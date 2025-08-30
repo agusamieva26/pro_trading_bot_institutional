@@ -1,0 +1,34 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+env*/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs y reports
+logs/
+reports/
+trades_log.csv
+bot/state.json
+
+# Modelos y datos grandes
+models/*.pkl
+models/*.joblib
+data/*.csv
+data/*.parquet
+*.h5
+*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
