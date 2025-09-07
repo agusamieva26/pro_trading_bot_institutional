@@ -15,6 +15,7 @@ from .state import BotState
 from .exposure import get_total_exposure
 from .telegram import alert_risk_stop, alert_error
 from .position_monitor import monitor_closed_positions
+from .profit_taking import auto_profit_taking
 from .util import logger
 
 
@@ -106,8 +107,19 @@ def run_once(state: BotState, clf):
 
     total_equity = current_equity
 
-    # --- 5. BTC/USD 40% ---
-    btc_allocation = 0.40
+    # --- 5. PROFIT-TAKING AUTOMÁTICO ---
+    profit_result = auto_profit_taking()
+    if profit_result == "PROFITS_TAKEN":
+        logger.info("💰 Profit-taking ejecutado. Actualizando equity...")
+        # Actualizar equity tras profit-taking
+        account = client.get_account()
+        current_equity = float(account.equity)
+        total_equity = current_equity
+        available_cash = float(account.cash)
+        logger.info(f"📊 Equity actualizado: ${total_equity:,.2f}, Cash: ${available_cash:,.2f}")
+
+    # --- 6. BTC/USD (máximo 70% con profit-taking) ---
+    btc_allocation = min(0.50, 0.70 * total_equity / max(total_equity, 1.0))  # Máximo 50% normal, 70% límite
     equity_for_btc = total_equity * btc_allocation
 
     if "BTC/USD" in settings.symbols:
