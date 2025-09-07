@@ -24,6 +24,17 @@ trading_client = TradingClient(
     paper=(settings.mode == "paper")
 )
 
+# Clientes para datos históricos
+crypto_client = CryptoHistoricalDataClient(
+    api_key=settings.alpaca_api_key,
+    secret_key=settings.alpaca_secret_key
+)
+
+stock_client = StockHistoricalDataClient(
+    api_key=settings.alpaca_api_key,
+    secret_key=settings.alpaca_secret_key
+)
+
 # Caché de precios
 _price_cache = {}
 _CACHE_TTL = 5  # segundos
@@ -56,7 +67,7 @@ def _get_current_price(symbol: str) -> float:
                 timeframe=TimeFrame.Minute,
                 limit=1
             )
-            bars = trading_client.get_crypto_bars(request)
+            bars = crypto_client.get_crypto_bars(request)
             price = float(bars.df.iloc[-1]["close"])
         else:  # Acciones
             request = StockBarsRequest(
@@ -64,7 +75,7 @@ def _get_current_price(symbol: str) -> float:
                 timeframe=TimeFrame.Minute,
                 limit=1
             )
-            bars = trading_client.get_stock_bars(request)
+            bars = stock_client.get_stock_bars(request)
             price = float(bars.df.iloc[-1]["close"])
 
         _price_cache[cache_key] = (price, now)
