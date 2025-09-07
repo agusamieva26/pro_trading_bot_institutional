@@ -170,12 +170,28 @@ def run_once(state: BotState, clf):
         except Exception as e:
             logger.error(f"💥 Error procesando BTC/USD: {e}")
 
-    # --- 6. Resto de símbolos 60% ---
-    equity_for_rest = total_equity * 0.60
+    # --- 7. Resto de símbolos (dinámico según capital disponible) ---
+    # Si tomamos profits, tendremos más cash disponible para otros activos
+    btc_position_value = 0
+    try:
+        positions = client.get_all_positions()
+        for pos in positions:
+            if pos.symbol == "BTCUSD":
+                btc_position_value = abs(float(pos.market_value))
+                break
+    except:
+        pass
+    
+    # Calcular equity disponible para otros activos (más dinámico)
+    btc_percentage = btc_position_value / total_equity if total_equity > 0 else 0
+    remaining_for_others = max(0.30, 1.0 - btc_percentage)  # Mínimo 30% para otros
+    equity_for_rest = total_equity * remaining_for_others
+    
     other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
     signals = []
     
-    logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales con ${equity_for_rest:,.2f}")
+    logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales")
+    logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} ({remaining_for_others:.1%})")
 
     # ⚡ OPTIMIZACIÓN SCALPING: Procesar solo primeros 8 activos por iteración
     symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
