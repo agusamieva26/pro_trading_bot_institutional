@@ -1,0 +1,7 @@
+{
+  "risk_per_trade": 0.0322,
+  "max_gross_exposure": 0.32,
+  "tp_multiplier": 2.0,
+  "sl_multiplier": 1.5,
+  "last_tune_time": "2025-08-29T04:13:15.596606+00:00"
+}

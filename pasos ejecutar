@@ -1,0 +1,10 @@
+cd C:\pro_trading_bot_institutional
+venv\Scripts\activate
+python run.py
+
+streamlit run dashboard.py
+
+
+entrenar
+python -m bot.trainer --symbols SPY AAPL MSFT AMZN GOOGL TSLA NFLX BTC/USD ETH/USD --start 2022-01-01 --end 2023-12-31
+

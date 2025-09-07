@@ -1,0 +1,8 @@
+"subir cambios a github"
+git add ."apila los archivos que se han modificado, lo detecta solo"
+git commit -m "Descripción clara de los cambios realizados"
+
+
+"para un archivo concreto"
+git add main.py "main.py es un ejemplo"
+git commit -m "Descripción clara de los cambios realizados"
