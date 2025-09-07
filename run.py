@@ -2,7 +2,7 @@
 import threading
 import time
 from bot.main import main
-from daily_reporter import run_reporter
+from scripts.daily_reporter import run_reporter
 
 def run_main():
     main()

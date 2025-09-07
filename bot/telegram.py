@@ -31,11 +31,14 @@ def send_telegram(message: str):
         logger.error(f"❌ Excepción al enviar a Telegram: {e}")
 
 
-def alert_trade_entry(symbol: str, side: str, qty: float, entry_price: float):
+def alert_trade_entry(symbol: str, side: str, qty: float, entry_price: float, tp_price=None, sl_price=None):
     """
     Alerta cuando se abre una posición.
+    Incluye parámetros opcionales de take profit y stop loss para compatibilidad.
     """
     side_text = "🟢 LONG" if side == "long" else "🔴 SHORT"
+    
+    # Formatear mensaje base
     msg = (
         f"{side_text} abierto\n"
         f"──────────────────\n"
@@ -43,6 +46,12 @@ def alert_trade_entry(symbol: str, side: str, qty: float, entry_price: float):
         f"• Cantidad: `{qty:.6f}`\n"
         f"• Precio entrada: `${entry_price:,.2f}`"
     )
+    
+    # Agregar TP/SL si están definidos
+    if tp_price and tp_price > 0:
+        msg += f"\n• Take Profit: `${tp_price:,.2f}`"
+    if sl_price and sl_price > 0:
+        msg += f"\n• Stop Loss: `${sl_price:,.2f}`"
     send_telegram(msg)
 
 
