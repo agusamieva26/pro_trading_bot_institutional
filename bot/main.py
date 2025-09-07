@@ -162,17 +162,31 @@ def run_once(state: BotState, clf):
     equity_for_rest = total_equity * 0.60
     other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
     signals = []
+    
+    logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales con ${equity_for_rest:,.2f}")
 
-    for symbol in other_symbols:
+    # ⚡ OPTIMIZACIÓN SCALPING: Procesar solo primeros 8 activos por iteración
+    symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
+    logger.info(f"⚡ Modo scalping: analizando primeros {len(symbols_batch)} de {len(other_symbols)} activos")
+
+    for i, symbol in enumerate(symbols_batch, 1):
         try:
-            df = fetch_bars(symbol, start="2023-01-01")
-            if df.empty or len(df) < 100:
+            logger.info(f"📊 ({i}/{len(symbols_batch)}) {symbol}...")
+            
+            # ⚡ Optimización: menos datos históricos para scalping
+            df = fetch_bars(symbol, start="2024-01-01")  # Solo 2024 vs 2023
+            if df.empty or len(df) < 50:  # Menos requisito de datos
+                logger.warning(f"⚠️ {symbol}: Sin datos")
                 continue
+                
             feats = make_features(df)
             latest = feats.iloc[-1]
 
             sig = hybrid_signal(latest, clf)
-            if sig == 0:
+            
+            # ⚡ Solo procesar señales fuertes (>0.1) para scalping
+            if abs(sig) < 0.1:
+                logger.info(f"🔄 {symbol}: señal débil ({sig:.3f}), skip")
                 continue
 
             signals.append({
@@ -182,8 +196,14 @@ def run_once(state: BotState, clf):
                 "price": float(latest["close"]),
                 "atr": float(latest["atr_14"])
             })
+            logger.info(f"✅ {symbol}: FUERTE señal {sig:.3f} @ ${latest['close']:.2f}")
+            
         except Exception as e:
-            logger.warning(f"⚠️ Error al calcular señal para {symbol}: {e}")
+            logger.warning(f"⚠️ {symbol}: {e}")
+
+    logger.info(f"⚡ Análisis rápido: {len(signals)}/{len(symbols_batch)} señales fuertes")
+
+    logger.info(f"📈 Total señales detectadas: {len(signals)} de {len(other_symbols)} activos")
 
     signals.sort(key=lambda x: abs(x["signal"]), reverse=True)
 
