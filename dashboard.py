@@ -38,11 +38,41 @@ def get_account_info():
             "cash": float(account.cash),
             "portfolio_value": float(account.portfolio_value),
             "buying_power": float(getattr(account, "buying_power", 0)),
-            "status": account.status
+            "status": account.status,
+            "initial_portfolio_value": float(getattr(account, "initial_portfolio_value", account.portfolio_value)),
+            "last_equity": float(getattr(account, "last_equity", account.equity))
         }
     except Exception as e:
         st.error(f"❌ No se pudo obtener cuenta: {e}")
         return {}
+
+def calculate_daily_change(account_info):
+    """Calcula el cambio diario basado en equity actual vs inicial del día"""
+    if not account_info:
+        return 0.0, 0.0
+    
+    try:
+        current_equity = account_info.get("equity", 0)
+        last_equity = account_info.get("last_equity", current_equity)
+        
+        # Daily change en dólares
+        daily_change = current_equity - last_equity
+        
+        # Daily change en porcentaje
+        daily_change_pct = (daily_change / last_equity * 100) if last_equity > 0 else 0.0
+        
+        return daily_change, daily_change_pct
+    except Exception:
+        return 0.0, 0.0
+
+def get_total_unrealized_pnl():
+    """Obtiene el P&L no realizado total de todas las posiciones"""
+    try:
+        positions = get_open_positions()
+        total_unrealized = sum([pos.get("unrealized_pl", 0) for pos in positions])
+        return total_unrealized
+    except Exception:
+        return 0.0
 
 def get_open_positions():
     try:
@@ -94,13 +124,59 @@ tab1, tab2, tab3, tab4 = st.tabs(["📈 Principal", "💼 Cuenta", "📊 Trades"
 
 # --- TAB 1: PRINCIPAL ---
 with tab1:
-    # Métricas de cuenta
+    # Métricas principales mejoradas
     account_info = get_account_info()
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Equity", f"${account_info.get('equity', 0):,.2f}")
-    col2.metric("Cash", f"${account_info.get('cash', 0):,.2f}")
-    col3.metric("Valor", f"${account_info.get('portfolio_value', 0):,.2f}")
-    col4.metric("Estado", account_info.get("status", "N/A"))
+    daily_change, daily_change_pct = calculate_daily_change(account_info)
+    total_unrealized = get_total_unrealized_pnl()
+    
+    # Primera fila: Métricas principales financieras
+    st.markdown("### 💰 Métricas Financieras")
+    col1, col2, col3 = st.columns(3)
+    
+    # Daily Change con color
+    daily_color = "normal" if daily_change == 0 else ("inverse" if daily_change > 0 else "off")
+    col1.metric(
+        label="📈 Daily Change", 
+        value=f"${daily_change:+,.2f}",
+        delta=f"{daily_change_pct:+.2f}%",
+        delta_color=daily_color
+    )
+    
+    # Buying Power
+    col2.metric(
+        label="💵 Buying Power", 
+        value=f"${account_info.get('buying_power', 0):,.2f}"
+    )
+    
+    # Cash disponible
+    col3.metric(
+        label="💰 Cash", 
+        value=f"${account_info.get('cash', 0):,.2f}"
+    )
+    
+    # Segunda fila: P&L y Portfolio
+    col4, col5, col6 = st.columns(3)
+    
+    # Total Unrealized P&L con color
+    unrealized_color = "normal" if total_unrealized == 0 else ("inverse" if total_unrealized > 0 else "off")
+    col4.metric(
+        label="📊 Unrealized P&L", 
+        value=f"${total_unrealized:+,.2f}",
+        delta_color=unrealized_color
+    )
+    
+    # Equity total
+    col5.metric(
+        label="🏦 Equity", 
+        value=f"${account_info.get('equity', 0):,.2f}"
+    )
+    
+    # Estado de cuenta
+    status_emoji = "🟢" if account_info.get("status") == "ACTIVE" else "🔴"
+    col6.metric(
+        label=f"{status_emoji} Estado", 
+        value=account_info.get("status", "N/A")
+    )
 
     # Posiciones abiertas
     st.subheader("💼 Posiciones Abiertas")
