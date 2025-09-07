@@ -22,13 +22,13 @@ args = "Dashboard"
 name = "Dashboard"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PYTHONPATH=. streamlit run dashboard.py --server.port 5000 --server.address 0.0.0.0 --server.headless true"
+args = "PYTHONPATH=. streamlit run dashboard.py --server.port 5000 --server.address 0.0.0.0 --server.headless true --server.enableCORS false"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000
