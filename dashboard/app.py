@@ -50,7 +50,7 @@ def get_open_positions():
             "symbol": pos.symbol,
             "qty": float(pos.qty),
             "avg_entry_price": float(pos.avg_entry_price),
-            "current_price": float(pos.current_price),
+            "current_price": float(pos.current_price) if pos.current_price else 0.0,
             "unrealized_pnl": float(pos.unrealized_pl) if pos.unrealized_pl else 0.0,
             "unrealized_pnl_pct": float(pos.unrealized_plpc) if pos.unrealized_plpc else 0.0,
             "market_value": float(pos.market_value) if pos.market_value else 0.0
