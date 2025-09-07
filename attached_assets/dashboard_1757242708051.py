@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime, timezone
 import os
 from pathlib import Path
+from streamlit_autorefresh import st_autorefresh  # Para recarga automática
 
 # Módulos del bot
 from bot.config import settings
@@ -50,10 +51,10 @@ def get_open_positions():
             "symbol": pos.symbol,
             "qty": float(pos.qty),
             "avg_entry_price": float(pos.avg_entry_price),
-            "current_price": float(pos.current_price) if pos.current_price else 0.0,
-            "unrealized_pnl": float(pos.unrealized_pl) if pos.unrealized_pl else 0.0,
-            "unrealized_pnl_pct": (float(pos.unrealized_pl) / (float(pos.avg_entry_price) * abs(float(pos.qty))) * 100) if pos.avg_entry_price != 0 and pos.unrealized_pl else 0.0,
-            "market_value": float(pos.market_value) if pos.market_value else 0.0
+            "current_price": float(pos.current_price),
+            "unrealized_pl": float(pos.unrealized_pl),
+            "unrealized_pl_pct": (float(pos.unrealized_pl) / (float(pos.avg_entry_price) * abs(float(pos.qty))) * 100) if pos.avg_entry_price != 0 else 0.0,
+            "market_value": float(pos.market_value)
         } for pos in positions]
     except Exception as e:
         st.warning(f"⚠️ No se pudieron obtener posiciones: {e}")
@@ -106,15 +107,16 @@ with tab1:
     positions = get_open_positions()
     if positions:
         df_pos = pd.DataFrame(positions)
+        # ✅ Corregido: nombres consistentes con los del DataFrame
         st.dataframe(
             df_pos.style.format({
                 "avg_entry_price": "${:.2f}",
                 "current_price": "${:.2f}",
-                "unrealized_pnl": "${:.2f}",
-                "unrealized_pnl_pct": "{:.2f}%",
+                "unrealized_pl": "${:.2f}",
+                "unrealized_pl_pct": "{:.2f}%",
                 "market_value": "${:.2f}"
             }),
-            width="stretch"
+            use_container_width=True
         )
     else:
         st.info("No hay posiciones abiertas.")
@@ -131,7 +133,7 @@ with tab2:
     orders = get_open_orders()
     if orders:
         df_orders = pd.DataFrame(orders)
-        st.dataframe(df_orders, width="stretch")
+        st.dataframe(df_orders, use_container_width=True)
     else:
         st.info("No hay órdenes abiertas.")
 
@@ -152,9 +154,9 @@ with tab3:
                 title="P&L Acumulado (Trades Cerrados)",
                 labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
             )
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
 
-        st.dataframe(df, width="stretch")
+        st.dataframe(df, use_container_width=True)
     else:
         st.warning("No se encontró `trades_log.csv` o está vacío.")
 
@@ -172,8 +174,8 @@ with tab4:
             df_resumen = pd.read_excel(report_path, sheet_name="Resumen")
             df_trades = pd.read_excel(report_path, sheet_name="Trades")
 
-            st.dataframe(df_resumen, width="stretch")
-            st.dataframe(df_trades, width="stretch")
+            st.dataframe(df_resumen, use_container_width=True)
+            st.dataframe(df_trades, use_container_width=True)
         else:
             st.info("No hay reportes generados aún.")
     else:
@@ -187,10 +189,6 @@ if auto_refresh:
     refresh_sec = st.sidebar.number_input(
         "Refresco (segundos)", min_value=10, max_value=600, value=60, step=10
     )
-    # Usar timer simple en lugar de streamlit_autorefresh
-    import time
-    time.sleep(refresh_sec)
-    st.rerun()
+    st_autorefresh(interval=refresh_sec * 1000, key="datarefresh")
 else:
-    if st.sidebar.button("Recargar ahora"):
-        st.rerun()
+    st.sidebar.button("Recargar ahora")
