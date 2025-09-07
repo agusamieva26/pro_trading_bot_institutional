@@ -87,41 +87,30 @@ def train_model(df: pd.DataFrame):
 
 
 def load_trading_model():
-    """
-    Carga el modelo de trading desde disco. Se asegura de que solo
-    se cargue una vez (singleton).
-    """
     global _trading_model_instance
-
-    # ✅ Reutilizar el modelo si ya está en memoria
     if _trading_model_instance is not None:
-        return _trading_model_instance
-
+        return _trading_model_instance  
+    """Carga el modelo desde disco."""
     if not os.path.exists(settings.model_path):
         logger.warning(f"⚠️ No se encontró el modelo en {settings.model_path}")
         return None
 
     try:
         model = joblib.load(settings.model_path)
-
         if hasattr(model, 'feature_names_in_'):
             missing = set(FEATURES) - set(model.feature_names_in_)
             if missing:
                 logger.error(f"❌ Modelo espera features que faltan: {missing}")
                 return None
-            logger.info(f"✅ Modelo cargado correctamente. Usa {len(model.feature_names_in_)} features.")
         else:
             logger.warning("⚠️ Modelo no tiene 'feature_names_in_'. Podría causar errores.")
-
-        # 🔒 Guardamos en cache y devolvemos
-        _trading_model_instance = model
-        return _trading_model_instance
-
+        return model
     except Exception as e:
         logger.error(f"❌ No se pudo cargar el modelo: {e}")
         return None
 
 
+_last_signals = {}
 
 def hybrid_signal(features, model=None):
     """
@@ -130,68 +119,55 @@ def hybrid_signal(features, model=None):
     - Si no: usa solo reglas
     Retorna: float entre -1.0 (fuerte venta) y +1.0 (fuerte compra)
     """
-    from .strategy import load_trading_model  # asegura carga del modelo singleton
-
-    # 🔹 Cargar modelo si no se pasa como argumento
-    if model is None:
-        model = load_trading_model()
-
+    model = model or TRADING_MODEL
     if model is None:
         logger.warning("⚠️ No hay modelo cargado. Usando solo reglas.")
         return rule_signal(features)
 
     try:
-        # Preparar input para el modelo
+        # Preparar input
         if isinstance(features, pd.Series):
-            X = pd.DataFrame([features[FEATURES].to_numpy()], columns=FEATURES)
+            X = pd.DataFrame([features[FEATURES].values], columns=FEATURES)
         elif isinstance(features, dict):
-            X = pd.DataFrame([list(features[f] for f in FEATURES)], columns=FEATURES)
+            X = pd.DataFrame([features], columns=FEATURES)
         elif isinstance(features, pd.DataFrame):
             X = features[FEATURES]
         else:
             logger.error(f"❌ Tipo no soportado: {type(features)}")
             return 0.0
 
-        if X.isna().any(axis=None):
+        if X.isna().any().any():
             logger.warning("⚠️ Input contiene NaN. Usando solo reglas.")
             return rule_signal(features)
 
-        # Predicción del modelo (probabilidad)
+        # Predicción del modelo
         proba = model.predict_proba(X)[0]  # [P(0), P(1)]
-        model_signal = proba[1] - proba[0]  # -1 a +1
+        model_signal = float(proba[1] - proba[0])  # rango -1 a +1
 
         # Señal de reglas
         rule_sig = rule_signal(features)
 
-        # Combinar con peso (modelo 70%, reglas 30%)
+        # 🔎 DEBUG: ver valores sin redondeo
+        logger.debug(f"🔧 [hybrid_signal] proba={proba.tolist()} | model_signal={model_signal:.6f} | rule_signal={rule_sig:.6f}")
+
+        # Combinar con pesos (modelo 70%, reglas 30%)
         combined_signal = 0.7 * model_signal + 0.3 * rule_sig
 
         # Ajustar por volatilidad
         if "atr_14" in features and "close" in features:
             atr_ratio = features["atr_14"] / features["close"]
-            if atr_ratio > 0.05:  # alta volatilidad
-                combined_signal *= 0.5
+            if atr_ratio > 0.08:
+                combined_signal *= 0.7
 
-        # Normalizar
-        current_signal = np.clip(combined_signal, -1.0, 1.0)
+        current_signal = float(np.clip(combined_signal, -1.0, 1.0))
 
-        # 🔹 Mantener estabilidad de la señal por símbolo
+        # Filtro de estabilidad (simétrico)
         symbol = features.get("symbol", "UNKNOWN")
-        # Inicializar _last_signals si no existe
-        if '_last_signals' not in globals():
-            global _last_signals
-            _last_signals = {}
-
-        if symbol in _last_signals:
-            last_signal = _last_signals[symbol]
-            # Solo cambia si la diferencia es significativa
-            if (current_signal > 0.3 and last_signal > 0.1) or \
-               (current_signal < -0.3 and last_signal < -0.1):
-                _last_signals[symbol] = current_signal
-                return current_signal
-            elif abs(current_signal - last_signal) < 0.2:
-                logger.debug(f"🔧 [hybrid_signal] Señal estable. Manteniendo {last_signal:.2f}")
-                return last_signal
+        last_signal = _last_signals.get(symbol)
+        if last_signal is not None:
+            if abs(current_signal - last_signal) < 0.15:
+                logger.debug(f"🔧 [hybrid_signal] Señal estable → mantener {last_signal:.4f}")
+                current_signal = last_signal
 
         _last_signals[symbol] = current_signal
         return current_signal
@@ -199,42 +175,88 @@ def hybrid_signal(features, model=None):
     except Exception as e:
         logger.error(f"❌ Error en señal híbrida: {e}")
         sig = rule_signal(features)
-        logger.debug(f"🔧 [hybrid_signal] Fallback a reglas: {sig:.2f}")
+        logger.debug(f"🔧 [hybrid_signal] Fallback a reglas: {sig:.6f}")
         return sig
 
-def precompute_model_signals(df: pd.DataFrame, model=None) -> pd.DataFrame:
+def generate_signals(market_data, model=None):
     """
-    Precalcula señales del modelo + híbridas para todo un DataFrame.
-    Muchísimo más rápido que llamar hybrid_signal() en cada fila.
+    Genera señales de trading para cada símbolo en market_data.
     """
-    if model is None:
-        model = load_trading_model()
-    if model is None:
-        logger.warning("⚠️ No hay modelo. Se usarán solo reglas.")
-        df["rule_signal"] = df.apply(rule_signal, axis=1)
-        df["model_signal"] = 0.0
-        df["combined_signal"] = df["rule_signal"]
-        return df
+    signals = []
+    logger.info(f"📊 Generando señales para {len(market_data)} símbolos")
+    for symbol, df in market_data.items():
+        logger.info(f"🔎 {symbol}: {len(df)} filas de datos")
+        if df.empty:
+            logger.warning(f"⚠️ Sin datos para {symbol}")
+            continue
+        try:
+            last_row = df.iloc[-1].copy()
+            last_row["symbol"] = symbol
 
-    feats = make_features(df).dropna(subset=FEATURES + ["close"])
-    X = feats[FEATURES]
+            # 🔍 DEBUG: Ver features en detalle (por si alguna viene igual entre símbolos)
+            try:
+                features_dict = {f: float(last_row[f]) for f in FEATURES}
+                logger.debug(f"🧪 [{symbol}] features: {features_dict}")
+            except Exception as e:
+                logger.error(f"❌ No se pudieron loggear las features de {symbol}: {e}")
 
-    # 🔹 Predicciones en batch
-    probas = model.predict_proba(X)
-    feats["model_signal"] = probas[:, 1] - probas[:, 0]
+            score = hybrid_signal(last_row, model)
 
-    # Señal basada en reglas
-    feats["rule_signal"] = feats.apply(rule_signal, axis=1)
+            # Determinar BUY / SELL / HOLD
+            if score > 0.2:
+                action = "BUY"
+            elif score < -0.2:
+                action = "SELL"
+            else:
+                action = "HOLD"
 
-    # Combinar con peso 70/30
-    feats["combined_signal"] = 0.7 * feats["model_signal"] + 0.3 * feats["rule_signal"]
+            signals.append({
+                "symbol": symbol,
+                "score": float(score),
+                "signal": action
+            })
+            logger.info(f"📈 Señal {symbol}: {action} ({score:+.2f})")
+        except Exception as e:
+            logger.error(f"❌ Error generando señal para {symbol}: {e}")
+    return signals
+    
+# =========================
+# 📊 Asignación de capital
+# =========================
 
-    # Ajustar por volatilidad
-    atr_ratio = feats["atr_14"] / feats["close"]
-    feats.loc[atr_ratio > 0.05, "combined_signal"] *= 0.5
+def allocate_positions(signals, equity, max_exposure=0.3, max_allocation_per_asset=0.5):
+    """
+    Distribuye capital entre activos según la fuerza de la señal.
 
-    # Normalizar
-    feats["combined_signal"] = feats["combined_signal"].clip(-1.0, 1.0)
+    :param signals: Lista de señales [{'symbol': 'BTCUSD', 'signal': 'BUY', 'score': 0.75}, ...]
+    :param equity: Capital total de la cuenta
+    :param max_exposure: Porcentaje máximo de equity a usar (0.3 = 30%)
+    :param max_allocation_per_asset: Límite por activo (0.5 = máx. 50% del equity en uno solo)
+    :return: Lista de asignaciones [{'symbol': 'BTCUSD', 'allocation': 1234.56, 'signal': 'BUY', 'score': 0.75}, ...]
+    """
+    if not signals:
+        return []
 
-    return feats
+    # Filtra señales válidas (con score y signal coherentes)
+    ranked = sorted(
+        [s for s in signals if "score" in s and s["signal"] in ("BUY", "SELL")],
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    total_score = sum(s["score"] for s in ranked) or 1.0
+    total_capital = equity * max_exposure
+
+    allocations = []
+    for s in ranked:
+        weight = s["score"] / total_score
+        alloc = min(weight * total_capital, equity * max_allocation_per_asset)
+        allocations.append({
+            "symbol": s["symbol"],
+            "allocation": alloc,
+            "signal": s["signal"],
+            "score": s["score"],  # 👈 ***ESTO ES LO QUE TE FALTABA***
+        })
+
+    return allocations
 
