@@ -170,6 +170,6 @@ with tab4:
 
 # Recarga automática
 st.sidebar.header("⚙️ Control")
-auto_refresh = st.sidebar.checkbox("Auto-recarga", value=True)
+auto_refresh = st.sidebar.checkbox("Auto-recarga", value=False)
 if auto_refresh:
-    st_autorefresh = st_autorefresh(interval=refresh * 1000, key="datarefresh")
+    st.rerun()
