@@ -116,7 +116,7 @@ with tab1:
                 "unrealized_pl_pct": "{:.2f}%",
                 "market_value": "${:.2f}"
             }),
-            use_container_width=True
+            width='stretch'
         )
     else:
         st.info("No hay posiciones abiertas.")
@@ -133,7 +133,7 @@ with tab2:
     orders = get_open_orders()
     if orders:
         df_orders = pd.DataFrame(orders)
-        st.dataframe(df_orders, use_container_width=True)
+        st.dataframe(df_orders, width='stretch')
     else:
         st.info("No hay órdenes abiertas.")
 
@@ -154,9 +154,9 @@ with tab3:
                 title="P&L Acumulado (Trades Cerrados)",
                 labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_column_width=True)
 
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, width='stretch')
     else:
         st.warning("No se encontró `trades_log.csv` o está vacío.")
 
@@ -174,8 +174,8 @@ with tab4:
             df_resumen = pd.read_excel(report_path, sheet_name="Resumen")
             df_trades = pd.read_excel(report_path, sheet_name="Trades")
 
-            st.dataframe(df_resumen, use_container_width=True)
-            st.dataframe(df_trades, use_container_width=True)
+            st.dataframe(df_resumen, width='stretch')
+            st.dataframe(df_trades, width='stretch')
         else:
             st.info("No hay reportes generados aún.")
     else:
