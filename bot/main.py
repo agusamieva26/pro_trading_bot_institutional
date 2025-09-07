@@ -207,17 +207,26 @@ def run_once(state: BotState, clf):
 
     signals.sort(key=lambda x: abs(x["signal"]), reverse=True)
 
-    for item in signals:
+    logger.info(f"💰 Procesando {len(signals)} señales detectadas...")
+    
+    for i, item in enumerate(signals, 1):
         symbol = item["symbol"]
         sig = item["signal"]
         price = item["price"]
         atr = item["atr"]
+        
+        logger.info(f"🎯 ({i}/{len(signals)}) {symbol}: señal={sig:.3f} precio=${price:.2f}")
+        
         shares = volatility_target_size(equity_for_rest, price, atr)
         frac_k = kelly_cap(0.5 + abs(sig)/2, cap=settings.risk_per_trade * 4)
         leverage = max(min(abs(sig) + frac_k, 1.5), 0.1)
         qty = shares * leverage
         side = "buy" if sig > 0 else "sell"
+        
+        logger.info(f"📊 {symbol}: qty={qty:.6f} side={side} (shares={shares:.6f}, leverage={leverage:.2f})")
+        
         if qty < 1e-6:
+            logger.info(f"⚠️ {symbol}: cantidad muy pequeña, skip")
             continue
 
         is_crypto = _is_crypto(symbol)
@@ -255,9 +264,10 @@ def run_once(state: BotState, clf):
         else:
             # ✅ Nueva posición: crypto solo LONG, acciones pueden ser LONG/SHORT
             if is_crypto and side == "sell":
-                logger.info(f"⚠️ Señal bajista en {symbol} pero crypto no permite short. Skip.")
+                logger.info(f"⚠️ {symbol}: Señal BAJISTA pero crypto no permite SHORT → SKIP")
             else:
-                logger.info(f"📈 Abriendo nueva posición {'LONG' if side == 'buy' else 'SHORT'} en {symbol}")
+                action = "LONG" if side == "buy" else "SHORT"
+                logger.info(f"🚀 {symbol}: Abriendo {action} con qty={qty:.6f} @ ${price:.2f}")
                 place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres
