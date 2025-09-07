@@ -14,14 +14,14 @@ class Settings(BaseModel):
     telegram_enabled: bool = Field(default_factory=lambda: os.getenv("TELEGRAM_ENABLED","true").lower() in ("1","true","yes"))
     telegram_bot_token: str = Field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN",""))
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
-    bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","1Hour"))
+    bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","5Min"))  # SCALPING
     initial_equity: float = 30000.0  # Valor fijo
-    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.004")))
-    max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","2.03")))
-    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))
-    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.025")))
-    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.02")))
-    trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.01")))
+    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.008")))  # SCALPING: Mayor riesgo
+    max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","4.0")))  # SCALPING: Mayor tolerancia diaria
+    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","2.5")))  # SCALPING: Mayor exposición
+    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.005")))  # SCALPING: 0.5%
+    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.003")))  # SCALPING: 0.3%
+    trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.002")))  # SCALPING: 0.2%
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))

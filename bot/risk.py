@@ -2,10 +2,10 @@
 from typing import NamedTuple
 
 class RiskParams(NamedTuple):
-    take_profit_pct: float = 0.02      # 2%
-    stop_loss_pct: float = 0.01        # 1%
-    trail_stop_atr: float = 3.0        # Múltiplo del ATR
-    max_risk_per_trade: float = 0.005  # 0.5% del equity
+    take_profit_pct: float = 0.005     # 0.5% SCALPING - Take profit agresivo
+    stop_loss_pct: float = 0.003       # 0.3% SCALPING - Stop loss ajustado  
+    trail_stop_atr: float = 1.5        # 1.5x ATR para scalping
+    max_risk_per_trade: float = 0.008  # 0.8% del equity - Mayor riesgo por trade
     MAX_EXPOSURE_PER_SYMBOL = 0.20  # Máximo 20% del equity por símbolo
     max_gross_exposure: float = 1.5    # 150% del equity
 
