@@ -210,17 +210,30 @@ def run_once(state: BotState, clf):
                     logger.info(f"🔄 Cerrando corto y abriendo largo en {symbol}")
                     place_order(symbol, abs(current_qty), "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
-            else:
-                if is_short:
-                    logger.info(f"🔴 Posición corta existente en {symbol}. Aumentando...")
-                    place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                elif is_long:
-                    logger.info(f"🔄 Cerrando largo y abriendo corto en {symbol}")
-                    place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                    place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+            else:  # side == "sell"
+                if is_crypto:
+                    # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short
+                    if is_long:
+                        logger.info(f"🔄 Señal bajista: cerrando posición larga en {symbol} (crypto no permite short)")
+                        place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    else:
+                        logger.info(f"⚠️ Señal bajista en {symbol} pero crypto no permite short. Skip.")
+                else:
+                    # ✅ ACCIONES: Permitir short normal
+                    if is_short:
+                        logger.info(f"🔴 Posición corta existente en {symbol}. Aumentando...")
+                        place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    elif is_long:
+                        logger.info(f"🔄 Cerrando largo y abriendo corto en {symbol}")
+                        place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+                        place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
         else:
-            logger.info(f"📈 Abriendo nueva posición en {symbol}")
-            place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
+            # ✅ Nueva posición: crypto solo LONG, acciones pueden ser LONG/SHORT
+            if is_crypto and side == "sell":
+                logger.info(f"⚠️ Señal bajista en {symbol} pero crypto no permite short. Skip.")
+            else:
+                logger.info(f"📈 Abriendo nueva posición {'LONG' if side == 'buy' else 'SHORT'} en {symbol}")
+                place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres
     try:
