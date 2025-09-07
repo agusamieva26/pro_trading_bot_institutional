@@ -184,9 +184,15 @@ def run_once(state: BotState, clf):
 
             sig = hybrid_signal(latest, clf)
             
+            # 📊 MOSTRAR SCORE COMPLETO SIEMPRE
+            score_status = "🟢 FUERTE" if abs(sig) >= 0.2 else "🟡 MODERADA" if abs(sig) >= 0.1 else "🔴 DÉBIL"
+            signal_direction = "🔺 ALCISTA" if sig > 0 else "🔻 BAJISTA" if sig < 0 else "➡️ NEUTRAL"
+            
+            logger.info(f"📊 {symbol}: SCORE={sig:+.3f} ({score_status} {signal_direction}) @ ${latest['close']:.2f}")
+            
             # ⚡ Solo procesar señales fuertes (>0.1) para scalping
             if abs(sig) < 0.1:
-                logger.info(f"🔄 {symbol}: señal débil ({sig:.3f}), skip")
+                logger.info(f"⚠️ {symbol}: Score débil, no se opera")
                 continue
 
             signals.append({
@@ -196,7 +202,7 @@ def run_once(state: BotState, clf):
                 "price": float(latest["close"]),
                 "atr": float(latest["atr_14"])
             })
-            logger.info(f"✅ {symbol}: FUERTE señal {sig:.3f} @ ${latest['close']:.2f}")
+            logger.info(f"✅ {symbol}: INCLUIDO para trading")
             
         except Exception as e:
             logger.warning(f"⚠️ {symbol}: {e}")
@@ -215,7 +221,11 @@ def run_once(state: BotState, clf):
         price = item["price"]
         atr = item["atr"]
         
-        logger.info(f"🎯 ({i}/{len(signals)}) {symbol}: señal={sig:.3f} precio=${price:.2f}")
+        # 🎯 SCORE DETALLADO CON EVALUACIÓN
+        signal_strength = "MÁXIMA" if abs(sig) >= 0.5 else "ALTA" if abs(sig) >= 0.3 else "MEDIA"
+        signal_emoji = "🚀" if sig >= 0.3 else "📈" if sig >= 0.1 else "📉" if sig <= -0.1 else "📊"
+        
+        logger.info(f"{signal_emoji} ({i}/{len(signals)}) {symbol}: SCORE={sig:+.3f} ({signal_strength}) @ ${price:.2f}")
         
         shares = volatility_target_size(equity_for_rest, price, atr)
         frac_k = kelly_cap(0.5 + abs(sig)/2, cap=settings.risk_per_trade * 4)
@@ -223,7 +233,7 @@ def run_once(state: BotState, clf):
         qty = shares * leverage
         side = "buy" if sig > 0 else "sell"
         
-        logger.info(f"📊 {symbol}: qty={qty:.6f} side={side} (shares={shares:.6f}, leverage={leverage:.2f})")
+        logger.info(f"💰 {symbol}: qty={qty:.6f} side={side} (leverage={leverage:.2f}x, shares={shares:.6f})")
         
         if qty < 1e-6:
             logger.info(f"⚠️ {symbol}: cantidad muy pequeña, skip")
