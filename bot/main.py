@@ -68,11 +68,12 @@ def run_once(state: BotState, clf):
         return "STOP"  # ✅ Único return "STOP" válido
     logger.info(f"📈 P&L diario: {daily_pnl_pct:.2%}")
 
-    # 3. Exposición bruta
+    # 3. Exposición bruta - GESTIONAR PERO CONTINUAR
+    exposure_managed = False
     try:
         current_exposure = get_total_exposure()
         if current_exposure >= settings.max_gross_exposure:
-            logger.critical(f"🛑 Exposición {current_exposure:.2f}x ≥ límite {settings.max_gross_exposure}x. Cerrando posiciones...")
+            logger.warning(f"⚠️ Exposición {current_exposure:.2f}x ≥ límite {settings.max_gross_exposure}x. Reduciendo...")
             try:
                 positions = client.get_all_positions()
                 sorted_positions = sorted(positions, key=lambda p: abs(float(p.qty)), reverse=False)
@@ -83,13 +84,17 @@ def run_once(state: BotState, clf):
                     logger.info(f"🔁 Reduciendo exposición: cerrando {abs(qty)} de {symbol}")
                     # ✅ Pasar el objeto de posición directamente para evitar inconsistencias
                     close_position(symbol, side, position_obj=pos)
+                    exposure_managed = True
                     break
             except Exception as e:
                 logger.error(f"❌ No se pudieron obtener posiciones para cierre: {e}")
-            return
+        
+        # ✅ CONTINUAR después de gestionar exposición
+        if exposure_managed:
+            logger.info("✅ Exposición gestionada. Continuando con análisis de activos...")
     except Exception as e:
         logger.exception("💥 Error al verificar exposición")
-        return
+        # ✅ NO return aquí - continuar con otros activos
 
     # 4. Cash disponible
     try:

@@ -18,7 +18,7 @@ class Settings(BaseModel):
     initial_equity: float = 30000.0  # Valor fijo
     risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.008")))  # SCALPING: Mayor riesgo
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","4.0")))  # SCALPING: Mayor tolerancia diaria
-    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","2.5")))  # SCALPING: Mayor exposición
+    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))  # SCALPING: Exposición moderada pero funcional
     take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.005")))  # SCALPING: 0.5%
     stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.003")))  # SCALPING: 0.3%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.002")))  # SCALPING: 0.2%
