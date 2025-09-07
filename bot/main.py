@@ -132,20 +132,24 @@ def run_once(state: BotState, clf):
 
                         if pos:
                             current_qty = float(pos.qty)
-                            if (side == "buy" and current_qty > 0) or (side == "sell" and current_qty < 0):
-                                logger.info(f"🟢 Posición {'larga' if current_qty > 0 else 'corta'} existente en BTC/USD. Aumentando...")
+                            if side == "buy" and current_qty > 0:
+                                logger.info(f"🟢 Posición larga existente en BTC/USD. Aumentando...")
                                 place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
                             elif side == "buy" and current_qty < 0:
                                 logger.info("🔄 Cerrando corto y abriendo largo en BTC/USD")
                                 place_order("BTC/USD", abs(current_qty), "buy", price, fractional=False, is_crypto=is_crypto)
                                 place_order("BTC/USD", qty, "buy", price, fractional=False, is_crypto=is_crypto)
                             elif side == "sell" and current_qty > 0:
-                                logger.info("🔄 Cerrando largo y abriendo corto en BTC/USD")
+                                # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short
+                                logger.info("🔄 Señal bajista: cerrando posición larga en BTC/USD (crypto no permite short)")
                                 place_order("BTC/USD", abs(current_qty), "sell", price, fractional=False, is_crypto=is_crypto)
-                                place_order("BTC/USD", qty, "sell", price, fractional=False, is_crypto=is_crypto)
                         else:
-                            logger.info(f"📈 Abriendo nueva posición en BTC/USD ({'long' if side == 'buy' else 'short'})")
-                            place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
+                            # ✅ CRYPTO: Solo abrir posición si es LONG (buy)
+                            if side == "buy":
+                                logger.info(f"📈 Abriendo nueva posición LONG en BTC/USD")
+                                place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
+                            else:
+                                logger.info(f"⚠️ Señal bajista en BTC/USD pero crypto no permite short. Skip.")
         except Exception as e:
             logger.error(f"💥 Error procesando BTC/USD: {e}")
 
