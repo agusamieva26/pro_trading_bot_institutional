@@ -81,7 +81,8 @@ def run_once(state: BotState, clf):
                     symbol = pos.symbol
                     side = "long" if qty > 0 else "short"
                     logger.info(f"🔁 Reduciendo exposición: cerrando {abs(qty)} de {symbol}")
-                    close_position(symbol, side)
+                    # ✅ Pasar el objeto de posición directamente para evitar inconsistencias
+                    close_position(symbol, side, position_obj=pos)
                     break
             except Exception as e:
                 logger.error(f"❌ No se pudieron obtener posiciones para cierre: {e}")

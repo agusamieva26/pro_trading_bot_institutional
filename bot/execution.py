@@ -132,21 +132,31 @@ def place_order(symbol: str, qty: float, side: str, price: float, fractional: bo
         logger.error(f"❌ Error inesperado al enviar orden {symbol}: {e}")
 
 
-def close_position(symbol: str, side: str = None):
+def close_position(symbol: str, side: str = None, position_obj=None):
     """
     Cierra TODA la posición abierta en un símbolo dado usando Alpaca API.
     Usa el método nativo close_position para evitar errores de qty/TIF.
+    
+    Args:
+        symbol: Símbolo de la posición
+        side: Lado de la posición (opcional)
+        position_obj: Objeto de posición de Alpaca (opcional, evita llamada adicional)
     """
     client = _client()
     base_symbol = symbol.replace("/", "")
 
-    try:
-        position = client.get_position(base_symbol)
-    except Exception:
-        logger.info(f"No hay posición abierta para {symbol}.")
-        return
-
-    qty = float(position.qty)
+    # Si tenemos el objeto de posición, úsalo directamente
+    if position_obj:
+        position = position_obj
+        qty = float(position.qty)
+    else:
+        # Fallback: intentar obtener posición por símbolo
+        try:
+            position = client.get_position(base_symbol)
+            qty = float(position.qty)
+        except Exception:
+            logger.info(f"No hay posición abierta para {symbol}.")
+            return
 
     try:
         # 🔒 cerrar posición con Alpaca
