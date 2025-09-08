@@ -140,29 +140,55 @@ class AdvancedModelSelector:
     def prepare_advanced_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """Prepara features avanzadas para entrenamiento."""
         try:
+            # Verificar datos mínimos
+            if len(data) < 5:
+                logger.warning(f"⚠️ Datos insuficientes para ML: {len(data)} filas")
+                return data
+            
             # Generar features avanzadas
             enhanced_data = advanced_feature_generator.generate_advanced_features(data.copy())
             
-            # Generar target si no existe
-            if 'target' not in enhanced_data.columns:
-                enhanced_data['target'] = self._generate_target(enhanced_data)
+            # Siempre generar target
+            enhanced_data['target'] = self._generate_target(enhanced_data)
+            
+            # Verificar que target es válido
+            if enhanced_data['target'].isna().all():
+                logger.warning("⚠️ Target completamente nulo - usando target dummy")
+                enhanced_data['target'] = 0
             
             return enhanced_data
             
         except Exception as e:
             logger.error(f"❌ Error preparando features: {e}")
-            return data
+            # Fallback: datos originales con target dummy
+            fallback_data = data.copy()
+            fallback_data['target'] = 0
+            return fallback_data
     
     def _generate_target(self, data: pd.DataFrame) -> pd.Series:
         """Genera variable target para entrenamiento."""
-        # Target basado en retorno futuro
-        future_return = data['close'].pct_change().shift(-1)
-        
-        # Convertir a clases: -1 (down), 0 (neutral), 1 (up)
-        target = np.where(future_return > 0.01, 1,
-                         np.where(future_return < -0.01, -1, 0))
-        
-        return pd.Series(target, index=data.index)
+        try:
+            if 'close' not in data.columns or len(data) < 2:
+                # Fallback target dummy
+                return pd.Series(0, index=data.index)
+            
+            # Target basado en retorno futuro
+            future_return = data['close'].pct_change().shift(-1)
+            
+            # Convertir a clases: -1 (down), 0 (neutral), 1 (up)  
+            target = np.where(future_return > 0.01, 1,
+                             np.where(future_return < -0.01, -1, 0))
+            
+            target_series = pd.Series(target, index=data.index)
+            
+            # Llenar NaN con 0
+            target_series = target_series.fillna(0)
+            
+            return target_series
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error generando target: {e}")
+            return pd.Series(0, index=data.index)
     
     def evaluate_model(self, model_name: str, data: pd.DataFrame, 
                       target_col: str = 'target') -> Dict[str, float]:
