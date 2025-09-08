@@ -2,6 +2,18 @@
 
 This is a sophisticated institutional-grade trading bot written in Python that combines machine learning, technical analysis, and risk management for automated trading. The system integrates with Alpaca Markets for paper/live trading and supports both equity and cryptocurrency markets. It features a comprehensive backtesting framework, hyperparameter optimization, live monitoring dashboard, and automated reporting capabilities.
 
+## Recent Changes (2025-09-08)
+
+**Performance & Diversification Optimization:**
+- Implemented parallel data fetching with ThreadPoolExecutor (4 threads), reducing analysis time from 8+ seconds to 2-3 seconds
+- Enhanced strategy.py with global model caching and signal stability filtering for improved performance
+- Added professional institutional-grade logging format: "📊 LONG {symbol}: score={score:+.3f}, qty={qty:.6f}"
+- **CRITICAL:** Fixed capital management - limited BTC to maximum 40% allocation (was using 90% causing insufficient funds)
+- Implemented diversification controls: minimum 30% capital reserved for other assets, preventing over-concentration
+- Enhanced position sizing: adaptive allocation based on signal strength (25%/15%/8% for strong/medium/weak signals)
+- Improved cash tracking system eliminating "reservado" confusion in execution logging
+- Removed MATIC/USD from symbol list due to consistent data availability issues
+
 The bot employs a hybrid trading strategy that combines rule-based technical indicators (EMA crossovers, RSI, MACD) with machine learning predictions using Random Forest classifiers. It includes advanced risk management features like position sizing based on volatility targeting, Kelly criterion optimization, and exposure limits.
 
 # User Preferences
