@@ -429,7 +429,7 @@ class RLTradingSystem:
                 rl_data[col] = 0.0
         
         # Llenar NaN values
-        rl_data = rl_data.fillna(method='forward').fillna(0)
+        rl_data = rl_data.fillna(method='ffill').fillna(0)
         
         return rl_data
     
