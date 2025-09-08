@@ -1,5 +1,8 @@
 # bot/data.py
 import pandas as pd
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from alpaca.data.historical import StockHistoricalDataClient, CryptoHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest, CryptoBarsRequest
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
@@ -9,8 +12,10 @@ from .util import logger
 
 
 # ------------------------------------------------------------------
-# Clientes autenticados (globales del módulo)
+# Caché de datos y clientes autenticados
 # ------------------------------------------------------------------
+CACHE_DIR = "data_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
 stock_client = StockHistoricalDataClient(
     api_key=settings.alpaca_api_key,
     secret_key=settings.alpaca_secret_key
@@ -106,6 +111,84 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
 # ------------------------------------------------------------------
 # Wrapper para obtener las últimas n barras (para alertas)
 # ------------------------------------------------------------------
+def fetch_all_bars(symbols: list[str], start: str = None, end: str = None, min_bars: int = 50):
+    """
+    Descarga datos para múltiples símbolos en paralelo usando ThreadPoolExecutor.
+    Optimizada para usar caché incremental: solo descarga si faltan datos o hay huecos.
+    """
+    results = {}
+    max_workers = min(4, len(symbols))
+    logger.info(f"📡 Descargando datos de {len(symbols)} símbolos en paralelo ({max_workers} hilos)...")
+
+    def fetch_with_retry(sym, retries=3, delay=1.0):
+        cache_file = os.path.join(CACHE_DIR, f"{sym.replace('/', '_')}.parquet")
+        cached_df = pd.DataFrame()
+
+        # 1️⃣ Cargar caché si existe
+        if os.path.exists(cache_file):
+            try:
+                cached_df = pd.read_parquet(cache_file).sort_index()
+                # Si tengo suficientes datos en cache, usar esos
+                if len(cached_df) >= min_bars:
+                    logger.debug(f"✅ {sym}: {len(cached_df)} velas en caché")
+                    return cached_df
+            except Exception as e:
+                logger.warning(f"⚠️ Error leyendo caché de {sym}: {e}")
+                cached_df = pd.DataFrame()
+
+        # 2️⃣ Descarga incremental con reintentos
+        for attempt in range(retries):
+            try:
+                df = fetch_bars(sym, start, end, min_bars)
+                
+                # Guardar en caché si descarga exitosa
+                if not df.empty:
+                    try:
+                        df.to_parquet(cache_file)
+                        logger.debug(f"💾 {sym}: datos guardados en caché")
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo guardar caché de {sym}: {e}")
+                
+                return df
+            except APIError as e:
+                if "too many requests" in str(e).lower() or "rate limit" in str(e).lower():
+                    wait_time = delay * (2 ** attempt)
+                    logger.warning(f"⏳ Rate limit para {sym}, reintentando en {wait_time:.1f}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"💥 Error API {sym}: {e}")
+                    break
+            except Exception as e:
+                logger.error(f"💥 Error inesperado con {sym}: {e}")
+                break
+        
+        # Si falla todo, devolver caché (aunque esté vacío)
+        return cached_df
+
+    # 3️⃣ Ejecutar en paralelo
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(fetch_with_retry, sym): sym for sym in symbols}
+
+        for future in as_completed(futures):
+            sym = futures[future]
+            try:
+                df = future.result()
+                if not df.empty:
+                    results[sym] = df
+                else:
+                    logger.warning(f"⚠️ {sym} sin datos")
+                    results[sym] = pd.DataFrame()
+            except Exception as e:
+                logger.error(f"💥 Error descargando {sym}: {e}")
+                results[sym] = pd.DataFrame()
+
+            # Pequeña pausa para evitar saturación de API
+            time.sleep(0.2)
+
+    successful = len([v for v in results.values() if not v.empty])
+    logger.info(f"✅ Descarga completada: {successful}/{len(symbols)} símbolos con datos.")
+    return results
+
 def fetch_last_bars(symbol: str, n: int = 1):
     """
     Devuelve las últimas 'n' barras de un símbolo sin pasar 'limit' directamente.
