@@ -513,5 +513,111 @@ class EnsembleModel:
             logger.error(f"❌ Error guardando ensemble: {e}")
 
 
+def auto_load_ml_models(model_dir: str = "models"):
+    """
+    Carga automáticamente todos los modelos ML disponibles al arrancar el bot.
+    """
+    logger.info("🔄 Cargando modelos ML automáticamente...")
+    
+    try:
+        model_path = Path(model_dir)
+        if not model_path.exists():
+            logger.warning(f"⚠️ Directorio {model_dir} no existe - creando...")
+            model_path.mkdir(parents=True, exist_ok=True)
+            return False
+        
+        models_loaded = 0
+        
+        # 1. Cargar Ensemble Model si existe
+        ensemble_config = model_path / "ensemble_config.joblib"
+        if ensemble_config.exists():
+            try:
+                logger.info("📊 Cargando Ensemble Model...")
+                config = joblib.load(ensemble_config)
+                
+                # Cargar RandomForest
+                rf_file = model_path / "ensemble_rf.joblib"
+                if rf_file.exists():
+                    advanced_ensemble.models['rf'] = joblib.load(rf_file)
+                    logger.info("   ✅ RandomForest cargado")
+                    models_loaded += 1
+                
+                # Cargar XGBoost
+                xgb_file = model_path / "ensemble_xgb.joblib"
+                if xgb_file.exists():
+                    advanced_ensemble.models['xgb'] = joblib.load(xgb_file)
+                    logger.info("   ✅ XGBoost cargado")
+                    models_loaded += 1
+                
+                # Cargar modelos de deep learning
+                if TENSORFLOW_AVAILABLE:
+                    lstm_file = model_path / "ensemble_lstm.h5"
+                    if lstm_file.exists():
+                        try:
+                            advanced_ensemble.models['lstm'].model = tf.keras.models.load_model(str(lstm_file))
+                            advanced_ensemble.models['lstm'].is_trained = True
+                            logger.info("   ✅ LSTM cargado")
+                            models_loaded += 1
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error cargando LSTM: {e}")
+                    
+                    transformer_file = model_path / "ensemble_transformer.h5"
+                    if transformer_file.exists():
+                        try:
+                            advanced_ensemble.models['transformer'].model = tf.keras.models.load_model(str(transformer_file))
+                            advanced_ensemble.models['transformer'].is_trained = True
+                            logger.info("   ✅ Transformer cargado")
+                            models_loaded += 1
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error cargando Transformer: {e}")
+                
+                # Configurar ensemble
+                if models_loaded > 0:
+                    advanced_ensemble.weights = config.get('weights', {})
+                    advanced_ensemble.is_trained = config.get('is_trained', True)
+                    
+                    logger.info(f"🎯 Ensemble Model cargado: {models_loaded} modelos")
+                    for model_name, weight in advanced_ensemble.weights.items():
+                        logger.info(f"   • {model_name}: peso={weight:.3f}")
+                        
+            except Exception as e:
+                logger.error(f"❌ Error cargando Ensemble: {e}")
+        else:
+            logger.info("ℹ️ Ensemble Model no encontrado - se entrenará cuando sea necesario")
+        
+        # 2. Cargar Reinforcement Learning
+        try:
+            from .reinforcement_learning import rl_trading_system
+            rl_file = model_path / "rl_model.pkl" 
+            if rl_file.exists():
+                rl_data = joblib.load(rl_file)
+                if rl_data.get('is_trained', False):
+                    # Restaurar estado del RL
+                    if hasattr(rl_trading_system, 'agent'):
+                        rl_trading_system.agent = rl_data.get('agent')
+                        rl_trading_system.is_trained = True
+                        logger.info("🤖 Reinforcement Learning cargado exitosamente")
+                        models_loaded += 1
+                    else:
+                        logger.warning("⚠️ RL encontrado pero no se puede cargar")
+            else:
+                logger.info("ℹ️ Reinforcement Learning no encontrado - se entrenará cuando sea necesario")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Error cargando RL: {e}")
+        
+        # Resultado final
+        if models_loaded > 0:
+            logger.info(f"✅ Carga automática completada: {models_loaded} modelos ML cargados")
+            return True
+        else:
+            logger.info("ℹ️ No hay modelos ML pre-entrenados - usando modelos base")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error en carga automática de modelos: {e}")
+        return False
+
+
 # Instancia global del ensemble
 advanced_ensemble = EnsembleModel()
