@@ -10,7 +10,7 @@ from .config import settings
 from .data import fetch_bars, fetch_all_bars
 from .features import make_features
 from .strategy import load_trading_model, hybrid_signal
-from .advanced_ml import auto_load_ml_models
+from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
 from .execution import place_order, close_position
 from .state import BotState
@@ -415,6 +415,16 @@ def main():
     except Exception as e:
         logger.error(f"❌ No se pudo cargar el modelo: {e}")
         return
+    
+    # Cargar parámetros optimizados por Optuna
+    try:
+        optimized_params = load_optimized_params()
+        if optimized_params:
+            logger.info("🎯 Parámetros optimizados por Optuna aplicados")
+        else:
+            logger.info("ℹ️ Usando parámetros por defecto")
+    except Exception as e:
+        logger.warning(f"⚠️ Error cargando parámetros optimizados: {e}")
     
     # Cargar modelos ML avanzados automáticamente
     try:

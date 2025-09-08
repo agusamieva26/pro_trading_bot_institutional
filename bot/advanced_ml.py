@@ -513,6 +513,38 @@ class EnsembleModel:
             logger.error(f"❌ Error guardando ensemble: {e}")
 
 
+def load_optimized_params():
+    """
+    Carga parámetros optimizados por Optuna si existen.
+    """
+    try:
+        from pathlib import Path
+        import joblib
+        
+        results_dir = Path("optimization_results")
+        params_file = results_dir / "best_params.pkl"
+        
+        if params_file.exists():
+            optimized_params = joblib.load(params_file)
+            logger.info("✅ Parámetros optimizados cargados de Optuna")
+            
+            # Mostrar algunos parámetros clave
+            ml_weight = optimized_params.get('ml_weight', 0.4)
+            ensemble_rf_weight = optimized_params.get('ensemble_rf_weight', 0.5)
+            
+            logger.info(f"   • ML Weight: {ml_weight:.3f}")
+            logger.info(f"   • RF Weight: {ensemble_rf_weight:.3f}")
+            
+            return optimized_params
+        else:
+            logger.info("ℹ️ No hay parámetros optimizados - usando valores por defecto")
+            return {}
+            
+    except Exception as e:
+        logger.warning(f"⚠️ Error cargando parámetros optimizados: {e}")
+        return {}
+
+
 def auto_load_ml_models(model_dir: str = "models"):
     """
     Carga automáticamente todos los modelos ML disponibles al arrancar el bot.
