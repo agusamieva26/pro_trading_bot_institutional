@@ -16,11 +16,11 @@ class Settings(BaseModel):
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
     bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","5Min"))  # SCALPING
     initial_equity: float = 30000.0  # Valor fijo
-    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.008")))  # SCALPING: Mayor riesgo
+    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.005")))  # OPTUNA OPTIMIZED: 0.5%
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","4.0")))  # SCALPING: Mayor tolerancia diaria
     max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))  # SCALPING: Exposición moderada pero funcional
-    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.005")))  # SCALPING: 0.5%
-    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.003")))  # SCALPING: 0.3%
+    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.05")))  # OPTUNA OPTIMIZED: 5%
+    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.01")))  # OPTUNA OPTIMIZED: 1%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.002")))  # SCALPING: 0.2%
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
@@ -32,4 +32,11 @@ class Settings(BaseModel):
         env_file_encoding = "utf-8"
 
 settings = Settings()
+
+# Aplicar configuración optimizada por Optuna
+try:
+    from .optuna_config import apply_optimized_config
+    settings = apply_optimized_config(settings)
+except ImportError:
+    pass  # Si no existe optuna_config, usar valores por defecto
 
