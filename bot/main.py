@@ -1,6 +1,7 @@
 # bot/main.py
 import logging
 import time
+import pandas as pd
 from tenacity import retry, wait_exponential, stop_after_attempt
 from alpaca.trading.client import TradingClient
 
