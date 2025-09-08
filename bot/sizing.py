@@ -18,7 +18,8 @@ def volatility_target_size(
         return 0.0
 
     risk_per_trade = risk_per_trade or settings.risk_per_trade
-    capital_at_risk = equity * risk_per_trade
+    # Usar un factor más conservador para evitar órdenes demasiado grandes
+    capital_at_risk = equity * risk_per_trade * 0.25  # 25% del riesgo normal
     risk_per_unit = atr  # riesgo por unidad en USD
 
     units = capital_at_risk / risk_per_unit

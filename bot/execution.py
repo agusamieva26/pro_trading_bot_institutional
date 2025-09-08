@@ -76,11 +76,13 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
             )
         else:
             # Use quantity for crypto and whole shares
+            # Crypto no soporta DAY time_in_force, usar GTC en su lugar
+            tif = TimeInForce.GTC if is_crypto else TimeInForce.DAY
             order_request = MarketOrderRequest(
                 symbol=api_symbol,
                 qty=float(qty),
                 side=order_side,
-                time_in_force=TimeInForce.DAY
+                time_in_force=tif
             )
             
         # Submit order

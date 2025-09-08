@@ -121,7 +121,7 @@ def run_once(state: BotState, clf):
 
     if "BTC/USD" in settings.symbols:
         try:
-            df = fetch_bars("BTC/USD", start="2023-01-01")
+            df = fetch_bars("BTC/USD", start=None, end=None, min_bars=50)  # Solo mínimo necesario
             if not df.empty and len(df) >= 100:
                 feats = make_features(df)
                 latest = feats.iloc[-1]
@@ -200,7 +200,7 @@ def run_once(state: BotState, clf):
             logger.info(f"📊 ({i}/{len(symbols_batch)}) {symbol}...")
             
             # ⚡ Optimización: menos datos históricos para scalping
-            df = fetch_bars(symbol, start="2024-01-01")  # Solo 2024 vs 2023
+            df = fetch_bars(symbol, start=None, end=None, min_bars=50)  # Solo mínimo necesario
             if df.empty or len(df) < 50:  # Menos requisito de datos
                 logger.warning(f"⚠️ {symbol}: Sin datos")
                 continue

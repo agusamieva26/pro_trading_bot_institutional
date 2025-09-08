@@ -44,10 +44,14 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
     Descarga barras desde Alpaca. Si hay pocas, retrocede más en el tiempo automáticamente.
     Compatible con acciones y criptos.
     """
-    lookback_days = 365
+    lookback_days = 30  # Solo último mes para velocidad
     bars = pd.DataFrame()
 
-    while True:
+    max_attempts = 3  # Limite de intentos para evitar loop infinito
+    attempt = 0
+    
+    while attempt < max_attempts:
+        attempt += 1
         start_dt = pd.Timestamp(start, tz="UTC") if start else (pd.Timestamp.utcnow() - pd.Timedelta(days=lookback_days))
         end_dt   = pd.Timestamp(end, tz="UTC") if end else (pd.Timestamp.utcnow() - pd.Timedelta(minutes=16))
 
@@ -87,13 +91,17 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
             logger.exception(f"💥 Error construyendo petición de datos ({symbol}): {e}")
             return pd.DataFrame()
 
-        if len(bars) >= min_bars or lookback_days > 3650:
+        if len(bars) >= min_bars or lookback_days > 3650 or attempt >= max_attempts:
             if len(bars) < min_bars:
                 logger.warning(f"⚠️ Solo {len(bars)} velas para {symbol}, por debajo del mínimo {min_bars}.")
             return bars
         else:
-            logger.info(f"🔍 Solo {len(bars)} velas para {symbol}, retrocediendo más...")
+            logger.info(f"🔍 Solo {len(bars)} velas para {symbol}, retrocediendo más... (intento {attempt}/{max_attempts})")
             lookback_days *= 2
+    
+    # Si llegamos aquí, se agotaron los intentos
+    logger.warning(f"⚠️ Máximo de intentos alcanzado para {symbol}, devolviendo datos disponibles")
+    return bars
 
 # ------------------------------------------------------------------
 # Wrapper para obtener las últimas n barras (para alertas)
