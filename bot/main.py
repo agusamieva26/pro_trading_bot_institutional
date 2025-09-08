@@ -17,6 +17,7 @@ from .exposure import get_total_exposure
 from .telegram import alert_risk_stop, alert_error
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
+from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
 from .util import logger
 
 
@@ -39,6 +40,18 @@ def _get_position(symbol: str):
     client = _client()
     try:
         return client.get_open_position(symbol.replace("/", ""))
+    except Exception:
+        return None
+
+def _get_position_cached(symbol: str, client):
+    """Obtener posición usando cache de posiciones para mejor rendimiento."""
+    try:
+        positions = get_cached_positions(client)  # 🚀 CACHE INTELIGENTE
+        symbol_normalized = symbol.replace("/", "")
+        for pos in positions:
+            if pos.symbol == symbol_normalized:
+                return pos
+        return None
     except Exception:
         return None
 
@@ -175,7 +188,7 @@ def run_once(state: BotState, clf):
     # Si tomamos profits, tendremos más cash disponible para otros activos
     btc_position_value = 0
     try:
-        positions = client.get_all_positions()
+        positions = get_cached_positions(client)  # 🚀 CACHE INTELIGENTE
         for pos in positions:
             if pos.symbol == "BTCUSD":
                 btc_position_value = abs(float(pos.market_value))
@@ -199,53 +212,18 @@ def run_once(state: BotState, clf):
     logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales")
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
-    # ⚡ OPTIMIZACIÓN PARALELA: Descargar todos los datos en paralelo primero
+    # 🚀 ANÁLISIS PARALELO ULTRA-RÁPIDO: Descarga + análisis simultáneo
     symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
-    logger.info(f"⚡ Modo scalping: analizando primeros {len(symbols_batch)} de {len(other_symbols)} activos")
+    logger.info(f"⚡ Análisis paralelo ultra-rápido: procesando {len(symbols_batch)} de {len(other_symbols)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
     all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
     
-    # 🧠 PROCESAMIENTO: analizar cada símbolo con datos ya descargados
-    for i, symbol in enumerate(symbols_batch, 1):
-        try:
-            logger.info(f"📊 ({i}/{len(symbols_batch)}) {symbol}...")
-            
-            # Obtener datos de la descarga paralela
-            df = all_data.get(symbol, pd.DataFrame())
-            if df.empty or len(df) < 50:
-                logger.warning(f"⚠️ {symbol}: Sin datos")
-                continue
-                
-            feats = make_features(df)
-            latest = feats.iloc[-1]
-
-            sig = hybrid_signal(latest, clf)
-            
-            # 📊 MOSTRAR SCORE COMPLETO SIEMPRE
-            score_status = "🟢 FUERTE" if abs(sig) >= 0.2 else "🟡 MODERADA" if abs(sig) >= 0.1 else "🔴 DÉBIL"
-            signal_direction = "🔺 ALCISTA" if sig > 0 else "🔻 BAJISTA" if sig < 0 else "➡️ NEUTRAL"
-            
-            logger.info(f"📊 {symbol}: SCORE={sig:+.3f} ({score_status} {signal_direction}) @ ${latest['close']:.2f}")
-            
-            # ⚡ Solo procesar señales fuertes (>0.1) para scalping
-            if abs(sig) < 0.1:
-                logger.info(f"⚠️ {symbol}: Score débil, no se opera")
-                continue
-
-            signals.append({
-                "symbol": symbol,
-                "signal": sig,
-                "features": latest,
-                "price": float(latest["close"]),
-                "atr": float(latest["atr_14"])
-            })
-            logger.info(f"✅ {symbol}: INCLUIDO para trading")
-            
-        except Exception as e:
-            logger.warning(f"⚠️ {symbol}: {e}")
-
-    logger.info(f"⚡ Análisis rápido: {len(signals)}/{len(symbols_batch)} señales fuertes")
+    # 🧠 ANÁLISIS PARALELO COMPLETO: features + señales + scoring simultáneo
+    analysis_results = parallel_signal_analysis(all_data, clf, max_workers=6)
+    
+    # 📊 FILTRAR SEÑALES FUERTES
+    signals = filter_strong_signals(analysis_results, min_threshold=0.1)
 
     logger.info(f"📈 Total señales detectadas: {len(signals)} de {len(other_symbols)} activos")
 
@@ -287,7 +265,7 @@ def run_once(state: BotState, clf):
             continue
 
         is_crypto = _is_crypto(symbol)
-        pos = _get_position(symbol)
+        pos = _get_position_cached(symbol, client)  # 🚀 CACHE OPTIMIZADO
         if pos:
             current_qty = float(pos.qty)
             is_long = current_qty > 0
