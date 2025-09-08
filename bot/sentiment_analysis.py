@@ -6,7 +6,7 @@ Detecta extremos de mercado para optimizar entrada/salida de posiciones.
 import requests
 import pandas as pd
 import numpy as np
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from datetime import datetime, timedelta
 import json
 from .util import logger
