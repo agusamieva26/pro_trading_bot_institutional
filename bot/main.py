@@ -6,7 +6,7 @@ from alpaca.trading.client import TradingClient
 
 from .auto_tuner import tune_risk_parameters
 from .config import settings
-from .data import fetch_bars
+from .data import fetch_bars, fetch_all_bars
 from .features import make_features
 from .strategy import load_trading_model, hybrid_signal
 from .sizing import volatility_target_size, kelly_cap
@@ -191,17 +191,21 @@ def run_once(state: BotState, clf):
     logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales")
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} ({remaining_for_others:.1%})")
 
-    # ⚡ OPTIMIZACIÓN SCALPING: Procesar solo primeros 8 activos por iteración
+    # ⚡ OPTIMIZACIÓN PARALELA: Descargar todos los datos en paralelo primero
     symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
     logger.info(f"⚡ Modo scalping: analizando primeros {len(symbols_batch)} de {len(other_symbols)} activos")
-
+    
+    # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
+    all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
+    
+    # 🧠 PROCESAMIENTO: analizar cada símbolo con datos ya descargados
     for i, symbol in enumerate(symbols_batch, 1):
         try:
             logger.info(f"📊 ({i}/{len(symbols_batch)}) {symbol}...")
             
-            # ⚡ Optimización: menos datos históricos para scalping
-            df = fetch_bars(symbol, start=None, end=None, min_bars=50)  # Solo mínimo necesario
-            if df.empty or len(df) < 50:  # Menos requisito de datos
+            # Obtener datos de la descarga paralela
+            df = all_data.get(symbol, pd.DataFrame())
+            if df.empty or len(df) < 50:
                 logger.warning(f"⚠️ {symbol}: Sin datos")
                 continue
                 
