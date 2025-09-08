@@ -51,11 +51,13 @@ def run_once(state: BotState, clf):
     settings.risk_per_trade = auto_config["risk_per_trade"]
     settings.max_gross_exposure = auto_config["max_gross_exposure"]
 
-    # 1. Equity actual
+    # 1. Equity actual y cash disponible
     try:
         account = client.get_account()
         current_equity = float(account.equity)
+        available_cash = float(account.cash)
         state.state["equity"] = current_equity
+        logger.info(f"💵 Cash disponible al inicio: ${available_cash:,.2f}")
     except Exception as e:
         logger.error(f"❌ No se pudo obtener equity: {e}")
         return
@@ -97,13 +99,8 @@ def run_once(state: BotState, clf):
         logger.exception("💥 Error al verificar exposición")
         # ✅ NO return aquí - continuar con otros activos
 
-    # 4. Cash disponible
-    try:
-        available_cash = float(client.get_account().cash)
-        logger.info(f"💵 Cash disponible al inicio: ${available_cash:,.2f}")
-    except Exception as e:
-        logger.warning(f"⚠️ No se pudo obtener cash: {e}")
-        available_cash = 10000.0
+    # 4. Cash disponible (ya obtenido arriba)
+    # available_cash ya se obtuvo en el paso 1
 
     total_equity = current_equity
 
@@ -183,10 +180,10 @@ def run_once(state: BotState, clf):
     except:
         pass
     
-    # Calcular equity disponible para otros activos (más dinámico)
+    # Calcular cash disponible para otros activos (más realista)
     btc_percentage = btc_position_value / total_equity if total_equity > 0 else 0
     remaining_for_others = max(0.30, 1.0 - btc_percentage)  # Mínimo 30% para otros
-    equity_for_rest = total_equity * remaining_for_others
+    equity_for_rest = min(available_cash * 0.9, total_equity * remaining_for_others)  # Usar cash real, no equity
     
     other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
     signals = []

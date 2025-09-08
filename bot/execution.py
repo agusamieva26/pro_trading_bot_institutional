@@ -46,12 +46,15 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
         api_symbol = symbol.replace("/", "")
         
         # Calculate notional value needed
-        notional_value = qty * price if price else 0
+        if price is None:
+            logger.error(f"❌ Price not provided for {symbol}")
+            return False
+        notional_value = qty * price
         
         # Check available cash before placing order
         available_cash, total_cash = get_available_cash()
         
-        if side.lower() == "buy" and notional_value > available_cash:
+        if side.lower() == "buy" and price and notional_value > available_cash:
             logger.warning(f"⚠️ Saldo real insuficiente: necesitas ${notional_value:.2f}, solo tienes ${available_cash:.2f} (reservado: {_reserved_cash}). Skip {symbol}.")
             return False
             
@@ -75,7 +78,7 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
             # Use quantity for crypto and whole shares
             order_request = MarketOrderRequest(
                 symbol=api_symbol,
-                qty=qty,
+                qty=float(qty),
                 side=order_side,
                 time_in_force=TimeInForce.DAY
             )
@@ -112,7 +115,7 @@ def close_position(symbol: str):
                 logger.info(f"ℹ️ No hay posición abierta para {symbol}")
                 return True
                 
-            qty = float(position.qty)
+            qty = float(str(position.qty))
             side = "sell" if qty > 0 else "buy"
             abs_qty = abs(qty)
             
