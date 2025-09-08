@@ -183,10 +183,15 @@ def run_once(state: BotState, clf):
     except:
         pass
     
-    # Calcular cash disponible para otros activos (más realista)
+    # 🎯 DIVERSIFICACIÓN FORZADA: Reservar siempre mínimo 30% para otros activos
     btc_percentage = btc_position_value / total_equity if total_equity > 0 else 0
-    remaining_for_others = max(0.30, 1.0 - btc_percentage)  # Mínimo 30% para otros
-    equity_for_rest = min(available_cash * 0.9, total_equity * remaining_for_others)  # Usar cash real, no equity
+    min_reserved_for_others = total_equity * 0.30  # SIEMPRE 30% reservado para diversificación
+    max_btc_allowed = total_equity * 0.50  # BTC nunca más de 50% del portafolio
+    
+    # Cash real disponible para otros (sin confusión de 'reservado')
+    remaining_cash_after_btc = available_cash - (max_btc_allowed * 0.6)  # Reservar 60% del límite BTC
+    equity_for_rest = max(min_reserved_for_others, remaining_cash_after_btc)
+    equity_for_rest = min(equity_for_rest, available_cash * 0.75)  # Máximo 75% del cash disponible
     
     other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
     signals = []
@@ -261,9 +266,17 @@ def run_once(state: BotState, clf):
         
         logger.info(f"{direction_emoji} {direction} ({i}/{len(signals)}) {symbol}: score={sig:+.3f} ({signal_strength}) @ ${price:.2f}")
         
-        shares = volatility_target_size(equity_for_rest, price, atr)
-        frac_k = kelly_cap(0.5 + abs(sig)/2, cap=settings.risk_per_trade * 4)
-        leverage = max(min(abs(sig) + frac_k, 1.5), 0.1)
+        # 🎯 POSITION SIZING BALANCEADO: Para diversificación óptima
+        if abs(sig) >= 0.2:  # Señales fuertes
+            position_equity = equity_for_rest * 0.25  # 25% del disponible por señal fuerte
+        elif abs(sig) >= 0.15:  # Señales medias
+            position_equity = equity_for_rest * 0.15  # 15% del disponible por señal media
+        else:  # Señales débiles pero >0.1
+            position_equity = equity_for_rest * 0.08  # 8% del disponible por señal débil
+        
+        shares = volatility_target_size(position_equity, price, atr)
+        frac_k = kelly_cap(0.3 + abs(sig)/4, cap=settings.risk_per_trade * 2.5)  # Kelly conservador
+        leverage = max(min(abs(sig) * 0.8 + frac_k, 1.0), 0.05)  # Leverage máximo 1.0x
         qty = shares * leverage
         side = "buy" if sig > 0 else "sell"
         
