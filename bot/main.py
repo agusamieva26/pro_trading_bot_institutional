@@ -254,9 +254,10 @@ def run_once(state: BotState, clf):
         
         # 🎯 SCORE DETALLADO CON EVALUACIÓN
         signal_strength = "MÁXIMA" if abs(sig) >= 0.5 else "ALTA" if abs(sig) >= 0.3 else "MEDIA"
-        signal_emoji = "🚀" if sig >= 0.3 else "📈" if sig >= 0.1 else "📉" if sig <= -0.1 else "📊"
+        direction = "LONG" if sig > 0 else "SHORT"
+        direction_emoji = "📊" if sig > 0 else "📉"
         
-        logger.info(f"{signal_emoji} ({i}/{len(signals)}) {symbol}: SCORE={sig:+.3f} ({signal_strength}) @ ${price:.2f}")
+        logger.info(f"{direction_emoji} {direction} ({i}/{len(signals)}) {symbol}: score={sig:+.3f} ({signal_strength}) @ ${price:.2f}")
         
         shares = volatility_target_size(equity_for_rest, price, atr)
         frac_k = kelly_cap(0.5 + abs(sig)/2, cap=settings.risk_per_trade * 4)
@@ -279,27 +280,27 @@ def run_once(state: BotState, clf):
 
             if side == "buy":
                 if is_long:
-                    logger.info(f"🟢 Posición larga existente en {symbol}. Aumentando...")
+                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (aumentando posición)")
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
                 elif is_short:
-                    logger.info(f"🔄 Cerrando corto y abriendo largo en {symbol}")
+                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (cerrando short + abrir long)")
                     place_order(symbol, abs(current_qty), "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:
                     # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short
                     if is_long:
-                        logger.info(f"🔄 Señal bajista: cerrando posición larga en {symbol} (crypto no permite short)")
+                        logger.info(f"📉 CIERRE PARCIAL {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (crypto no permite short)")
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                     else:
-                        logger.info(f"⚠️ Señal bajista en {symbol} pero crypto no permite short. Skip.")
+                        logger.info(f"⚠️ {symbol}: Señal BAJISTA pero crypto no permite SHORT → SKIP")
                 else:
                     # ✅ ACCIONES: Permitir short normal
                     if is_short:
-                        logger.info(f"🔴 Posición corta existente en {symbol}. Aumentando...")
+                        logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (aumentando short)")
                         place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                     elif is_long:
-                        logger.info(f"🔄 Cerrando largo y abriendo corto en {symbol}")
+                        logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (cerrando long + abrir short)")
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                         place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
         else:
@@ -308,7 +309,8 @@ def run_once(state: BotState, clf):
                 logger.info(f"⚠️ {symbol}: Señal BAJISTA pero crypto no permite SHORT → SKIP")
             else:
                 action = "LONG" if side == "buy" else "SHORT"
-                logger.info(f"🚀 {symbol}: Abriendo {action} con qty={qty:.6f} @ ${price:.2f}")
+                action_emoji = "📊" if side == "buy" else "📉"
+                logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
                 place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres
