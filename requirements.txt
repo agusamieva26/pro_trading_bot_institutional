@@ -44,3 +44,4 @@ streamlit-autorefresh
 tabulate
 tenacity
 vectorbt
+tornado

@@ -16,19 +16,18 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Dashboard"
+args = "Trading Bot"
 
 [[workflows.workflow]]
-name = "Dashboard"
+name = "Trading Bot"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PYTHONPATH=. streamlit run dashboard.py --server.port 5000 --server.address 0.0.0.0 --server.headless true --server.enableCORS false"
-waitForPort = 5000
+args = "cd /home/runner/workspace && python run.py"
 
 [workflows.workflow.metadata]
-outputType = "webview"
+outputType = "console"
 
 [[ports]]
 localPort = 5000
