@@ -11,9 +11,9 @@ from bot.risk import compute_brackets
 from bot.util import logger
 
 
-# Configuración
-SYMBOLS = ["BTC/USD", "ETH/USD"]  # Añade más si quieres
-START_DATE = "2024-01-01"
+# Configuración optimizada para velocidad
+SYMBOLS = ["BTC/USD", "ETH/USD"]  # 2 símbolos principales  
+START_DATE = "2025-08-01"  # Solo último mes para rapidez
 INITIAL_CAPITAL = 100000.0
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -48,7 +48,7 @@ def run_backtest(params, symbol_data, model=None):
         feats["signal"] = feats.apply(lambda row: hybrid_signal(row, model), axis=1)
 
         logger.info(f"📊 {symbol}: empezando backtest con {len(feats)} velas")
-        for i in range(100, len(feats)):
+        for i in range(100, len(feats), 5):  # Procesar cada 5ta vela para velocidad
             latest = feats.iloc[i]
             price = float(latest["close"])
 
@@ -184,7 +184,7 @@ def objective(trial):
 if __name__ == "__main__":
     logger.info("🚀 Iniciando optimización de hiperparámetros con Optuna...")
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=50, show_progress_bar=True)
+    study.optimize(objective, n_trials=20, show_progress_bar=True)  # Reducido para velocidad
 
     best_params = study.best_params
     best_result = study.best_value
