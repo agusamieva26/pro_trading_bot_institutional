@@ -18,6 +18,12 @@ from .telegram import alert_risk_stop, alert_error
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
 from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
+from .multi_timeframe import enhance_signals_with_multi_tf
+from .risk_management_v2 import AdvancedRiskManager, analyze_risk_environment
+from .symbol_manager import symbol_manager
+from .sentiment_analysis import sentiment_integrator
+from .portfolio_rebalancer import portfolio_rebalancer
+from .dynamic_config import dynamic_config_manager
 from .util import logger
 
 
@@ -33,7 +39,7 @@ def _client():
 
 
 def _is_crypto(symbol: str) -> bool:
-    return "/" in symbol or (symbol.endswith("USD") and symbol.isupper() and len(symbol) > 3)
+    return symbol_manager.is_crypto(symbol)
 
 
 def _get_position(symbol: str):
@@ -60,10 +66,17 @@ def _get_position_cached(symbol: str, client):
 def run_once(state: BotState, clf):
     client = _client()
 
-    # 0. Auto-ajuste
-    auto_config = tune_risk_parameters()
-    settings.risk_per_trade = auto_config["risk_per_trade"]
-    settings.max_gross_exposure = auto_config["max_gross_exposure"]
+    # 0. Configuración Dinámica y Auto-ajuste
+    dynamic_config = dynamic_config_manager.get_current_config()
+    performance_metrics = dynamic_config_manager.analyze_recent_performance()
+    
+    # Aplicar configuración dinámica
+    settings.risk_per_trade = dynamic_config["risk_per_trade"]
+    settings.take_profit_pct = dynamic_config["take_profit_pct"] 
+    settings.stop_loss_pct = dynamic_config["stop_loss_pct"]
+    settings.max_gross_exposure = dynamic_config["max_gross_exposure"]
+    
+    logger.debug(f"🔧 Config dinámico: risk={settings.risk_per_trade:.3f}, tp={settings.take_profit_pct:.3f}, sl={settings.stop_loss_pct:.3f}")
 
     # 1. Equity actual y cash disponible
     try:
@@ -219,11 +232,31 @@ def run_once(state: BotState, clf):
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
     all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
     
+    # 🌍 ANÁLISIS DE ENTORNO DE RIESGO: Detectar regímenes de mercado
+    risk_environment = analyze_risk_environment(all_data)
+    market_condition = risk_environment.get("market_condition", "NORMAL")
+    
     # 🧠 ANÁLISIS PARALELO COMPLETO: features + señales + scoring simultáneo
     analysis_results = parallel_signal_analysis(all_data, clf, max_workers=6)
     
     # 📊 FILTRAR SEÑALES FUERTES
-    signals = filter_strong_signals(analysis_results, min_threshold=0.1)
+    base_signals = filter_strong_signals(analysis_results, min_threshold=0.1)
+    
+    # 🕐 MEJORA MULTI-TIMEFRAME: Confirmar señales con múltiples marcos temporales
+    mtf_enhanced_signals = enhance_signals_with_multi_tf(base_signals, clf)
+    
+    # 📊 INTEGRACIÓN DE SENTIMENT: Ajustar por Fear & Greed Index
+    sentiment_enhanced_signals = sentiment_integrator.enhance_signals_with_sentiment(mtf_enhanced_signals)
+    
+    # 🔄 REBALANCEO DE PORTFOLIO: Ajustar por diversificación
+    portfolio_analysis = portfolio_rebalancer.analyze_current_portfolio(
+        [{'symbol': pos.symbol, 'market_value': pos.market_value} for pos in get_cached_positions(client)]
+    )
+    signals = portfolio_rebalancer.apply_rebalancing_to_signals(sentiment_enhanced_signals, portfolio_analysis)
+    
+    # 🛡️ CONFIGURACIÓN DINÁMICA: Adaptar a condiciones de mercado
+    sentiment_level = sentiment_enhanced_signals[0].get('sentiment_level', 'neutral') if sentiment_enhanced_signals else 'neutral'
+    dynamic_config_manager.adapt_to_market_conditions(market_condition, sentiment_level)
 
     logger.info(f"📈 Total señales detectadas: {len(signals)} de {len(other_symbols)} activos")
 
@@ -252,10 +285,31 @@ def run_once(state: BotState, clf):
         else:  # Señales débiles pero >0.1
             position_equity = equity_for_rest * 0.08  # 8% del disponible por señal débil
         
-        shares = volatility_target_size(position_equity, price, atr)
-        frac_k = kelly_cap(0.3 + abs(sig)/4, cap=settings.risk_per_trade * 2.5)  # Kelly conservador
-        leverage = max(min(abs(sig) * 0.8 + frac_k, 1.0), 0.05)  # Leverage máximo 1.0x
+        # 🛡️ RISK MANAGEMENT 2.0: Cálculo avanzado con regímenes de mercado
+        risk_manager = AdvancedRiskManager()
+        symbol_regime = risk_environment["symbol_regimes"].get(symbol, {"regime": "neutral", "confidence": 0.5})
+        symbol_vol = risk_environment["symbol_vol_conditions"].get(symbol, {"vol_regime": "normal", "vol_ratio": 1.0})
+        
+        # Calcular position size optimizado
+        advanced_sizing = risk_manager.calculate_position_size_v2(
+            equity=position_equity, price=price, atr=atr, signal_strength=sig,
+            market_regime=symbol_regime, vol_clustering=symbol_vol
+        )
+        
+        # Calcular stops dinámicos
+        dynamic_stops = risk_manager.calculate_dynamic_stops(
+            symbol=symbol, price=price, atr=atr, signal_strength=sig,
+            market_regime=symbol_regime, vol_clustering=symbol_vol
+        )
+        
+        # Usar sizing avanzado
+        shares = advanced_sizing["shares"]
+        leverage = max(min(abs(sig) * 0.8 + advanced_sizing["adjusted_risk_pct"] * 10, 1.0), 0.05)
         qty = shares * leverage
+        
+        # Actualizar stops dinámicos
+        settings.stop_loss_pct = dynamic_stops["stop_loss_pct"]
+        settings.take_profit_pct = dynamic_stops["take_profit_pct"]
         side = "buy" if sig > 0 else "sell"
         
         logger.info(f"💰 {symbol}: qty={qty:.6f} side={side} (leverage={leverage:.2f}x, shares={shares:.6f})")
