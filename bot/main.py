@@ -116,9 +116,10 @@ def run_once(state: BotState, clf):
         available_cash = float(account.cash)
         logger.info(f"📊 Equity actualizado: ${total_equity:,.2f}, Cash: ${available_cash:,.2f}")
 
-    # --- 6. BTC/USD (máximo 70% con profit-taking) ---
-    btc_allocation = min(0.50, 0.70 * total_equity / max(total_equity, 1.0))  # Máximo 50% normal, 70% límite
-    equity_for_btc = total_equity * btc_allocation
+    # --- 6. BTC/USD DIVERSIFICADO (máximo 40% para balance) ---
+    btc_max_allocation = 0.40  # Máximo 40% del equity total
+    btc_max_cash = min(total_equity * btc_max_allocation, available_cash * 0.6)  # Máx 60% del cash disponible
+    equity_for_btc = btc_max_cash
 
     if "BTC/USD" in settings.symbols:
         try:
@@ -137,9 +138,10 @@ def run_once(state: BotState, clf):
                     qty = shares * leverage
                     side = "buy" if sig > 0 else "sell"
 
-                    # 🔥 Límite: no usar más del 90% del cash disponible
-                    max_qty_by_cash = (available_cash * 0.9) / price
-                    qty = min(qty, max_qty_by_cash)
+                    # 🎯 LÍMITE INTELIGENTE: máximo 40% del equity o 60% del cash disponible
+                    max_qty_by_equity = (total_equity * 0.40) / price  # 40% del equity total
+                    max_qty_by_cash = (available_cash * 0.60) / price  # 60% del cash disponible
+                    qty = min(qty, max_qty_by_equity, max_qty_by_cash)
 
                     if qty >= 1e-6:
                         is_crypto = True
