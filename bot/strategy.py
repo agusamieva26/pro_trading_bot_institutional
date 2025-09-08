@@ -87,10 +87,10 @@ def train_model(df: pd.DataFrame):
 
 
 def load_trading_model():
+    """Carga el modelo desde disco."""
     global _trading_model_instance
     if _trading_model_instance is not None:
         return _trading_model_instance
-    """Carga el modelo desde disco."""
     if not os.path.exists(settings.model_path):
         logger.warning(f"⚠️ No se encontró el modelo en {settings.model_path}")
         return None
