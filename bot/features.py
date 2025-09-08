@@ -30,4 +30,9 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     out["macd"], out["macd_sig"], out["macd_hist"] = m, s, h
     out["atr_14"] = atr(out, 14)
     out["vol_roll"] = out["ret_1"].rolling(24).std() * (24**0.5)
+    
+    # Añadir features de Fibonacci
+    from .strategy import add_fibonacci_features
+    out = add_fibonacci_features(out)
+    
     return out.dropna()

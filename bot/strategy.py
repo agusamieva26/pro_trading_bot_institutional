@@ -10,16 +10,128 @@ from .features import make_features
 from .config import settings
 _trading_model_instance = None
 
+# =========================
+# 📊 Análisis de Fibonacci
+# =========================
+
+def calculate_fibonacci_levels(df, period=50):
+    """
+    Calcula niveles de retracción de Fibonacci basados en los últimos 'period' períodos.
+    Retorna dict con niveles de soporte y resistencia.
+    """
+    if len(df) < period:
+        return {'support': 0, 'resistance': 0, 'trend': 0}
+    
+    # Obtener high y low del período
+    recent_data = df.tail(period)
+    high_price = recent_data['high'].max()
+    low_price = recent_data['low'].min()
+    current_price = df['close'].iloc[-1]
+    
+    # Niveles de Fibonacci clásicos
+    price_range = high_price - low_price
+    if price_range == 0:
+        return {'support': 0, 'resistance': 0, 'trend': 0}
+    
+    # Niveles de retracimiento más importantes
+    fib_levels = {
+        'level_236': high_price - (price_range * 0.236),
+        'level_382': high_price - (price_range * 0.382), 
+        'level_500': high_price - (price_range * 0.500),
+        'level_618': high_price - (price_range * 0.618),
+        'level_786': high_price - (price_range * 0.786)
+    }
+    
+    # Determinar soporte y resistencia más cercanos
+    levels_array = list(fib_levels.values())
+    levels_array.extend([high_price, low_price])
+    levels_array.sort()
+    
+    # Encontrar el nivel de soporte (por debajo del precio actual)
+    support_level = low_price
+    for level in levels_array:
+        if level < current_price:
+            support_level = level
+        else:
+            break
+    
+    # Encontrar el nivel de resistencia (por encima del precio actual) 
+    resistance_level = high_price
+    for level in reversed(levels_array):
+        if level > current_price:
+            resistance_level = level
+        else:
+            break
+    
+    # Calcular señales normalizadas
+    # Distancia al soporte (positivo si está cerca del soporte)
+    support_signal = max(0, 1 - (current_price - support_level) / price_range) if price_range > 0 else 0
+    
+    # Distancia a la resistencia (negativo si está cerca de la resistencia)
+    resistance_signal = max(0, 1 - (resistance_level - current_price) / price_range) if price_range > 0 else 0
+    
+    # Tendencia general basada en posición en el rango Fibonacci
+    position_in_range = (current_price - low_price) / price_range if price_range > 0 else 0.5
+    
+    # Señal de tendencia: +1 si está en zona alta (>0.618), -1 si está en zona baja (<0.382)
+    if position_in_range > 0.618:
+        trend_signal = (position_in_range - 0.618) / 0.382  # Normalizado 0-1
+    elif position_in_range < 0.382:
+        trend_signal = -(0.382 - position_in_range) / 0.382  # Normalizado 0 a -1
+    else:
+        trend_signal = 0  # Zona neutral
+    
+    return {
+        'support': float(np.clip(support_signal, 0, 1)),
+        'resistance': float(np.clip(-resistance_signal, -1, 0)),  # Negativo para resistencia
+        'trend': float(np.clip(trend_signal, -1, 1))
+    }
+
+def add_fibonacci_features(df):
+    """
+    Añade features de Fibonacci al DataFrame.
+    """
+    if len(df) < 50:
+        df['fib_support'] = 0.0
+        df['fib_resistance'] = 0.0  
+        df['fib_trend'] = 0.0
+        return df
+    
+    # Calcular niveles para cada fila (usando ventana móvil)
+    fib_support = []
+    fib_resistance = []
+    fib_trend = []
+    
+    for i in range(len(df)):
+        if i < 49:  # No hay suficientes datos
+            fib_support.append(0.0)
+            fib_resistance.append(0.0)
+            fib_trend.append(0.0)
+        else:
+            # Usar los últimos 50 períodos hasta la fila actual
+            subset = df.iloc[max(0, i-49):i+1]
+            fib_data = calculate_fibonacci_levels(subset)
+            fib_support.append(fib_data['support'])
+            fib_resistance.append(fib_data['resistance']) 
+            fib_trend.append(fib_data['trend'])
+    
+    df['fib_support'] = fib_support
+    df['fib_resistance'] = fib_resistance
+    df['fib_trend'] = fib_trend
+    
+    return df
+
 # Lista de features que el modelo espera (deben coincidir con make_features)
 FEATURES = [
     "ret_1", "ema_12", "ema_26", "rsi_14",
-    "macd", "macd_sig", "macd_hist", "atr_14", "vol_roll"
+    "macd", "macd_sig", "macd_hist", "atr_14", "vol_roll",
+    "fib_support", "fib_resistance", "fib_trend"
 ]
 
 
 def rule_signal(row):
     """
-    Señal basada en cruce de EMA + RSI + volatilidad.
+    Señal basada en cruce de EMA + RSI + volatilidad + Fibonacci.
     Devuelve una señal entre -1.0 y +1.0 (no binaria).
     """
     # Tendencia
@@ -36,8 +148,22 @@ def rule_signal(row):
     # Confirmación de precio
     price_momentum = 1.0 if row["close"] > row["ema_26"] else -1.0
     
-    # Combinar señales con pesos
-    signal = 0.5 * ema_trend + 0.3 * rsi_signal + 0.2 * price_momentum
+    # Señales de Fibonacci (si están disponibles)
+    fib_signal = 0.0
+    if 'fib_support' in row and 'fib_resistance' in row and 'fib_trend' in row:
+        # Cerca del soporte = señal alcista
+        # Cerca de resistencia = señal bajista  
+        # Tendencia Fibonacci refuerza la dirección
+        fib_signal = (row['fib_support'] * 1.5 +  # Soporte es bullish
+                     row['fib_resistance'] * 1.5 +  # Resistencia es bearish (ya es negativo)
+                     row['fib_trend'] * 0.8)  # Tendencia general
+        fib_signal = np.clip(fib_signal, -1.0, 1.0)
+    
+    # Combinar señales con pesos (reducir peso tradicional para dar espacio a Fibonacci)
+    signal = (0.35 * ema_trend + 
+              0.25 * rsi_signal + 
+              0.15 * price_momentum +
+              0.25 * fib_signal)  # 25% peso para Fibonacci
     
     # Ajustar por volatilidad: menos confianza si ATR es alto
     atr_ratio = row["atr_14"] / row["close"]
@@ -130,7 +256,7 @@ def hybrid_signal(features, model=None):
     try:
         # Preparar input
         if isinstance(features, pd.Series):
-            X = pd.DataFrame([features[FEATURES].values], columns=FEATURES)
+            X = pd.DataFrame([features[FEATURES]], columns=FEATURES)
         elif isinstance(features, dict):
             X = pd.DataFrame([features], columns=FEATURES)
         elif isinstance(features, pd.DataFrame):
@@ -139,7 +265,7 @@ def hybrid_signal(features, model=None):
             logger.error(f"❌ Tipo no soportado: {type(features)}")
             return 0.0
 
-        if X.isna().any().any():
+        if X.isna().any(axis=1).any():
             logger.warning("⚠️ Input contiene NaN. Usando solo reglas.")
             return rule_signal(features)
 
