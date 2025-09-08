@@ -24,6 +24,8 @@ from .symbol_manager import symbol_manager
 from .sentiment_analysis import sentiment_integrator
 from .portfolio_rebalancer import portfolio_rebalancer
 from .dynamic_config import dynamic_config_manager
+from .model_selection import advanced_model_selector
+from .advanced_features import advanced_feature_generator
 from .util import logger
 
 
@@ -236,6 +238,11 @@ def run_once(state: BotState, clf):
     risk_environment = analyze_risk_environment(all_data)
     market_condition = risk_environment.get("market_condition", "NORMAL")
     
+    # 🤖 ADVANCED ML: Selección automática del mejor modelo
+    model_comparison = advanced_model_selector.run_model_comparison(
+        pd.concat([data for data in all_data.values()]) if all_data else pd.DataFrame()
+    )
+    
     # 🧠 ANÁLISIS PARALELO COMPLETO: features + señales + scoring simultáneo
     analysis_results = parallel_signal_analysis(all_data, clf, max_workers=6)
     
@@ -301,6 +308,22 @@ def run_once(state: BotState, clf):
             symbol=symbol, price=price, atr=atr, signal_strength=sig,
             market_regime=symbol_regime, vol_clustering=symbol_vol
         )
+        
+        # 🤖 ADVANCED ML PREDICTION: Combinar con modelo óptimo
+        try:
+            if symbol in all_data:
+                symbol_data = all_data[symbol]
+                ml_prediction, best_model, ml_confidence = advanced_model_selector.get_optimal_prediction(symbol_data)
+                
+                # Combinar señal tradicional con ML avanzado
+                combined_signal = (sig * 0.6) + (ml_prediction * 0.4)  # 60% tradicional, 40% ML avanzado
+                
+                logger.debug(f"🤖 {symbol}: ML={ml_prediction:+.3f} ({best_model}, conf={ml_confidence:.2f}) → Combined={combined_signal:+.3f}")
+                
+                # Usar señal combinada
+                sig = combined_signal
+        except Exception as e:
+            logger.debug(f"⚠️ Error en predicción ML para {symbol}: {e}")
         
         # Usar sizing avanzado
         shares = advanced_sizing["shares"]

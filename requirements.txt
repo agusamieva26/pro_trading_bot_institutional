@@ -45,3 +45,5 @@ tabulate
 tenacity
 vectorbt
 tornado
+tensorflow
+xgboost
