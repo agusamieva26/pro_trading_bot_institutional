@@ -197,7 +197,7 @@ def run_once(state: BotState, clf):
     signals = []
     
     logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales")
-    logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} ({remaining_for_others:.1%})")
+    logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
     # ⚡ OPTIMIZACIÓN PARALELA: Descargar todos los datos en paralelo primero
     symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
