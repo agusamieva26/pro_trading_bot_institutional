@@ -20,7 +20,7 @@ args = "Trading Bot"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Optuna Optimization"
+args = "Optuna Fast"
 
 [[workflows.workflow]]
 name = "Trading Bot"
@@ -34,12 +34,12 @@ task = "shell.exec"
 args = "cd /home/runner/workspace && python run.py"
 
 [[workflows.workflow]]
-name = "Optuna Optimization"
+name = "Optuna Fast"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd /home/runner/workspace && PYTHONPATH=. python scripts/backtest_optuna.py"
+args = "cd /home/runner/workspace && python scripts/optuna_fast.py"
 
 [workflows.workflow.metadata]
 outputType = "console"
