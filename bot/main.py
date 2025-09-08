@@ -157,9 +157,10 @@ def run_once(state: BotState, clf):
                                 place_order("BTC/USD", abs(current_qty), "buy", price, fractional=False, is_crypto=is_crypto)
                                 place_order("BTC/USD", qty, "buy", price, fractional=False, is_crypto=is_crypto)
                             elif side == "sell" and current_qty > 0:
-                                # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short
-                                logger.info("🔄 Señal bajista: cerrando posición larga en BTC/USD (crypto no permite short)")
-                                place_order("BTC/USD", abs(current_qty), "sell", price, fractional=False, is_crypto=is_crypto)
+                                # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short (ARREGLADO SALDO)
+                                safe_qty = abs(current_qty) * 0.95  # 95% para evitar errores de saldo
+                                logger.info(f"🔄 Señal bajista: cerrando posición larga en BTC/USD ({safe_qty:.6f} de {abs(current_qty):.6f})")
+                                place_order("BTC/USD", safe_qty, "sell", price, fractional=True, is_crypto=is_crypto)
                         else:
                             # ✅ CRYPTO: Solo abrir posición si es LONG (buy)
                             if side == "buy":

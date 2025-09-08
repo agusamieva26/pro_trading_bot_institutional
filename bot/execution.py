@@ -159,19 +159,42 @@ def close_position(symbol: str, side: str = None, position_obj=None):
             return
 
     try:
-        # 🔒 cerrar posición con Alpaca
-        client.close_position(base_symbol)
+        # ✅ ARREGLO: Para crypto, usar 95% de la cantidad disponible
+        is_crypto = _is_crypto(symbol)
+        if is_crypto:
+            # Para crypto, vender manualmente con cantidad segura
+            safe_qty = abs(qty) * 0.95  # Usar 95% para evitar errores de saldo
+            logger.info(f"🔒 Cerrando posición crypto {base_symbol}: vendiendo {safe_qty:.6f} de {abs(qty):.6f}")
+            
+            # Obtener precio actual
+            try:
+                from .data import fetch_last_bars
+                df = fetch_last_bars(symbol, n=1)
+                if not df.empty:
+                    current_price = float(df["close"].iloc[-1])
+                    place_order(symbol, safe_qty, "sell", current_price, fractional=True, is_crypto=True)
+                    exit_price = current_price
+                else:
+                    logger.warning(f"⚠️ No hay precio disponible para {symbol}")
+                    return
+            except Exception as e:
+                logger.error(f"❌ Error obteniendo precio para {symbol}: {e}")
+                return
+        else:
+            # Para acciones, usar método nativo de Alpaca
+            client.close_position(base_symbol)
+            
+            # 📩 Intentar estimar precio de salida
+            exit_price = 0.0
+            try:
+                from .data import fetch_last_bars
+                df = fetch_last_bars(base_symbol, n=1)
+                if not df.empty:
+                    exit_price = float(df["close"].iloc[-1])
+            except Exception:
+                logger.warning(f"⚠️ No se pudo obtener precio de salida para {base_symbol}")
+        
         logger.info(f"✅ Posición cerrada: {base_symbol}")
-
-        # 📩 Intentar estimar precio de salida
-        exit_price = 0.0
-        try:
-            from .data import fetch_last_bars
-            df = fetch_last_bars(base_symbol, n=1)
-            if not df.empty:
-                exit_price = float(df["close"].iloc[-1])
-        except Exception:
-            logger.warning(f"⚠️ No se pudo obtener precio de salida para {base_symbol}")
 
         # 🚀 Enviar alerta a Telegram
         try:
@@ -283,10 +306,14 @@ def allocate_and_place_orders(predictions: dict):
                 try:
                     position = client.get_position(base_symbol)
                     current_qty = float(position.qty)
-                    qty_to_sell = current_qty * weight
+                    
+                    # ✅ ARREGLO: Usar 95% de la cantidad disponible para evitar errores de saldo
+                    available_qty = current_qty * 0.95
+                    qty_to_sell = min(available_qty, current_qty * weight)
+                    
                     if qty_to_sell < 1e-6:
                         continue
-                    logger.info(f"📊 CIERRE PARCIAL {sym} (cripto): qty={qty_to_sell:.6f}")
+                    logger.info(f"📊 CIERRE PARCIAL {sym} (cripto): qty={qty_to_sell:.6f} de {current_qty:.6f} disponible")
                     place_order(sym, qty_to_sell, "sell", price, fractional=True, is_crypto=True)
                     try:
                         alert_trade_exit(sym, "flat", qty_to_sell, price, 0.0, 0.0)
