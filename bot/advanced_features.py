@@ -543,7 +543,7 @@ class AdvancedFeatureGenerator:
         """Limpia y normaliza features."""
         
         # Llenar NaN values
-        df = df.fillna(method='forward').fillna(method='backward').fillna(0)
+        df = df.fillna(method='ffill').fillna(method='bfill').fillna(0)
         
         # Remover infinitos
         df = df.replace([np.inf, -np.inf], 0)
