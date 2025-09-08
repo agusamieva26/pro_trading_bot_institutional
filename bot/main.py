@@ -10,6 +10,7 @@ from .config import settings
 from .data import fetch_bars, fetch_all_bars
 from .features import make_features
 from .strategy import load_trading_model, hybrid_signal
+from .advanced_ml import auto_load_ml_models
 from .sizing import volatility_target_size, kelly_cap
 from .execution import place_order, close_position
 from .state import BotState
@@ -414,6 +415,17 @@ def main():
     except Exception as e:
         logger.error(f"❌ No se pudo cargar el modelo: {e}")
         return
+    
+    # Cargar modelos ML avanzados automáticamente
+    try:
+        ml_loaded = auto_load_ml_models()
+        if ml_loaded:
+            logger.info("🤖 Modelos ML avanzados cargados - IA completa activada")
+        else:
+            logger.info("ℹ️ Usando modelos tradicionales - ML avanzado se entrenará automáticamente")
+    except Exception as e:
+        logger.warning(f"⚠️ Error cargando modelos ML avanzados: {e}")
+        logger.info("ℹ️ Continuando con modelo tradicional")
 
     while True:
         try:
