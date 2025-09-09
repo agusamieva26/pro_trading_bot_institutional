@@ -286,7 +286,7 @@ def run_once(state: BotState, clf):
                                 logger.info(f"📈 Abriendo nueva posición LONG en BTC/USD")
                                 place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
                             else:
-                                logger.info(f"⚠️ Señal bajista en BTC/USD pero crypto no permite short. Skip.")
+                                logger.info(f"🔥 CRYPTO SHORT HABILITADO: {symbol} señal bajista {sig:.3f}")
         except Exception as e:
             logger.error(f"💥 Error procesando BTC/USD: {e}")
 
@@ -487,14 +487,17 @@ def run_once(state: BotState, clf):
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                         place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
         else:
-            # 🔄 CRYPTO OPTIMIZADO: No shorts nuevos, solo LONGS 
+            # 🔥 CRYPTO SHORTS ACTIVADOS: Sin restricciones para máxima agresividad
+            action = "LONG" if side == "buy" else "SHORT"
+            action_emoji = "📊" if side == "buy" else "📉"
+            
+            # ✅ LOG OPTIMIZADO para meta $1000
             if is_crypto and side == "sell":
-                logger.info(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP (no crypto shorts sin balance)")
+                logger.info(f"🔥 CRYPTO {action} {symbol}: score={sig:+.3f}, qty={qty:.6f} (SHORTS HABILITADOS)")
             else:
-                action = "LONG" if side == "buy" else "SHORT"
-                action_emoji = "📊" if side == "buy" else "📉"
                 logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
-                place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
+            
+            place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres
     try:
@@ -561,8 +564,8 @@ def main():
         except Exception as e:
             logger.exception("💥 Error en el loop principal")
             alert_error("Error en loop principal", str(e))
-        logger.info("⏳ Esperando 30 segundos para próxima iteración...")  # 🔥 ULTRA-SCALPING
-        time.sleep(30)  # 🔥 ULTRA-SCALPING: 30 segundos
+        logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
+        time.sleep(15)  # 🔥 ULTRA-AGRESIVO: 15 segundos para meta $1000
 
 
 if __name__ == "__main__":
