@@ -86,20 +86,35 @@ def run_once(state: BotState, clf):
         account = client.get_account()
         current_equity = float(account.equity)
         available_cash = float(account.cash)
+        
+        # Actualizar equity y guardar estado
+        old_equity = state.state.get("equity", 0)
         state.state["equity"] = current_equity
-        logger.info(f"💵 Cash disponible al inicio: ${available_cash:,.2f}")
+        state.save()  # ✅ ARREGLO: Guardar estado después de actualizar equity
+        
+        logger.info(f"💵 Cash disponible: ${available_cash:,.2f} | Equity: ${current_equity:,.2f}")
+        
+        # Debug info para P&L
+        daily_start = state.state.get("daily_start_equity", 25000)
+        logger.debug(f"🔍 Debug P&L: Inicio=${daily_start:,.2f}, Actual=${current_equity:,.2f}, Anterior=${old_equity:,.2f}")
+        
     except Exception as e:
         logger.error(f"❌ No se pudo obtener equity: {e}")
         return
 
     # 2. Stop diario por pérdida
     daily_pnl_pct = state.get_daily_pnl_pct(current_equity)
+    daily_start_equity = state.state.get("daily_start_equity", 25000)
+    daily_change = current_equity - daily_start_equity
+    
     if daily_pnl_pct < -settings.max_daily_loss_pct:
         msg = f"Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de {settings.max_daily_loss_pct:.0%}"
         logger.critical(f"🛑 {msg}")
         alert_risk_stop(msg)
         return "STOP"  # ✅ Único return "STOP" válido
-    logger.info(f"📈 P&L diario: {daily_pnl_pct:.2%}")
+    
+    # ✅ ARREGLO: P&L diario mejorado con más información
+    logger.info(f"📈 P&L diario: {daily_pnl_pct:.2%} (${daily_change:+,.2f}) | Inicio: ${daily_start_equity:,.2f}")
 
     # 3. Exposición bruta - GESTIONAR PERO CONTINUAR
     exposure_managed = False
