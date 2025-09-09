@@ -493,14 +493,12 @@ def run_once(state: BotState, clf):
                     else:
                         logger.info(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP (no posición larga para cerrar)")
                 else:
-                    # ✅ ACCIONES: Permitir short normal
-                    if is_short:
-                        logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (aumentando short)")
-                        place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                    elif is_long:
-                        logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (cerrando long + abrir short)")
+                    # 🚫 ACCIONES: SHORTS DESHABILITADOS (Alpaca no permite fractional shorts)
+                    if is_long:
+                        logger.info(f"📉 CLOSE LONG {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (solo cerrar, no short)")
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                        place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    else:
+                        logger.warning(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP STOCK SHORT (fractional shorts no permitidos por Alpaca)")
         else:
             # 🔥 CRYPTO SHORTS ACTIVADOS: Sin restricciones para máxima agresividad
             action = "LONG" if side == "buy" else "SHORT"
@@ -520,7 +518,11 @@ def run_once(state: BotState, clf):
                 else:
                     # Fallback a orden normal
                     place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
+            elif not is_crypto and side == "sell":
+                # 🚫 STOCKS: No shorts permitidos
+                logger.warning(f"⚠️ STOCK SHORT BLOQUEADO {symbol}: score={sig:+.3f} → Alpaca no permite fractional shorts")
             else:
+                # ✅ LONGS (stocks y crypto)
                 logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
                 place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 

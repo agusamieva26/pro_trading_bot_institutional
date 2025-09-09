@@ -16,24 +16,26 @@ class DynamicShortManager:
         
     def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell") -> Dict:
         """
-        Ejecuta short dinámico: compra $1 del token, luego hace short.
+        Ejecuta short dinámico: compra $10 del token, luego hace short del 80% comprado.
         
         Args:
             symbol: Símbolo a operar (ej: BTC/USD)
-            short_qty: Cantidad del short principal
+            short_qty: Cantidad original (se ignora, se calcula del token comprado)
             short_side: Debe ser "sell" para short
             
         Returns:
             Dict con resultado de la operación
         """
         try:
-            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando $10 + Short {short_qty}")
-            
-            # PASO 1: Comprar $1 del token para habilitar short
-            logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
-            
-            # Usar precio ya disponible para calcular cantidad
+            # Calcular la cantidad que realmente podemos comprar y hacer short
             buy_qty = self.token_purchase_amount / current_price if current_price > 0 else 0.001
+            # Solo hacer short del 80% de lo comprado para dejar margen de seguridad
+            actual_short_qty = buy_qty * 0.8
+            
+            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando ${self.token_purchase_amount} + Short {actual_short_qty:.6f} (vs original {short_qty:.6f})")
+            
+            # PASO 1: Comprar $10 del token para habilitar short
+            logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
             
             buy_result = place_order(
                 symbol=symbol,
@@ -77,12 +79,12 @@ class DynamicShortManager:
             
             logger.info(f"✅ {symbol}: $10 comprado exitosamente - Order ID: {buy_order_id}")
             
-            # PASO 2: Ejecutar el short principal
-            logger.info(f"📉 Paso 2/2: Ejecutando SHORT de {short_qty} {symbol}...")
+            # PASO 2: Ejecutar el short principal (solo el 80% de lo comprado)
+            logger.info(f"📉 Paso 2/2: Ejecutando SHORT de {actual_short_qty:.6f} {symbol} (80% de {buy_qty:.6f} comprado)...")
             
             short_result = place_order(
                 symbol=symbol,
-                qty=short_qty,
+                qty=actual_short_qty,
                 side=short_side,
                 price=current_price,
                 is_crypto=True
@@ -123,15 +125,18 @@ class DynamicShortManager:
                 short_order_id = short_result.get('id', 'unknown')
             
             logger.info(f"🔥 {symbol}: SHORT DINÁMICO COMPLETADO")
-            logger.info(f"   💰 Compra: ${self.token_purchase_amount} (ID: {buy_order_id})")
-            logger.info(f"   📉 Short: {short_qty} (ID: {short_order_id})")
+            logger.info(f"   💰 Compra: ${self.token_purchase_amount} = {buy_qty:.6f} tokens (ID: {buy_order_id})")
+            logger.info(f"   📉 Short: {actual_short_qty:.6f} tokens = 80% comprado (ID: {short_order_id})")
             
             return {
                 "success": True,
                 "symbol": symbol,
                 "buy_order": buy_result,
                 "short_order": short_result,
-                "total_orders": 2
+                "total_orders": 2,
+                "actual_short_qty": actual_short_qty,
+                "original_short_qty": short_qty,
+                "buy_qty": buy_qty
             }
             
         except Exception as e:
