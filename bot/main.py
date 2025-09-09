@@ -255,7 +255,7 @@ def run_once(state: BotState, clf):
     equity_for_rest = max(min_reserved_for_others, remaining_cash_after_btc)
     equity_for_rest = min(equity_for_rest, available_cash * 0.75)  # Máximo 75% del cash disponible
     
-    other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
+    other_symbols = settings.symbols  # ✅ INCLUIR TODOS los símbolos (incluyendo BTC)
     signals = []
     
     # 🕐 DETECTAR HORARIOS DE MERCADO: Separar cryptos (24/7) de acciones (NYSE hours)
@@ -284,8 +284,8 @@ def run_once(state: BotState, clf):
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
     # 🚀 ANÁLISIS PARALELO ULTRA-RÁPIDO: Descarga + análisis simultáneo
-    symbols_batch = symbols_to_analyze[:8]  # AMPLIADO: 8 activos (mejores pesos y análisis más completo)
-    logger.info(f"⚡ Análisis optimizado: procesando {len(symbols_batch)} de {len(symbols_to_analyze)} activos")
+    symbols_batch = symbols_to_analyze  # ✅ ANALIZAR TODOS los símbolos disponibles (no limitar)
+    logger.info(f"⚡ Análisis completo: procesando TODOS los {len(symbols_batch)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
     all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
