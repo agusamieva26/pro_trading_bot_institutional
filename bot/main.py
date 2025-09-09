@@ -19,7 +19,7 @@ from .telegram import alert_risk_stop, alert_error
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
 from .profit_management import profit_manager
-from .token_manager import token_manager
+from .dynamic_shorts import dynamic_short_manager
 from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
 from .multi_timeframe import enhance_signals_with_multi_tf
 from .risk_management_v2 import AdvancedRiskManager, analyze_risk_environment
@@ -238,16 +238,6 @@ def run_once(state: BotState, clf):
 
     total_equity = current_equity
 
-    # 🛒 GESTIÓN DE TOKENS PARA SHORTS: Compra inicial si es necesario
-    try:
-        if token_manager.needs_token_purchase() and current_equity > 25000:
-            logger.info("🛒 Iniciando compra de tokens para habilitar shorts...")
-            purchase_result = token_manager.purchase_minimum_tokens(available_cash * 0.02)  # 2% del cash
-            if purchase_result["purchased"]:
-                token_manager.send_purchase_notification(purchase_result)
-                logger.info(f"✅ Tokens comprados: ${purchase_result['total_spent']:.2f} - Shorts habilitados")
-    except Exception as e:
-        logger.error(f"❌ Error en compra de tokens: {e}")
 
     # --- 5. PROFIT-TAKING AUTOMÁTICO ---
     profit_result = auto_profit_taking()
@@ -518,11 +508,21 @@ def run_once(state: BotState, clf):
             
             # ✅ LOG OPTIMIZADO para meta $1000
             if is_crypto and side == "sell":
-                logger.info(f"🔥 CRYPTO {action} {symbol}: score={sig:+.3f}, qty={qty:.6f} (SHORTS HABILITADOS)")
+                logger.info(f"🔥 CRYPTO {action} DINÁMICO {symbol}: score={sig:+.3f}, qty={qty:.6f}")
+                
+                # USAR SHORT DINÁMICO: Compra $1 + Short
+                if dynamic_short_manager.should_use_dynamic_short(symbol):
+                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, side)
+                    if result["success"]:
+                        logger.info(f"✅ SHORT DINÁMICO EXITOSO {symbol}: $1 comprado + short ejecutado")
+                    else:
+                        logger.error(f"❌ SHORT DINÁMICO FALLÓ {symbol}: {result.get('error', 'Error desconocido')}")
+                else:
+                    # Fallback a orden normal
+                    place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
             else:
                 logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
-            
-            place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
+                place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres
     try:
