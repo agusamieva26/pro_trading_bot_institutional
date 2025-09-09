@@ -10,6 +10,13 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **Notificaciones:** Telegram alert + logs críticos cuando se activa el take-profit
 - **Safety STOP:** Bot se detiene completamente tras alcanzar objetivo diario
 
+**💰 GESTIÓN INTELIGENTE DE BENEFICIOS (40/60):**
+- **DISTRIBUCIÓN AUTOMÁTICA:** 40% reinversión para capitalización, 60% protegido como ganancia neta
+- **CAPITAL DINÁMICO:** El capital de trading crece automáticamente con la reinversión acumulada
+- **PROTECCIÓN TOTAL:** El 60% de beneficios se mantiene intocable para preservar ganancias
+- **NOTIFICACIONES COMPLETAS:** Telegram detallado con distribución diaria y crecimiento del capital
+- **ESTADO PERSISTENTE:** Seguimiento completo de reinversiones y beneficios protegidos
+
 **🔥 ULTRA-SCALPING OPTIMIZADO:**
 - **Problema de cuelgue RESUELTO:** Eliminados logs innecesarios de features avanzadas
 - **Features estadísticas DESHABILITADAS:** Solo features esenciales para máxima velocidad

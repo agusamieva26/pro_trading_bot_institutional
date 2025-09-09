@@ -15,7 +15,7 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, Tuple
 from .util import logger
-from .state import state
+from .state import BotState
 
 
 class ProfitManager:
@@ -56,7 +56,8 @@ class ProfitManager:
     
     def calculate_daily_profit(self, current_equity: float) -> float:
         """Calcula el beneficio neto del día actual."""
-        daily_start = state.state.get("daily_start_equity", self.profit_state["capital_base_original"])
+        bot_state = BotState()
+        daily_start = bot_state.state.get("daily_start_equity", self.profit_state["capital_base_original"])
         daily_profit = current_equity - daily_start
         return daily_profit
     
