@@ -31,9 +31,9 @@ class AdvancedFeatureGenerator:
             'volatility_features': True,
             'pattern_features': True,
             'volume_features': True,
-            'cycle_features': True,
+            'cycle_features': False,  # Optimizado: deshabilitado temporalmente
             'statistical_features': True,
-            'fractal_features': True
+            'fractal_features': False  # Optimizado: muy costoso computacionalmente
         }
     
     def generate_advanced_features(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -75,17 +75,23 @@ class AdvancedFeatureGenerator:
         if self.feature_configs['volume_features']:
             df = self._add_volume_features(df)
         
-        # 6. Cycle features
+        # 6. Cycle features (optimizado)
         if self.feature_configs['cycle_features']:
-            df = self._add_cycle_features(df)
+            try:
+                df = self._add_cycle_features(df)
+            except Exception as e:
+                logger.warning(f"⚠️ Saltando cycle features: {e}")
         
-        # 7. Statistical features
+        # 7. Statistical features (optimizado)  
         if self.feature_configs['statistical_features']:
-            df = self._add_statistical_features(df)
+            try:
+                df = self._add_statistical_features(df)
+            except Exception as e:
+                logger.warning(f"⚠️ Saltando statistical features: {e}")
         
-        # 8. Fractal features
-        if self.feature_configs['fractal_features']:
-            df = self._add_fractal_features(df)
+        # 8. Fractal features (deshabilitado temporalmente)
+        # if self.feature_configs['fractal_features']:
+        #     df = self._add_fractal_features(df)
         
         # Limpiar features
         df = self._clean_features(df)
