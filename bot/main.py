@@ -143,14 +143,53 @@ def run_once(state: BotState, clf):
         logger.critical(f"💰 {msg}")
         logger.critical("🚨 CERRANDO TODAS LAS POSICIONES - OBJETIVO DIARIO CUMPLIDO")
         
+        # 🚨 NOTIFICACIÓN TELEGRAM PRIORITARIA
         try:
-            send_telegram(f"🎯 OBJETIVO DIARIO CUMPLIDO!\n\n💰 Beneficio: ${daily_change:+,.2f}\n🚨 Cerrando todas las posiciones automáticamente")
-        except:
-            pass
+            telegram_msg = f"""🎯 ¡OBJETIVO DIARIO CUMPLIDO! 🎯
+
+💰 Beneficio alcanzado: ${daily_change:+,.2f}
+🎯 Objetivo: $1,000.00
+📊 Porcentaje: {(daily_change/1000)*100:.1f}%
+
+🚨 CERRANDO TODAS LAS POSICIONES AUTOMÁTICAMENTE
+
+✅ Bot detenido por seguridad tras alcanzar meta diaria"""
+            send_telegram(telegram_msg)
+            logger.info("📱 Telegram: Notificación de objetivo enviada")
+        except Exception as e:
+            logger.error(f"❌ Error enviando Telegram de objetivo: {e}")
             
         close_all()
         logger.critical("✅ Todas las posiciones cerradas. Bot detenido por objetivo diario.")
         return "STOP"
+    
+    # 📊 NOTIFICACIONES DE PROGRESO HACIA OBJETIVO
+    elif daily_change > 0:  # Solo si hay beneficio
+        progress_pct = (daily_change / 1000) * 100
+        
+        # Notificar cada 25% de progreso (250, 500, 750)
+        milestone_250 = daily_change >= 250 and not state.state.get("notified_250", False)
+        milestone_500 = daily_change >= 500 and not state.state.get("notified_500", False) 
+        milestone_750 = daily_change >= 750 and not state.state.get("notified_750", False)
+        
+        if milestone_250 or milestone_500 or milestone_750:
+            from bot.telegram import send_telegram
+            try:
+                if milestone_750:
+                    telegram_msg = f"🔥 ¡75% DEL OBJETIVO! 🔥\n\n💰 Beneficio: ${daily_change:+,.2f}\n🎯 Faltan solo: ${1000-daily_change:.2f} para $1,000\n⚡ ¡Casi en la meta!"
+                    state.state["notified_750"] = True
+                elif milestone_500:
+                    telegram_msg = f"🚀 ¡MITAD DEL CAMINO! 🚀\n\n💰 Beneficio: ${daily_change:+,.2f}\n🎯 Progreso: 50% hacia $1,000\n💪 ¡Sigue así!"
+                    state.state["notified_500"] = True
+                elif milestone_250:
+                    telegram_msg = f"📈 ¡Primer cuarto! 📈\n\n💰 Beneficio: ${daily_change:+,.2f}\n🎯 Progreso: 25% hacia $1,000\n✨ ¡Buen comienzo!"
+                    state.state["notified_250"] = True
+                
+                send_telegram(telegram_msg)
+                state.save()  # Guardar estado de notificaciones
+                logger.info(f"📱 Telegram: Notificación de progreso enviada ({progress_pct:.1f}%)")
+            except Exception as e:
+                logger.error(f"❌ Error enviando Telegram de progreso: {e}")
 
     # 3. Exposición bruta - GESTIONAR PERO CONTINUAR
     exposure_managed = False
