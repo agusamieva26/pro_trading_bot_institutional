@@ -149,12 +149,23 @@ def monitor_closed_positions(clf):
             reason = ""
             
             # ⚡ ANTI-OVERTRADING: Verificar que la posición tenga al menos 3 minutos
-            position_age_minutes = (pos.created_at.timestamp() if hasattr(pos.created_at, 'timestamp') else 0)
+            # 🔧 FIX: Verificar atributos de posición
+            if not hasattr(pos, 'created_at') and not hasattr(pos, 'created_time'):
+                # Si no tiene timestamp, asumir que es nueva (skip por seguridad)
+                continue
+                
+            # Usar created_at o created_time según disponibilidad  
+            if hasattr(pos, 'created_at'):
+                position_age_minutes = (pos.created_at.timestamp() if hasattr(pos.created_at, 'timestamp') else 0)
+            elif hasattr(pos, 'created_time'):
+                position_age_minutes = (pos.created_time.timestamp() if hasattr(pos.created_time, 'timestamp') else 0)
+            else:
+                position_age_minutes = 0
             current_time = time.time()
             age_minutes = (current_time - position_age_minutes) / 60
             
-            # ⚡ SCALPING: Solo esperar 30 segundos para cerrar
-            min_age_minutes = 0.5  # 30 segundos
+            # 🔥 ULTRA-SCALPING: Solo esperar 15 segundos para cerrar
+            min_age_minutes = 0.25  # 15 segundos
             
             if age_minutes < min_age_minutes:
                 continue  # Skip - posición muy nueva

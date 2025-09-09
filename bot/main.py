@@ -414,8 +414,8 @@ def run_once(state: BotState, clf):
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:
-                    # ⚡ SCALPING: Crypto shorts más agresivos 
-                    if abs(sig) >= 0.15:
+                    # 🔥 ULTRA-SCALPING: Crypto shorts máxima agresividad
+                    if abs(sig) >= 0.10:
                         # Señal bajista fuerte - permitir short
                         if is_short:
                             logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (crypto short fuerte)")
@@ -443,7 +443,7 @@ def run_once(state: BotState, clf):
         else:
             # 🎯 Nueva posición: crypto shorts solo en señales MUY FUERTES
             if is_crypto and side == "sell":
-                if abs(sig) >= 0.15:  # ⚡ SCALPING: Umbral agresivo
+                if abs(sig) >= 0.10:  # 🔥 ULTRA-SCALPING: Máxima agresividad
                     action = "SHORT"
                     action_emoji = "📉"
                     logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f} (FUERTE)")
@@ -521,8 +521,8 @@ def main():
         except Exception as e:
             logger.exception("💥 Error en el loop principal")
             alert_error("Error en loop principal", str(e))
-        logger.info("⏳ Esperando 60 segundos para próxima iteración...")
-        time.sleep(60)
+        logger.info("⏳ Esperando 30 segundos para próxima iteración...")  # 🔥 ULTRA-SCALPING
+        time.sleep(30)  # 🔥 ULTRA-SCALPING: 30 segundos
 
 
 if __name__ == "__main__":
