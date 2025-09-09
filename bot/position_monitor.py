@@ -97,8 +97,8 @@ def monitor_closed_positions(clf):
         daily_pnl = equity - last_equity
         daily_pnl_pct = daily_pnl / last_equity if last_equity != 0 else 0.0
 
-        if daily_pnl_pct < -0.03:  # -3%
-            msg = f"🛑 Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de 3%"
+        if daily_pnl_pct < -0.10:  # -10% (aumentado para operar hoy)
+            msg = f"🛑 Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de 10%"
             logger.critical(f"🚨 {msg}")
             alert_risk_stop(msg)
             return "STOP"

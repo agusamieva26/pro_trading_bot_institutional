@@ -17,7 +17,7 @@ class Settings(BaseModel):
     bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","5Min"))  # SCALPING
     initial_equity: float = 30000.0  # Valor fijo
     risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.005")))  # OPTUNA OPTIMIZED: 0.5%
-    max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","4.0")))  # SCALPING: Mayor tolerancia diaria
+    max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","10.0")))  # Aumentado para operar hoy
     max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))  # SCALPING: Exposición moderada pero funcional
     take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.05")))  # OPTUNA OPTIMIZED: 5%
     stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.01")))  # OPTUNA OPTIMIZED: 1%
