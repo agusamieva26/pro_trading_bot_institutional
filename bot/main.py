@@ -414,23 +414,12 @@ def run_once(state: BotState, clf):
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:
-                    # 🔥 ULTRA-SCALPING: Crypto shorts máxima agresividad
-                    if abs(sig) >= 0.10:
-                        # Señal bajista fuerte - permitir short
-                        if is_short:
-                            logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (crypto short fuerte)")
-                            place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                        elif is_long:
-                            logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (cerrando long + abrir short)")
-                            place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                            place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    # 🔄 CRYPTO OPTIMIZADO: Solo cerrar posiciones largas existentes
+                    if is_long:
+                        logger.info(f"📉 CLOSE LONG {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (señal bajista)")
+                        place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                     else:
-                        # Señal bajista débil - solo cerrar long si existe
-                        if is_long:
-                            logger.info(f"📉 CIERRE PARCIAL {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (crypto señal débil)")
-                            place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
-                        else:
-                            logger.info(f"⚠️ {symbol}: Señal BAJISTA débil ({sig:+.3f}) → SKIP crypto short")
+                        logger.info(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP (no posición larga para cerrar)")
                 else:
                     # ✅ ACCIONES: Permitir short normal
                     if is_short:
@@ -441,15 +430,9 @@ def run_once(state: BotState, clf):
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                         place_order(symbol, qty, "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
         else:
-            # 🎯 Nueva posición: crypto shorts solo en señales MUY FUERTES
+            # 🔄 CRYPTO OPTIMIZADO: No shorts nuevos, solo LONGS 
             if is_crypto and side == "sell":
-                if abs(sig) >= 0.10:  # 🔥 ULTRA-SCALPING: Máxima agresividad
-                    action = "SHORT"
-                    action_emoji = "📉"
-                    logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f} (FUERTE)")
-                    place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
-                else:
-                    logger.info(f"⚠️ {symbol}: Señal bajista débil ({sig:+.3f}) → SKIP crypto short")
+                logger.info(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP (no crypto shorts sin balance)")
             else:
                 action = "LONG" if side == "buy" else "SHORT"
                 action_emoji = "📊" if side == "buy" else "📉"
