@@ -4,6 +4,18 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 
 ## Recent Changes (2025-09-09)
 
+**🎯 TAKE-PROFIT AUTOMÁTICO DIARIO ($1000):**
+- **NUEVO:** Auto-cierre completo del portafolio al alcanzar $1000 beneficio diario
+- **Función close_all():** Cierra todas las posiciones automáticamente cuando daily_change >= $1000
+- **Notificaciones:** Telegram alert + logs críticos cuando se activa el take-profit
+- **Safety STOP:** Bot se detiene completamente tras alcanzar objetivo diario
+
+**🔥 ULTRA-SCALPING OPTIMIZADO:**
+- **Problema de cuelgue RESUELTO:** Eliminados logs innecesarios de features avanzadas
+- **Features estadísticas DESHABILITADAS:** Solo features esenciales para máxima velocidad
+- **Crypto shorts optimizados:** Solo cierre de longs existentes, no shorts nuevos sin balance
+- **Balance insuficiente SOLUCIONADO:** Lógica inteligente para operaciones viables
+
 **🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
 - **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
 - **17 Cryptos Completos:** BTC, ETH, SOL, AVAX, LINK, DOGE, DOT, LTC, SHIB, XRP, UNI, AAVE, PEPE, BCH, MKR, CRV, GRT
@@ -11,8 +23,8 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **Configuración Hardcoded:** Símbolos definidos directamente en config.py para evitar problemas de .env
 
 **⚡ CRYPTO SHORTS INTELIGENTES:**
-- **Habilitados:** Para señales >= 0.4 con calidad "EXCELENTE" o "MÁXIMA"
-- **Anti-Overtrading:** Cooldown de 3 minutos mínimo por posición
+- **Modificado:** Solo cierre de posiciones largas cuando hay señales bajistas
+- **Anti-Balance Issues:** Skip automático de shorts sin balance de token
 - **Señales diversificadas:** Factores únicos de volatilidad por cada crypto
 
 **🔧 DIVERSIFICACIÓN TÉCNICA:**
