@@ -37,7 +37,7 @@ class LSTMPredictor:
     LSTM/GRU network para análisis temporal de series financieras.
     """
     
-    def __init__(self, sequence_length=60, features_dim=12):
+    def __init__(self, sequence_length=60, features_dim=None):
         self.sequence_length = sequence_length
         self.features_dim = features_dim
         self.model = None
@@ -48,8 +48,9 @@ class LSTMPredictor:
             logger.warning("⚠️ TensorFlow no disponible - LSTM deshabilitado")
             return
         
-        # Crear modelo LSTM
-        self.model = self._build_lstm_model()
+        # Modelo se creará cuando se entrene (necesitamos conocer features_dim)
+        if self.features_dim:
+            self.model = self._build_lstm_model()
     
     def _build_lstm_model(self):
         """Construye arquitectura LSTM optimizada para trading."""
@@ -192,7 +193,7 @@ class TransformerPredictor:
     Transformer network para análisis de patrones complejos en datos financieros.
     """
     
-    def __init__(self, sequence_length=60, features_dim=12, num_heads=8):
+    def __init__(self, sequence_length=60, features_dim=None, num_heads=8):
         self.sequence_length = sequence_length
         self.features_dim = features_dim
         self.num_heads = num_heads
@@ -204,7 +205,9 @@ class TransformerPredictor:
             logger.warning("⚠️ TensorFlow no disponible - Transformer deshabilitado")
             return
         
-        self.model = self._build_transformer_model()
+        # Modelo se creará cuando se entrene (necesitamos conocer features_dim)
+        if self.features_dim:
+            self.model = self._build_transformer_model()
     
     def _build_transformer_model(self):
         """Construye arquitectura Transformer para trading."""
