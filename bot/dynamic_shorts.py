@@ -14,7 +14,7 @@ class DynamicShortManager:
     def __init__(self):
         self.token_purchase_amount = 1.0  # $1 por token
         
-    def execute_dynamic_short(self, symbol: str, short_qty: float, short_side: str = "sell") -> Dict:
+    def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell") -> Dict:
         """
         Ejecuta short dinámico: compra $1 del token, luego hace short.
         
@@ -32,14 +32,8 @@ class DynamicShortManager:
             # PASO 1: Comprar $1 del token para habilitar short
             logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
             
-            # Calcular cantidad aproximada para $1
-            # Obtener precio actual para calcular qty
-            from .data import get_current_price
-            current_price = get_current_price(symbol)
-            if current_price and current_price > 0:
-                buy_qty = self.token_purchase_amount / current_price
-            else:
-                buy_qty = 0.001  # Fallback cantidad mínima
+            # Usar precio ya disponible para calcular cantidad
+            buy_qty = self.token_purchase_amount / current_price if current_price > 0 else 0.001
             
             buy_result = place_order(
                 symbol=symbol,

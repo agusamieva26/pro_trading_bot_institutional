@@ -512,7 +512,7 @@ def run_once(state: BotState, clf):
                 
                 # USAR SHORT DINÁMICO: Compra $1 + Short
                 if dynamic_short_manager.should_use_dynamic_short(symbol):
-                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, side)
+                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, current_price, side)
                     if result["success"]:
                         logger.info(f"✅ SHORT DINÁMICO EXITOSO {symbol}: $1 comprado + short ejecutado")
                     else:
