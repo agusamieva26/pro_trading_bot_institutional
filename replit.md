@@ -36,12 +36,12 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **RATIOS R/R SCALPING:** TP 3% vs 5%, SL 0.8% vs 1% (ejecución más rápida)
 - **HORARIOS EXTENDIDOS:** Pre/post market habilitado para máxima cobertura
 
-**🛒 COMPRA AUTOMÁTICA DE TOKENS PARA SHORTS:**
-- **PROBLEMA RESUELTO:** Compra automática de tokens mínimos para habilitar shorts completos
-- **10 TOKENS PRINCIPALES:** BTC ($100), ETH ($75), SOL ($50), AVAX ($30), LINK ($30), DOT ($25), LTC ($30), UNI ($25), AAVE ($50), XRP ($20)
-- **INVERSIÓN TOTAL:** ~$435 (2% del capital) para desbloquear todos los shorts
-- **NOTIFICACIÓN TELEGRAM:** Alert completo cuando se compren los tokens
-- **UNA SOLA VEZ:** Sistema inteligente que solo compra una vez al inicio
+**🔄 SHORTS DINÁMICOS ULTRA-EFICIENTES:**
+- **NUEVA ESTRATEGIA:** Compra $1 del token dinámicamente solo cuando necesita hacer short
+- **OPERACIÓN DUAL:** 1) Compra $1 del token, 2) Ejecuta short inmediatamente 
+- **MÁXIMA EFICIENCIA:** Solo invierte cuando hay señal real de short (vs $435 fijos)
+- **CERO CAPITAL INMOVILIZADO:** No mantiene tokens innecesarios
+- **EJECUCIÓN AUTOMÁTICA:** Proceso completamente transparente e instantáneo
 
 **🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
 - **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
