@@ -1,5 +1,5 @@
 {
-  "risk_per_trade": 0.02,
+  "risk_per_trade": 0.015,
   "max_gross_exposure": 1.0,
   "tp_multiplier": 2.0,
   "sl_multiplier": 1.5,

@@ -9,7 +9,7 @@ from .util import logger
 
 AUTO_CONFIG_FILE = "bot/auto_config.json"
 DEFAULT_CONFIG = {
-    "risk_per_trade": 0.02,
+    "risk_per_trade": 0.015,
     "max_gross_exposure": 0.5,
     "tp_multiplier": 2.0,
     "sl_multiplier": 1.5,

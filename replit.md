@@ -16,6 +16,12 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **Crypto shorts optimizados:** Solo cierre de longs existentes, no shorts nuevos sin balance
 - **Balance insuficiente SOLUCIONADO:** Lógica inteligente para operaciones viables
 
+**💰 RIESGO OPTIMIZADO PARA META $1000:**
+- **INCREMENTO CRÍTICO:** Risk per trade aumentado de 0.5% a 1.5% (3x)
+- **Riesgo por trade:** ~$366 con capital actual de $24,401
+- **Ganancia esperada:** $18.30 por trade ganador
+- **Meta diaria:** 55 trades para alcanzar $1,000 (matemáticamente viable)
+
 **🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
 - **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
 - **17 Cryptos Completos:** BTC, ETH, SOL, AVAX, LINK, DOGE, DOT, LTC, SHIB, XRP, UNI, AAVE, PEPE, BCH, MKR, CRV, GRT

@@ -5,7 +5,7 @@ Este archivo contiene los parámetros óptimos encontrados por la optimización.
 
 # Parámetros optimizados por Optuna (15 trials, score: 5911.78)
 OPTIMIZED_PARAMS = {
-    "risk_per_trade": 0.005,      # 0.5% - Riesgo óptimo por trade
+    "risk_per_trade": 0.015,      # 1.5% - Riesgo optimizado para meta $1000
     "take_profit_pct": 0.05,      # 5.0% - Target de ganancia optimizado
     "stop_loss_pct": 0.01,        # 1.0% - Stop loss optimizado
 }
@@ -27,7 +27,7 @@ def apply_optimized_config(settings_obj):
     settings_obj.stop_loss_pct = OPTIMIZED_PARAMS["stop_loss_pct"]
     
     print("✅ Configuración optimizada por Optuna aplicada:")
-    print(f"   🎯 Risk per trade: {OPTIMIZED_PARAMS['risk_per_trade']*100:.1f}%")
+    print(f"   🎯 Risk per trade: {OPTIMIZED_PARAMS['risk_per_trade']*100:.1f}% (META $1000)")
     print(f"   📈 Take profit: {OPTIMIZED_PARAMS['take_profit_pct']*100:.1f}%")
     print(f"   🛡️ Stop loss: {OPTIMIZED_PARAMS['stop_loss_pct']*100:.1f}%")
     print(f"   🏆 Win rate esperado: {EXPECTED_PERFORMANCE['win_rate']*100:.1f}%")
