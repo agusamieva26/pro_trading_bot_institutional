@@ -144,16 +144,30 @@ def monitor_closed_positions(clf):
             current_side = "long" if qty > 0 else "short"
             predicted_side = "long" if predicted_signal > 0 else "short"
 
-            # --- Lógica de cierre inteligente ---
+            # --- Lógica de cierre inteligente con COOLDOWN ---
             should_close = False
             reason = ""
-
-            if current_side == "long" and predicted_side == "short":
+            
+            # ⚡ ANTI-OVERTRADING: Verificar que la posición tenga al menos 3 minutos
+            position_age_minutes = (pos.created_at.timestamp() if hasattr(pos.created_at, 'timestamp') else 0)
+            current_time = time.time()
+            age_minutes = (current_time - position_age_minutes) / 60
+            
+            # Solo cerrar si han pasado al menos 3 minutos Y señal es fuerte
+            min_age_minutes = 3
+            
+            if age_minutes < min_age_minutes:
+                continue  # Skip - posición muy nueva
+                
+            # Requiere señal FUERTE para cerrar (no cualquier cambio)
+            signal_strength = abs(predicted_signal)
+            
+            if current_side == "long" and predicted_side == "short" and signal_strength >= 0.3:
                 should_close = True
-                reason = "Modelo predice giro a baja"
-            elif current_side == "short" and predicted_side == "long":
+                reason = f"Modelo predice giro a baja fuerte ({predicted_signal:+.3f})"
+            elif current_side == "short" and predicted_side == "long" and signal_strength >= 0.3:
                 should_close = True
-                reason = "Modelo predice giro a alza"
+                reason = f"Modelo predice giro a alza fuerte ({predicted_signal:+.3f})"
 
             if should_close:
                 pnl = (current_price - entry_price) * qty if qty > 0 else (entry_price - current_price) * abs(qty)
