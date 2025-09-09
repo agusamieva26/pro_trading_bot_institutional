@@ -12,7 +12,6 @@ tabulate>=0.9
 # Institutional-lite add-ons
 vectorbt>=0.26
 optuna>=3.6
-plotly>=5.22
 streamlit>=1.35
 alpaca-py>=0.20.0
 pandas
@@ -32,7 +31,6 @@ numpy
 openpyxl
 optuna
 pandas
-plotly
 pydantic
 python-dotenv
 pytz
@@ -44,6 +42,9 @@ streamlit-autorefresh
 tabulate
 tenacity
 vectorbt
-tornado
 tensorflow
 xgboost
+streamlit
+streamlit-autorefresh
+tornado>=6.5.2
+plotly>=5.22.0

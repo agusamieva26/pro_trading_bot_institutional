@@ -1,11 +1,17 @@
 # dashboard.py
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from datetime import datetime, timezone
 import os
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh  # Para recarga automática
+
+# Import plotly safely
+try:
+    import plotly.express as px
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
 
 # Módulos del bot
 from bot.config import settings
@@ -34,13 +40,13 @@ def get_account_info():
     try:
         account = client.get_account()
         return {
-            "equity": float(account.equity),
-            "cash": float(account.cash),
-            "portfolio_value": float(account.portfolio_value),
+            "equity": float(getattr(account, "equity", 0)),
+            "cash": float(getattr(account, "cash", 0)),
+            "portfolio_value": float(getattr(account, "portfolio_value", 0)),
             "buying_power": float(getattr(account, "buying_power", 0)),
-            "status": account.status,
-            "initial_portfolio_value": float(getattr(account, "initial_portfolio_value", account.portfolio_value)),
-            "last_equity": float(getattr(account, "last_equity", account.equity))
+            "status": getattr(account, "status", "UNKNOWN"),
+            "initial_portfolio_value": float(getattr(account, "initial_portfolio_value", 0)),
+            "last_equity": float(getattr(account, "last_equity", 0))
         }
     except Exception as e:
         st.error(f"❌ No se pudo obtener cuenta: {e}")
@@ -78,13 +84,13 @@ def get_open_positions():
     try:
         positions = client.get_all_positions()
         return [{
-            "symbol": pos.symbol,
-            "qty": float(pos.qty),
-            "avg_entry_price": float(pos.avg_entry_price),
-            "current_price": float(pos.current_price),
-            "unrealized_pl": float(pos.unrealized_pl),
-            "unrealized_pl_pct": (float(pos.unrealized_pl) / (float(pos.avg_entry_price) * abs(float(pos.qty))) * 100) if pos.avg_entry_price != 0 else 0.0,
-            "market_value": float(pos.market_value)
+            "symbol": getattr(pos, "symbol", "N/A"),
+            "qty": float(getattr(pos, "qty", 0)),
+            "avg_entry_price": float(getattr(pos, "avg_entry_price", 0)),
+            "current_price": float(getattr(pos, "current_price", 0)),
+            "unrealized_pl": float(getattr(pos, "unrealized_pl", 0)),
+            "unrealized_pl_pct": (float(getattr(pos, "unrealized_pl", 0)) / (float(getattr(pos, "avg_entry_price", 1)) * abs(float(getattr(pos, "qty", 1)))) * 100) if getattr(pos, "avg_entry_price", 0) != 0 else 0.0,
+            "market_value": float(getattr(pos, "market_value", 0))
         } for pos in positions]
     except Exception as e:
         st.warning(f"⚠️ No se pudieron obtener posiciones: {e}")
@@ -95,12 +101,12 @@ def get_open_orders():
         req = GetOrdersRequest(status=QueryOrderStatus.OPEN)
         orders = client.get_orders(req)
         return [{
-            "symbol": order.symbol,
-            "side": order.side.value,
-            "qty": float(order.qty),
-            "type": order.order_type.value,
-            "filled": float(order.filled_qty) if order.filled_qty else 0,
-            "status": order.status.value
+            "symbol": getattr(order, "symbol", "N/A"),
+            "side": getattr(getattr(order, "side", None), "value", "N/A"),
+            "qty": float(getattr(order, "qty", 0)),
+            "type": getattr(getattr(order, "order_type", None), "value", "N/A"),
+            "filled": float(getattr(order, "filled_qty", 0)) if getattr(order, "filled_qty", None) else 0,
+            "status": getattr(getattr(order, "status", None), "value", "N/A")
         } for order in orders]
     except Exception as e:
         st.warning(f"⚠️ No se pudieron obtener órdenes: {e}")
@@ -221,16 +227,20 @@ with tab3:
         # Gráfico de P&L acumulado (solo trades cerrados)
         df_closed = df[df["status"] == "closed"].copy()
         if "realized_pnl" in df_closed.columns and not df_closed.empty:
-            df_closed = df_closed.sort_values("exit_date")
+            df_closed = df_closed.sort_values("exit_date", na_position='last')
             df_closed["cum_pnl"] = df_closed["realized_pnl"].cumsum()
-            fig = px.line(
-                df_closed,
-                x="exit_date",
-                y="cum_pnl",
-                title="P&L Acumulado (Trades Cerrados)",
-                labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
-            )
-            st.plotly_chart(fig, use_column_width=True)
+            
+            if PLOTLY_AVAILABLE:
+                fig = px.line(
+                    df_closed,
+                    x="exit_date",
+                    y="cum_pnl",
+                    title="P&L Acumulado (Trades Cerrados)",
+                    labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
+                )
+                st.plotly_chart(fig, use_column_width=True)
+            else:
+                st.line_chart(df_closed.set_index("exit_date")["cum_pnl"])
 
         st.dataframe(df, width='stretch')
     else:
