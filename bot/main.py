@@ -301,7 +301,7 @@ def run_once(state: BotState, clf):
                                 logger.info(f"📈 Abriendo nueva posición LONG en BTC/USD")
                                 place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
                             else:
-                                logger.info(f"🔥 CRYPTO SHORT HABILITADO: {symbol} señal bajista {sig:.3f}")
+                                logger.info(f"🔥 CRYPTO SHORT HABILITADO: BTC/USD señal bajista {sig:.3f}")
         except Exception as e:
             logger.error(f"💥 Error procesando BTC/USD: {e}")
 
@@ -512,7 +512,7 @@ def run_once(state: BotState, clf):
                 
                 # USAR SHORT DINÁMICO: Compra $1 + Short
                 if dynamic_short_manager.should_use_dynamic_short(symbol):
-                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, current_price, side)
+                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, price, side)
                     if result["success"]:
                         logger.info(f"✅ SHORT DINÁMICO EXITOSO {symbol}: $1 comprado + short ejecutado")
                     else:
