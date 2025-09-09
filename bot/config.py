@@ -10,7 +10,7 @@ class Settings(BaseModel):
     alpaca_base_url: str = Field(default_factory=lambda: os.getenv("ALPACA_BASE_URL","https://paper-api.alpaca.markets"))
     data_base_url: str = Field(default_factory=lambda: os.getenv("DATA_BASE_URL","https://data.alpaca.markets"))
     mode: str = Field(default_factory=lambda: os.getenv("MODE","paper"))
-    symbols: list[str] = Field(default_factory=lambda: [s.strip() for s in os.getenv("SYMBOLS","BTC/USD,ETH/USD,SOL/USD,AVAX/USD,LINK/USD,DOGE/USD,DOT/USD,LTC/USD,SHIB/USD,XRP/USD,UNI/USD,AAVE/USD,PEPE/USD,BCH/USD,MKR/USD,CRV/USD,GRT/USD,AAPL,AMZN,TSLA,NVDA,GOOGL,MSFT,META,AMD,NFLX,GLD,SPY,QQQ").split(",") if s.strip()])
+    symbols: list[str] = Field(default_factory=lambda: [s.strip() for s in os.getenv("SYMBOLS","BTC/USD,ETH/USD,SOL/USD,AVAX/USD,LINK/USD,DOGE/USD,DOT/USD,LTC/USD,SHIB/USD,XRP/USD,UNI/USD,AAVE/USD,PEPE/USD,BCH/USD,MKR/USD,CRV/USD,GRT/USD,AAPL,AMZN,TSLA,NVDA,GOOGL,MSFT,META,AMD,NFLX,AVGO,CRM,ADBE,JPM,BAC,V,MA,JNJ,PFE,UNH,XOM,CVX,CAT,BA,KO,PG,WMT,SPY,QQQ,VTI,VEA,VWO,VGK,XLE,XLF,XLK,XLV,VNQ,TLT,IWM,GLD").split(",") if s.strip()])
     telegram_enabled: bool = Field(default_factory=lambda: os.getenv("TELEGRAM_ENABLED","true").lower() in ("1","true","yes"))
     telegram_bot_token: str = Field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN",""))
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
