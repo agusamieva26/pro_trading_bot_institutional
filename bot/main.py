@@ -133,6 +133,24 @@ def run_once(state: BotState, clf):
     
     # ✅ ARREGLO: P&L diario mejorado con más información
     logger.info(f"📈 P&L diario: {daily_pnl_pct:.2%} (${daily_change:+,.2f}) | Inicio: ${daily_start_equity:,.2f}")
+    
+    # 🎯 TAKE PROFIT DIARIO: $1000 - Cerrar todas las posiciones
+    if daily_change >= 1000:
+        from bot.execution import close_all
+        from bot.telegram import send_telegram
+        
+        msg = f"🎯 META ALCANZADA: ${daily_change:+,.2f} beneficio diario ≥ $1,000"
+        logger.critical(f"💰 {msg}")
+        logger.critical("🚨 CERRANDO TODAS LAS POSICIONES - OBJETIVO DIARIO CUMPLIDO")
+        
+        try:
+            send_telegram(f"🎯 OBJETIVO DIARIO CUMPLIDO!\n\n💰 Beneficio: ${daily_change:+,.2f}\n🚨 Cerrando todas las posiciones automáticamente")
+        except:
+            pass
+            
+        close_all()
+        logger.critical("✅ Todas las posiciones cerradas. Bot detenido por objetivo diario.")
+        return "STOP"
 
     # 3. Exposición bruta - GESTIONAR PERO CONTINUAR
     exposure_managed = False
