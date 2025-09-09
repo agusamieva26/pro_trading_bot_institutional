@@ -230,10 +230,11 @@ class TransformerPredictor:
         # Positional encoding (simplificado)
         x = inputs
         
-        # Multi-head attention block
+        # Multi-head attention block  
+        key_dim = max(1, self.features_dim//self.num_heads)  # Asegurar key_dim >= 1
         attention_output = MultiHeadAttention(
             num_heads=self.num_heads, 
-            key_dim=self.features_dim//self.num_heads
+            key_dim=key_dim
         )(x, x)
         
         # Add & Norm
