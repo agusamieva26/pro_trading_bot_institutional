@@ -11,9 +11,9 @@ class Settings(BaseModel):
     data_base_url: str = Field(default_factory=lambda: os.getenv("DATA_BASE_URL","https://data.alpaca.markets"))
     mode: str = Field(default_factory=lambda: os.getenv("MODE","paper"))
     symbols: list[str] = Field(default_factory=lambda: [
-        # 17 CRYPTOS (incluyendo 8 nuevas)
+        # 16 CRYPTOS (MKR/USD removido por no ser tradeable)
         "BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "LINK/USD", "DOGE/USD", "DOT/USD", "LTC/USD", "SHIB/USD",
-        "XRP/USD", "UNI/USD", "AAVE/USD", "PEPE/USD", "BCH/USD", "MKR/USD", "CRV/USD", "GRT/USD",
+        "XRP/USD", "UNI/USD", "AAVE/USD", "PEPE/USD", "BCH/USD", "CRV/USD", "GRT/USD",
         # 37 STOCKS/ETFS (25 nuevas acciones + 12 originales)
         "AAPL", "AMZN", "TSLA", "NVDA", "GOOGL", "MSFT", "META", "AMD", "NFLX", "GLD", "SPY", "QQQ",
         "AVGO", "CRM", "ADBE", "JPM", "BAC", "V", "MA", "JNJ", "PFE", "UNH", "XOM", "CVX", "CAT", "BA", 

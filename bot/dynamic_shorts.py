@@ -43,7 +43,7 @@ class DynamicShortManager:
                 is_crypto=True
             )
             
-            if not buy_result or buy_result.get("status") not in ["filled", "new", "partially_filled"]:
+            if not buy_result:
                 logger.error(f"❌ {symbol}: Fallo en compra de $10 - {buy_result}")
                 return {
                     "success": False,
@@ -52,7 +52,30 @@ class DynamicShortManager:
                     "symbol": symbol
                 }
             
-            logger.info(f"✅ {symbol}: $1 comprado exitosamente - Order ID: {buy_result.get('id')}")
+            # Si buy_result es solo True/False, no tiene atributo 'get'
+            if isinstance(buy_result, bool):
+                if not buy_result:
+                    logger.error(f"❌ {symbol}: Compra falló (resultado booleano)")
+                    return {
+                        "success": False,
+                        "step_failed": "token_purchase",
+                        "error": "Order returned False",
+                        "symbol": symbol
+                    }
+                buy_order_id = "boolean_success"
+            else:
+                # Es un diccionario con información de la orden
+                if buy_result.get("status") not in ["filled", "new", "partially_filled"]:
+                    logger.error(f"❌ {symbol}: Estado de compra inválido - {buy_result}")
+                    return {
+                        "success": False,
+                        "step_failed": "token_purchase",
+                        "error": buy_result,
+                        "symbol": symbol
+                    }
+                buy_order_id = buy_result.get('id', 'unknown')
+            
+            logger.info(f"✅ {symbol}: $10 comprado exitosamente - Order ID: {buy_order_id}")
             
             # PASO 2: Ejecutar el short principal
             logger.info(f"📉 Paso 2/2: Ejecutando SHORT de {short_qty} {symbol}...")
@@ -65,7 +88,7 @@ class DynamicShortManager:
                 is_crypto=True
             )
             
-            if not short_result or short_result.get("status") not in ["filled", "new", "partially_filled"]:
+            if not short_result:
                 logger.error(f"❌ {symbol}: Fallo en SHORT - {short_result}")
                 return {
                     "success": False,
@@ -75,9 +98,33 @@ class DynamicShortManager:
                     "symbol": symbol
                 }
             
+            # Manejar resultado booleano vs diccionario
+            if isinstance(short_result, bool):
+                if not short_result:
+                    logger.error(f"❌ {symbol}: SHORT falló (resultado booleano)")
+                    return {
+                        "success": False,
+                        "step_failed": "short_execution",
+                        "error": "Short returned False",
+                        "buy_order": buy_result,
+                        "symbol": symbol
+                    }
+                short_order_id = "boolean_success"
+            else:
+                if short_result.get("status") not in ["filled", "new", "partially_filled"]:
+                    logger.error(f"❌ {symbol}: Estado de SHORT inválido - {short_result}")
+                    return {
+                        "success": False,
+                        "step_failed": "short_execution",
+                        "error": short_result,
+                        "buy_order": buy_result,
+                        "symbol": symbol
+                    }
+                short_order_id = short_result.get('id', 'unknown')
+            
             logger.info(f"🔥 {symbol}: SHORT DINÁMICO COMPLETADO")
-            logger.info(f"   💰 Compra: ${self.token_purchase_amount} (ID: {buy_result.get('id')})")
-            logger.info(f"   📉 Short: {short_qty} (ID: {short_result.get('id')})")
+            logger.info(f"   💰 Compra: ${self.token_purchase_amount} (ID: {buy_order_id})")
+            logger.info(f"   📉 Short: {short_qty} (ID: {short_order_id})")
             
             return {
                 "success": True,
@@ -103,7 +150,7 @@ class DynamicShortManager:
         """
         return symbol.endswith("/USD") and any(crypto in symbol for crypto in [
             "BTC", "ETH", "SOL", "AVAX", "LINK", "DOT", "LTC", 
-            "UNI", "AAVE", "XRP", "DOGE", "SHIB", "PEPE", "BCH", "MKR", "CRV", "GRT"
+            "UNI", "AAVE", "XRP", "DOGE", "SHIB", "PEPE", "BCH", "CRV", "GRT"
         ])
     
     def get_dynamic_short_stats(self) -> Dict:
@@ -112,7 +159,7 @@ class DynamicShortManager:
             "purchase_amount_per_token": self.token_purchase_amount,
             "supported_cryptos": [
                 "BTC", "ETH", "SOL", "AVAX", "LINK", "DOT", "LTC",
-                "UNI", "AAVE", "XRP", "DOGE", "SHIB", "PEPE", "BCH", "MKR", "CRV", "GRT"
+                "UNI", "AAVE", "XRP", "DOGE", "SHIB", "PEPE", "BCH", "CRV", "GRT"
             ]
         }
 
