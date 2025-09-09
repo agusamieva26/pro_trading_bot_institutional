@@ -176,14 +176,17 @@ def rule_signal(row):
 def prepare_xy(df: pd.DataFrame):
     """
     Prepara X e y para entrenamiento.
-    y = 1 si el precio sube en la siguiente vela (1h)
+    y = 0 (SELL), 1 (HOLD), 2 (BUY) basado en retorno futuro
     """
     feats = make_features(df)
     feats = feats.dropna(subset=FEATURES + ["close"])
     
-    # Usar retorno futuro en lugar de binario simple
+    # Usar retorno futuro con 3 clases
     future_ret = feats["close"].shift(-1) / feats["close"] - 1
-    y = (future_ret > 0).astype(int)  # 1 si sube, 0 si baja
+    
+    # ✅ ARREGLO: 3 clases para ensemble model
+    y = np.where(future_ret < -0.01, 0,      # SELL si baja >1%
+          np.where(future_ret > 0.01, 2, 1)) # BUY si sube >1%, sino HOLD
     
     X = feats[FEATURES]
     return X, y
