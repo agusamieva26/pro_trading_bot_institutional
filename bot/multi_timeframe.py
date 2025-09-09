@@ -163,10 +163,10 @@ class MultiTimeframeAnalyzer:
         vol_factor = factors['volatility_factor']
         boost = factors['confirmation_boost']
         
-        # 🎲 RANDOMNESS CONTROLADO: Pequeña variación para diversificar
+        # ⚡ SCALPING: Mayor randomness para señales más diversas
         import random
         random.seed(hash(symbol) % 1000)  # Seed consistente por símbolo
-        noise_factor = 1.0 + random.uniform(-0.05, 0.05)  # ±5% variación
+        noise_factor = 1.0 + random.uniform(-0.25, 0.25)  # ±25% variación para scalping
         
         # Contar alineación direccional con umbrales dinámicos
         bullish_count = sum(1 for s in signals.values() if s > threshold * vol_factor)
@@ -186,10 +186,10 @@ class MultiTimeframeAnalyzer:
             # Señales mixtas - menor confirmación
             confirmation = 0.6
         
-        # Bonus por tendencia fuerte en timeframes largos
-        if "1Hour" in signals and abs(signals["1Hour"]) > 0.2:
-            confirmation += 0.1
-        if "4Hour" in signals and abs(signals["4Hour"]) > 0.15:
+        # ⚡ SCALPING: Bonus por tendencia en timeframes cortos
+        if "5Min" in signals and abs(signals["5Min"]) > 0.1:
+            confirmation += 0.05
+        if "15Min" in signals and abs(signals["15Min"]) > 0.12:
             confirmation += 0.1
         
         return min(confirmation, 1.5)  # Máximo 150% de confirmación

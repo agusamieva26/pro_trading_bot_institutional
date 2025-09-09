@@ -153,8 +153,8 @@ def monitor_closed_positions(clf):
             current_time = time.time()
             age_minutes = (current_time - position_age_minutes) / 60
             
-            # Solo cerrar si han pasado al menos 3 minutos Y señal es fuerte
-            min_age_minutes = 3
+            # ⚡ SCALPING: Solo esperar 30 segundos para cerrar
+            min_age_minutes = 0.5  # 30 segundos
             
             if age_minutes < min_age_minutes:
                 continue  # Skip - posición muy nueva
@@ -162,10 +162,10 @@ def monitor_closed_positions(clf):
             # Requiere señal FUERTE para cerrar (no cualquier cambio)
             signal_strength = abs(predicted_signal)
             
-            if current_side == "long" and predicted_side == "short" and signal_strength >= 0.3:
+            if current_side == "long" and predicted_side == "short" and signal_strength >= 0.1:  # ⚡ SCALPING
                 should_close = True
                 reason = f"Modelo predice giro a baja fuerte ({predicted_signal:+.3f})"
-            elif current_side == "short" and predicted_side == "long" and signal_strength >= 0.3:
+            elif current_side == "short" and predicted_side == "long" and signal_strength >= 0.1:  # ⚡ SCALPING
                 should_close = True
                 reason = f"Modelo predice giro a alza fuerte ({predicted_signal:+.3f})"
 

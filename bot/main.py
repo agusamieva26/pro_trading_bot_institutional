@@ -414,8 +414,8 @@ def run_once(state: BotState, clf):
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:
-                    # 🎯 CRYPTO: Permitir shorts solo en señales MUY FUERTES
-                    if abs(sig) >= 0.4 and signal_quality in ["EXCELENTE", "MÁXIMA"]:
+                    # ⚡ SCALPING: Crypto shorts más agresivos 
+                    if abs(sig) >= 0.15:
                         # Señal bajista fuerte - permitir short
                         if is_short:
                             logger.info(f"📉 SHORT {symbol}: score={sig:+.3f}, qty={qty:.6f} (crypto short fuerte)")
@@ -443,7 +443,7 @@ def run_once(state: BotState, clf):
         else:
             # 🎯 Nueva posición: crypto shorts solo en señales MUY FUERTES
             if is_crypto and side == "sell":
-                if abs(sig) >= 0.4 and signal_quality in ["EXCELENTE", "MÁXIMA"]:
+                if abs(sig) >= 0.15:  # ⚡ SCALPING: Umbral agresivo
                     action = "SHORT"
                     action_emoji = "📉"
                     logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f} (FUERTE)")

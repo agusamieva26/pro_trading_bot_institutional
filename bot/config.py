@@ -22,7 +22,7 @@ class Settings(BaseModel):
     telegram_enabled: bool = Field(default_factory=lambda: os.getenv("TELEGRAM_ENABLED","true").lower() in ("1","true","yes"))
     telegram_bot_token: str = Field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN",""))
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
-    bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","5Min"))  # SCALPING
+    bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","1Min"))  # ⚡ SCALPING ULTRA-RÁPIDO
     initial_equity: float = 30000.0  # Valor fijo
     risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.005")))  # OPTUNA OPTIMIZED: 0.5%
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","10.0")))  # Aumentado para operar hoy

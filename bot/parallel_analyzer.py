@@ -113,7 +113,7 @@ def parallel_signal_analysis(symbols_data: Dict[str, pd.DataFrame], clf, max_wor
     return valid_results
 
 
-def filter_strong_signals(analysis_results: List[Dict], min_threshold: float = 0.1) -> List[Dict]:
+def filter_strong_signals(analysis_results: List[Dict], min_threshold: float = 0.05) -> List[Dict]:  # ⚡ SCALPING: Más agresivo
     """
     Filtra y ordena señales por fuerza, excluyendo señales débiles.
     """
