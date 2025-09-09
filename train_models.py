@@ -68,11 +68,30 @@ def prepare_training_data(all_data):
     # Combinar todos los datos
     full_dataset = pd.concat(combined_data, ignore_index=True)
     
+    # Crear columna target para entrenamiento
+    print("   • Creando targets de entrenamiento...")
+    full_dataset = full_dataset.sort_values(['symbol', 'timestamp']).reset_index(drop=True)
+    
+    # Calcular target basado en rendimiento futuro
+    full_dataset['future_return'] = full_dataset.groupby('symbol')['close'].pct_change(5).shift(-5)
+    
+    # Convertir a clases: -1 (SELL), 0 (HOLD), 1 (BUY)
+    conditions = [
+        full_dataset['future_return'] < -0.02,  # Caída > 2%
+        full_dataset['future_return'] > 0.02,   # Subida > 2%
+    ]
+    choices = [-1, 1]  # SELL, BUY
+    full_dataset['target'] = np.select(conditions, choices, default=0)  # Default: HOLD
+    
     # Limpiar datos
-    full_dataset = full_dataset.dropna(subset=['close'])
+    full_dataset = full_dataset.dropna(subset=['close', 'target'])
     full_dataset = full_dataset.fillna(method='ffill').fillna(method='bfill').fillna(0)
     
+    # Remover columnas auxiliares
+    full_dataset = full_dataset.drop(['future_return'], axis=1)
+    
     print(f"✅ Dataset combinado: {len(full_dataset)} filas, {len(full_dataset.columns)} columnas")
+    print(f"   • Distribución target: SELL={sum(full_dataset['target'] == -1)}, HOLD={sum(full_dataset['target'] == 0)}, BUY={sum(full_dataset['target'] == 1)}")
     
     return full_dataset
 
