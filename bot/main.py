@@ -28,6 +28,7 @@ from .dynamic_config import dynamic_config_manager
 from .model_selection import advanced_model_selector
 from .advanced_features import advanced_feature_generator
 from .util import logger
+from .util.market import is_stock_market_open
 
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
@@ -240,12 +241,34 @@ def run_once(state: BotState, clf):
     other_symbols = [s for s in settings.symbols if s != "BTC/USD"]
     signals = []
     
-    logger.info(f"🔍 Analizando {len(other_symbols)} activos adicionales")
+    # 🕐 DETECTAR HORARIOS DE MERCADO: Separar cryptos (24/7) de acciones (NYSE hours)
+    market_is_open = is_stock_market_open()
+    crypto_symbols = []
+    stock_symbols = []
+    
+    for symbol in other_symbols:
+        asset_type = symbol_manager.get_asset_type(symbol)
+        if asset_type.name == "CRYPTO":
+            crypto_symbols.append(symbol)
+        else:  # STOCK, ETF, etc.
+            stock_symbols.append(symbol)
+    
+    # 📊 OPTIMIZACIÓN POR HORARIOS: Solo analizar según disponibilidad de mercado
+    symbols_to_analyze = crypto_symbols.copy()  # Cryptos siempre 24/7
+    
+    if market_is_open:
+        symbols_to_analyze.extend(stock_symbols)  # Agregar acciones si mercado abierto
+        logger.info(f"📈 Mercado ABIERTO: analizando {len(crypto_symbols)} cryptos + {len(stock_symbols)} acciones")
+    else:
+        logger.info(f"🌙 Mercado CERRADO: solo analizando {len(crypto_symbols)} cryptos (24/7)")
+        logger.info(f"⏰ Acciones pausadas hasta: 9:30 AM ET (lunes-viernes)")
+    
+    logger.info(f"🔍 Total activos a analizar: {len(symbols_to_analyze)}")
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
     # 🚀 ANÁLISIS PARALELO ULTRA-RÁPIDO: Descarga + análisis simultáneo
-    symbols_batch = other_symbols[:8]  # AMPLIADO: 8 activos (mejores pesos y análisis más completo)
-    logger.info(f"⚡ Análisis optimizado: procesando {len(symbols_batch)} de {len(other_symbols)} activos")
+    symbols_batch = symbols_to_analyze[:8]  # AMPLIADO: 8 activos (mejores pesos y análisis más completo)
+    logger.info(f"⚡ Análisis optimizado: procesando {len(symbols_batch)} de {len(symbols_to_analyze)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
     all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
