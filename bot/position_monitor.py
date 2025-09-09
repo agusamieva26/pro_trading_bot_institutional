@@ -171,15 +171,21 @@ def monitor_closed_positions(clf):
 def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float, pnl_pct: float, reason: str):
     """Cierra una posición y registra el cierre."""
     try:
+        from alpaca.trading.requests import MarketOrderRequest
+        from alpaca.trading.enums import OrderSide, TimeInForce
+        
         base_symbol = symbol.replace("/", "")
-        order_side = "sell" if qty > 0 else "buy"
-        trading_client.submit_order(
+        order_side = OrderSide.SELL if qty > 0 else OrderSide.BUY
+        
+        # ✅ ARREGLO: Usar MarketOrderRequest correctamente
+        order_request = MarketOrderRequest(
             symbol=base_symbol,
             qty=abs(qty),
             side=order_side,
-            type="market",
-            time_in_force="GTC"
+            time_in_force=TimeInForce.GTC
         )
+        
+        trading_client.submit_order(order_request)
         side_str = "long" if qty > 0 else "short"
         logger.info(f"✅ Cerrada {side_str} {abs(qty)} {symbol} | P&L: ${pnl:.2f} ({pnl_pct:+.2%}) [{reason}]")
         alert_trade_exit(symbol, side_str, abs(qty), exit_price, pnl, pnl_pct)

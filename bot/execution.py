@@ -78,6 +78,12 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
             # Use quantity for crypto and whole shares
             # Crypto no soporta DAY time_in_force, usar GTC en su lugar
             tif = TimeInForce.GTC if is_crypto else TimeInForce.DAY
+            
+            # ✅ ARREGLO: Validar cantidad mínima para crypto
+            if is_crypto and float(qty) < 0.000000002:
+                logger.warning(f"⚠️ Cantidad {qty} muy pequeña para {symbol}, saltando orden")
+                return False
+            
             order_request = MarketOrderRequest(
                 symbol=api_symbol,
                 qty=float(qty),
