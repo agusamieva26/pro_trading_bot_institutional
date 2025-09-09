@@ -244,8 +244,8 @@ def run_once(state: BotState, clf):
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
     # 🚀 ANÁLISIS PARALELO ULTRA-RÁPIDO: Descarga + análisis simultáneo
-    symbols_batch = other_symbols[:8]  # Rotar 8 activos por vez
-    logger.info(f"⚡ Análisis paralelo ultra-rápido: procesando {len(symbols_batch)} de {len(other_symbols)} activos")
+    symbols_batch = other_symbols[:4]  # OPTIMIZADO: Solo 4 activos para evitar colgadas
+    logger.info(f"⚡ Análisis optimizado: procesando {len(symbols_batch)} de {len(other_symbols)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
     all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
@@ -254,13 +254,13 @@ def run_once(state: BotState, clf):
     risk_environment = analyze_risk_environment(all_data)
     market_condition = risk_environment.get("market_condition", "NORMAL")
     
-    # 🤖 ADVANCED ML: Selección automática del mejor modelo
-    model_comparison = advanced_model_selector.run_model_comparison(
-        pd.concat([data for data in all_data.values()]) if all_data else pd.DataFrame()
-    )
+    # 🤖 ADVANCED ML: Selección optimizada (simplificada temporalmente)
+    # model_comparison = advanced_model_selector.run_model_comparison(
+    #     pd.concat([data for data in all_data.values()]) if all_data else pd.DataFrame()
+    # )
     
-    # 🧠 ANÁLISIS PARALELO COMPLETO: features + señales + scoring simultáneo
-    analysis_results = parallel_signal_analysis(all_data, clf, max_workers=6)
+    # 🧠 ANÁLISIS PARALELO OPTIMIZADO: features + señales + scoring simultáneo
+    analysis_results = parallel_signal_analysis(all_data, clf, max_workers=3)  # REDUCIDO para evitar colgadas
     
     # 📊 FILTRAR SEÑALES FUERTES
     base_signals = filter_strong_signals(analysis_results, min_threshold=0.1)
