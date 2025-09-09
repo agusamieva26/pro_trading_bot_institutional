@@ -2,7 +2,25 @@
 
 This is a sophisticated institutional-grade trading bot written in Python that combines machine learning, technical analysis, and risk management for automated trading. The system integrates with Alpaca Markets for paper/live trading and supports both equity and cryptocurrency markets. It features a comprehensive backtesting framework, hyperparameter optimization, live monitoring dashboard, and automated reporting capabilities.
 
-## Recent Changes (2025-09-08)
+## Recent Changes (2025-09-09)
+
+**🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
+- **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
+- **17 Cryptos Completos:** BTC, ETH, SOL, AVAX, LINK, DOGE, DOT, LTC, SHIB, XRP, UNI, AAVE, PEPE, BCH, MKR, CRV, GRT
+- **37 Stocks/ETFs:** Tech (AVGO, CRM, ADBE), Finance (JPM, BAC, V, MA), Healthcare (JNJ, PFE, UNH), Sector ETFs (XLE, XLF, XLK, XLV)
+- **Configuración Hardcoded:** Símbolos definidos directamente en config.py para evitar problemas de .env
+
+**⚡ CRYPTO SHORTS INTELIGENTES:**
+- **Habilitados:** Para señales >= 0.4 con calidad "EXCELENTE" o "MÁXIMA"
+- **Anti-Overtrading:** Cooldown de 3 minutos mínimo por posición
+- **Señales diversificadas:** Factores únicos de volatilidad por cada crypto
+
+**🔧 DIVERSIFICACIÓN TÉCNICA:**
+- **EMAs variables:** Períodos específicos por crypto (BTC: 12/26, ETH: 10/24, PEPE: 16/32)
+- **RSI diversificado:** Períodos únicos (LTC: 12, PEPE: 18, XRP: 13)
+- **Randomness controlado:** Seed consistente ±5% variación por símbolo
+
+## Previous Changes (2025-09-08)
 
 **COMPLETE HEDGE FUND-LEVEL TRANSFORMATION:**
 
