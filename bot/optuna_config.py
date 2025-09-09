@@ -3,11 +3,11 @@ Configuración optimizada por Optuna con análisis de Fibonacci.
 Este archivo contiene los parámetros óptimos encontrados por la optimización.
 """
 
-# Parámetros optimizados por Optuna (15 trials, score: 5911.78)
+# Parámetros optimizados para evitar micro-trading y maximizar ganancias netas
 OPTIMIZED_PARAMS = {
-    "risk_per_trade": 0.015,      # 1.5% - Riesgo optimizado para meta $1000
-    "take_profit_pct": 0.03,      # 3.0% - Scalping agresivo para meta $1000
-    "stop_loss_pct": 0.008,       # 0.8% - Stop loss ultra-tight
+    "risk_per_trade": 0.02,       # 2.0% - Riesgo aumentado para trades más grandes
+    "take_profit_pct": 0.08,      # 8.0% - Take profit más alto para movimientos reales
+    "stop_loss_pct": 0.015,       # 1.5% - Stop loss balanceado
 }
 
 # Métricas de rendimiento esperado
@@ -27,9 +27,9 @@ def apply_optimized_config(settings_obj):
     settings_obj.stop_loss_pct = OPTIMIZED_PARAMS["stop_loss_pct"]
     
     print("✅ Configuración optimizada por Optuna aplicada:")
-    print(f"   🎯 Risk per trade: {OPTIMIZED_PARAMS['risk_per_trade']*100:.1f}% (META $1000)")
-    print(f"   📈 Take profit: {OPTIMIZED_PARAMS['take_profit_pct']*100:.1f}%")
-    print(f"   🛡️ Stop loss: {OPTIMIZED_PARAMS['stop_loss_pct']*100:.1f}%")
+    print(f"   🎯 Risk per trade: {OPTIMIZED_PARAMS['risk_per_trade']*100:.1f}% (ANTI-MICRO-TRADING)")
+    print(f"   📈 Take profit: {OPTIMIZED_PARAMS['take_profit_pct']*100:.1f}% (MOVIMIENTOS REALES)")
+    print(f"   🛡️ Stop loss: {OPTIMIZED_PARAMS['stop_loss_pct']*100:.1f}% (BALANCEADO)")
     print(f"   🏆 Win rate esperado: {EXPECTED_PERFORMANCE['win_rate']*100:.1f}%")
     
     return settings_obj
