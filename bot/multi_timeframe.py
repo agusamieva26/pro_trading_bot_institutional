@@ -126,25 +126,62 @@ class MultiTimeframeAnalyzer:
     
     def _calculate_confirmation(self, signals: Dict, data: Dict) -> float:
         """
-        Calcula score de confirmación basado en alineación de timeframes.
+        Calcula score de confirmación diversificado basado en alineación de timeframes.
         """
         if len(signals) < 2:
             return 0.5  # Confirmación neutral si hay pocos timeframes
         
-        # Contar alineación direccional
-        bullish_count = sum(1 for s in signals.values() if s > 0.1)
-        bearish_count = sum(1 for s in signals.values() if s < -0.1)
+        # 🎯 DIVERSIFICACIÓN: Umbrales específicos por crypto basados en volatilidad
+        symbol = list(data.keys())[0] if data else "BTC/USD"
+        crypto_base = symbol.split('/')[0] if '/' in symbol else symbol.replace('USD', '')
+        
+        # Factores de diversificación por crypto
+        crypto_factors = {
+            'BTC': {'threshold': 0.08, 'volatility_factor': 1.0, 'confirmation_boost': 1.15},
+            'ETH': {'threshold': 0.10, 'volatility_factor': 1.1, 'confirmation_boost': 1.18},
+            'SOL': {'threshold': 0.12, 'volatility_factor': 1.2, 'confirmation_boost': 1.22},
+            'AVAX': {'threshold': 0.11, 'volatility_factor': 1.15, 'confirmation_boost': 1.20},
+            'LINK': {'threshold': 0.09, 'volatility_factor': 1.05, 'confirmation_boost': 1.16},
+            'DOT': {'threshold': 0.10, 'volatility_factor': 1.08, 'confirmation_boost': 1.17},
+            'LTC': {'threshold': 0.07, 'volatility_factor': 0.95, 'confirmation_boost': 1.14},
+            'SHIB': {'threshold': 0.15, 'volatility_factor': 1.3, 'confirmation_boost': 1.25},
+            'DOGE': {'threshold': 0.13, 'volatility_factor': 1.25, 'confirmation_boost': 1.23},
+            # NEW CRYPTOS con factores diversificados
+            'XRP': {'threshold': 0.09, 'volatility_factor': 1.12, 'confirmation_boost': 1.19},
+            'UNI': {'threshold': 0.14, 'volatility_factor': 1.18, 'confirmation_boost': 1.21},
+            'AAVE': {'threshold': 0.16, 'volatility_factor': 1.25, 'confirmation_boost': 1.24},
+            'PEPE': {'threshold': 0.18, 'volatility_factor': 1.35, 'confirmation_boost': 1.28},
+            'BCH': {'threshold': 0.08, 'volatility_factor': 1.02, 'confirmation_boost': 1.16},
+            'MKR': {'threshold': 0.17, 'volatility_factor': 1.28, 'confirmation_boost': 1.26},
+            'CRV': {'threshold': 0.15, 'volatility_factor': 1.22, 'confirmation_boost': 1.23},
+            'GRT': {'threshold': 0.14, 'volatility_factor': 1.20, 'confirmation_boost': 1.22},
+        }
+        
+        # Usar factores específicos o defaults
+        factors = crypto_factors.get(crypto_base, {'threshold': 0.10, 'volatility_factor': 1.0, 'confirmation_boost': 1.20})
+        threshold = factors['threshold']
+        vol_factor = factors['volatility_factor']
+        boost = factors['confirmation_boost']
+        
+        # 🎲 RANDOMNESS CONTROLADO: Pequeña variación para diversificar
+        import random
+        random.seed(hash(symbol) % 1000)  # Seed consistente por símbolo
+        noise_factor = 1.0 + random.uniform(-0.05, 0.05)  # ±5% variación
+        
+        # Contar alineación direccional con umbrales dinámicos
+        bullish_count = sum(1 for s in signals.values() if s > threshold * vol_factor)
+        bearish_count = sum(1 for s in signals.values() if s < -threshold * vol_factor)
         neutral_count = len(signals) - bullish_count - bearish_count
         
         total_signals = len(signals)
         
-        # Score basado en consenso
+        # Score basado en consenso DIVERSIFICADO
         if bullish_count > bearish_count:
             # Señal alcista - mejor si más timeframes confirman
-            confirmation = (bullish_count / total_signals) * 1.2
+            confirmation = (bullish_count / total_signals) * boost * noise_factor
         elif bearish_count > bullish_count:
             # Señal bajista - mejor si más timeframes confirman  
-            confirmation = (bearish_count / total_signals) * 1.2
+            confirmation = (bearish_count / total_signals) * boost * noise_factor
         else:
             # Señales mixtas - menor confirmación
             confirmation = 0.6
