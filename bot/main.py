@@ -18,6 +18,7 @@ from .exposure import get_total_exposure
 from .telegram import alert_risk_stop, alert_error
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
+from .profit_management import profit_manager
 from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
 from .multi_timeframe import enhance_signals_with_multi_tf
 from .risk_management_v2 import AdvancedRiskManager, analyze_risk_environment
@@ -163,8 +164,20 @@ def run_once(state: BotState, clf):
         logger.critical("✅ Todas las posiciones cerradas. Bot detenido por objetivo diario.")
         return "STOP"
     
-    # 📊 NOTIFICACIONES DE PROGRESO HACIA OBJETIVO
+    # 💰 GESTIÓN INTELIGENTE DE BENEFICIOS: 40% Reinversión, 60% Protección
     elif daily_change > 0:  # Solo si hay beneficio
+        # 1. Gestionar distribución de beneficios
+        try:
+            if profit_manager.should_distribute_profits(daily_change):
+                distribution_result = profit_manager.distribute_daily_profits(current_equity, daily_change)
+                if distribution_result["distributed"]:
+                    # Enviar notificación de distribución
+                    profit_manager.send_distribution_notification(distribution_result)
+                    logger.info(f"💰 Beneficios distribuidos: Reinversión ${distribution_result['amount_reinvested']:,.2f}, Protegido ${distribution_result['amount_protected']:,.2f}")
+        except Exception as e:
+            logger.error(f"❌ Error en gestión de beneficios: {e}")
+        
+        # 2. Notificaciones de progreso hacia objetivo $1000
         progress_pct = (daily_change / 1000) * 100
         
         # Notificar cada 25% de progreso (250, 500, 750)
