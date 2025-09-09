@@ -50,6 +50,15 @@ class SymbolManager:
             'LTCUSD': 'LTC/USD',
             'SHIBUDE': 'SHIB/USD',
             'DOGEUSD': 'DOGE/USD',
+            # NEW CRYPTOS
+            'XRPUSD': 'XRP/USD',
+            'UNIUSD': 'UNI/USD',
+            'AAVEUSD': 'AAVE/USD',
+            'PEPEUSD': 'PEPE/USD',
+            'BCHUSD': 'BCH/USD',
+            'MKRUSD': 'MKR/USD',
+            'CRVUSD': 'CRV/USD',
+            'GRTUSD': 'GRT/USD',
         }
         
         # Cache para optimizar lookups
