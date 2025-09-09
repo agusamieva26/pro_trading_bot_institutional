@@ -70,7 +70,19 @@ def prepare_training_data(all_data):
     
     # Crear columna target para entrenamiento
     print("   • Creando targets de entrenamiento...")
-    full_dataset = full_dataset.sort_values(['symbol', 'timestamp']).reset_index(drop=True)
+    
+    # Verificar si hay columna de tiempo
+    time_col = None
+    for col in ['timestamp', 'time', 'datetime', 'date']:
+        if col in full_dataset.columns:
+            time_col = col
+            break
+    
+    if time_col:
+        full_dataset = full_dataset.sort_values(['symbol', time_col]).reset_index(drop=True)
+    else:
+        # Si no hay columna de tiempo, usar el índice
+        full_dataset = full_dataset.reset_index().sort_values(['symbol', 'index']).drop('index', axis=1).reset_index(drop=True)
     
     # Calcular target basado en rendimiento futuro
     full_dataset['future_return'] = full_dataset.groupby('symbol')['close'].pct_change(5).shift(-5)
