@@ -377,7 +377,7 @@ def run_once(state: BotState, clf):
     # 📊 FILTRAR SEÑALES FUERTES
     base_signals = filter_strong_signals(analysis_results, min_threshold=0.1)
     
-    # 🕐 MEJORA MULTI-TIMEFRAME: Confirmar señales con múltiples marcos temporales
+    # 🕐 MEJORA MULTI-TIMEFRAME ULTRA-RÁPIDA: 6 workers para velocidad máxima
     mtf_enhanced_signals = enhance_signals_with_multi_tf(base_signals, clf)
     
     # 📊 INTEGRACIÓN DE SENTIMENT: Ajustar por Fear & Greed Index
