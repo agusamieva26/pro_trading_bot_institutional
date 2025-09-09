@@ -14,8 +14,8 @@ from dataclasses import dataclass
 class BrokerCaps:
     supports_fractional_long_equities: bool = True
     supports_fractional_short_equities: bool = False
-    min_notional_equity: float = 1.0
-    min_notional_crypto: float = 1.0
+    min_notional_equity: float = 50.0    # Mínimo aumentado para trades viables
+    min_notional_crypto: float = 25.0    # Mínimo aumentado para evitar micro-trades
 
 BROKER = BrokerCaps()
 

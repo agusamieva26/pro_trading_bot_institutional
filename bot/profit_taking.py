@@ -9,11 +9,12 @@ from .util import logger
 from .execution import place_order
 import time
 
-# Configuración de profit-taking
-PROFIT_THRESHOLD_BTC = 0.03  # 3% ganancia para tomar profits en BTC
-MAX_CONCENTRATION_BTC = 0.70  # Máximo 70% en BTC
-MIN_CASH_RESERVE = 0.05  # Mantener 5% en cash
-REBALANCE_THRESHOLD = 0.15  # 15% desviación para rebalancear
+# Configuración de profit-taking optimizada
+PROFIT_THRESHOLD_BTC = 0.08      # 8% ganancia para BTC (movimientos reales)
+PROFIT_THRESHOLD_OTHER = 0.06    # 6% ganancia para otros activos
+MAX_CONCENTRATION_BTC = 0.70     # Máximo 70% en BTC
+MIN_CASH_RESERVE = 0.05          # Mantener 5% en cash
+REBALANCE_THRESHOLD = 0.15       # 15% desviación para rebalancear
 
 def _client():
     """Cliente de Alpaca"""
@@ -47,15 +48,15 @@ def should_take_profits(symbol, allocation, unrealized_pnl, entry_value):
     
     # Condiciones para profit-taking
     if symbol == "BTC/USD":
-        # BTC: Tomar profits si >3% ganancia O >70% concentración
+        # BTC: Tomar profits si >8% ganancia O >70% concentración
         if pnl_pct >= PROFIT_THRESHOLD_BTC:
             return True, f"Ganancia {pnl_pct:.1%} ≥ objetivo {PROFIT_THRESHOLD_BTC:.1%}"
         if allocation >= MAX_CONCENTRATION_BTC:
             return True, f"Concentración {allocation:.1%} ≥ límite {MAX_CONCENTRATION_BTC:.1%}"
     else:
-        # Otros activos: Tomar profits con 2% ganancia
-        if pnl_pct >= 0.02:
-            return True, f"Ganancia {pnl_pct:.1%} ≥ 2.0%"
+        # Otros activos: Tomar profits con 6% ganancia (evitar micro-profits)
+        if pnl_pct >= PROFIT_THRESHOLD_OTHER:
+            return True, f"Ganancia {pnl_pct:.1%} ≥ {PROFIT_THRESHOLD_OTHER:.1%}"
     
     return False, ""
 
