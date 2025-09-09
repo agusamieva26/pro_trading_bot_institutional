@@ -32,7 +32,7 @@ class AdvancedFeatureGenerator:
             'pattern_features': True,
             'volume_features': True,
             'cycle_features': False,  # Optimizado: deshabilitado temporalmente
-            'statistical_features': True,
+            'statistical_features': False,  # 🔥 ULTRA-SCALPING: Deshabilitado por velocidad
             'fractal_features': False  # Optimizado: muy costoso computacionalmente
         }
     
@@ -53,7 +53,7 @@ class AdvancedFeatureGenerator:
             logger.error("❌ Columnas OHLC requeridas no encontradas")
             return df
         
-        logger.info("🔧 Generando features avanzadas...")
+        # logger.info("🔧 Generando features avanzadas...")  # 🔥 ULTRA-SCALPING: Sin logs
         
         # 1. Price-based features
         if self.feature_configs['price_features']:
@@ -85,12 +85,8 @@ class AdvancedFeatureGenerator:
             except Exception as e:
                 logger.warning(f"⚠️ Saltando cycle features: {e}")
         
-        # 7. Statistical features (deshabilitado temporalmente - muy costoso)
-        # if self.feature_configs['statistical_features']:
-        #     try:
-        #         df = self._add_statistical_features(df)
-        #     except Exception as e:
-        #         logger.warning(f"⚠️ Saltando statistical features: {e}")
+        # 7. Statistical features (PERMANENTEMENTE DESHABILITADO - muy costoso)
+        # ULTRA-SCALPING: Todas las features estadísticas eliminadas por velocidad
         
         # 8. Fractal features (deshabilitado temporalmente)
         # if self.feature_configs['fractal_features']:
@@ -100,7 +96,7 @@ class AdvancedFeatureGenerator:
         df = self._clean_features(df)
         
         feature_count = len([col for col in df.columns if col not in required_cols + ['volume', 'timestamp']])
-        logger.info(f"✅ Features avanzadas generadas: {feature_count} nuevos indicadores")
+        # logger.info(f"✅ Features avanzadas generadas: {feature_count} nuevos indicadores")  # 🔥 ULTRA-SCALPING: Sin logs
         
         return df
     
