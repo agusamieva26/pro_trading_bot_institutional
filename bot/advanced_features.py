@@ -67,9 +67,12 @@ class AdvancedFeatureGenerator:
         if self.feature_configs['volatility_features']:
             df = self._add_volatility_features(df)
         
-        # 4. Pattern recognition features
+        # 4. Pattern recognition features (optimizado temporalmente)
         if self.feature_configs['pattern_features']:
-            df = self._add_pattern_features(df)
+            try:
+                df = self._add_pattern_features_light(df)  # Versión ligera
+            except Exception as e:
+                logger.warning(f"⚠️ Saltando pattern features: {e}")
         
         # 5. Volume features
         if self.feature_configs['volume_features']:
@@ -82,12 +85,12 @@ class AdvancedFeatureGenerator:
             except Exception as e:
                 logger.warning(f"⚠️ Saltando cycle features: {e}")
         
-        # 7. Statistical features (optimizado)  
-        if self.feature_configs['statistical_features']:
-            try:
-                df = self._add_statistical_features(df)
-            except Exception as e:
-                logger.warning(f"⚠️ Saltando statistical features: {e}")
+        # 7. Statistical features (deshabilitado temporalmente - muy costoso)
+        # if self.feature_configs['statistical_features']:
+        #     try:
+        #         df = self._add_statistical_features(df)
+        #     except Exception as e:
+        #         logger.warning(f"⚠️ Saltando statistical features: {e}")
         
         # 8. Fractal features (deshabilitado temporalmente)
         # if self.feature_configs['fractal_features']:
@@ -184,6 +187,17 @@ class AdvancedFeatureGenerator:
         df['donch_upper'] = df['high'].rolling(20).max()
         df['donch_lower'] = df['low'].rolling(20).min()
         df['donch_position'] = (df['close'] - df['donch_lower']) / (df['donch_upper'] - df['donch_lower'])
+        
+        return df
+    
+    def _add_pattern_features_light(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Añade features de patrones optimizadas (versión ligera)."""
+        
+        # Solo los patrones más esenciales y rápidos
+        df['support_level'] = df['low'].rolling(10).min()  # Reducido de 20 a 10
+        df['resistance_level'] = df['high'].rolling(10).max()  # Reducido de 20 a 10
+        df['support_distance'] = (df['close'] - df['support_level']) / df['close']
+        df['resistance_distance'] = (df['resistance_level'] - df['close']) / df['close']
         
         return df
     
