@@ -110,6 +110,37 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
             _reserved_cash = max(0, _reserved_cash - notional_value)
         return False
 
+def close_all():
+    """Cierra todas las posiciones abiertas."""
+    client = _client()
+    try:
+        positions = client.get_all_positions()
+        if not positions:
+            logger.info("✅ No hay posiciones abiertas para cerrar")
+            return
+            
+        logger.critical(f"🚨 Cerrando {len(positions)} posiciones abiertas...")
+        closed_count = 0
+        
+        for position in positions:
+            try:
+                symbol = position.symbol
+                qty = abs(float(position.qty))
+                side = "sell" if float(position.qty) > 0 else "buy"
+                
+                # Cerrar posición individual
+                close_position(symbol)
+                closed_count += 1
+                logger.info(f"✅ {symbol}: Posición cerrada ({closed_count}/{len(positions)})")
+                
+            except Exception as e:
+                logger.error(f"❌ Error cerrando {symbol}: {e}")
+                
+        logger.critical(f"🎯 TAKE-PROFIT COMPLETADO: {closed_count} posiciones cerradas")
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo posiciones para cerrar: {e}")
+
 def close_position(symbol: str):
     """Close an existing position for the given symbol."""
     try:
