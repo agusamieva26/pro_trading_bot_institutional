@@ -414,23 +414,23 @@ class EnsembleModel:
             logger.error(f"❌ Error entrenando XGBoost: {e}")
             model_scores['xgb'] = 0.0
         
-        # Entrenar LSTM
-        if TENSORFLOW_AVAILABLE and 'lstm' in self.models:
-            try:
-                lstm_success = self.models['lstm'].train(data, target_col)
-                model_scores['lstm'] = 0.6 if lstm_success else 0.0
-            except Exception as e:
-                logger.error(f"❌ Error entrenando LSTM: {e}")
-                model_scores['lstm'] = 0.0
+        # LSTM y Transformer temporalmente deshabilitados para optimización
+        # (RandomForest=0.716 y XGBoost=0.977 funcionan perfectamente)
+        # if TENSORFLOW_AVAILABLE and 'lstm' in self.models:
+        #     try:
+        #         lstm_success = self.models['lstm'].train(data, target_col)
+        #         model_scores['lstm'] = 0.6 if lstm_success else 0.0
+        #     except Exception as e:
+        #         logger.error(f"❌ Error entrenando LSTM: {e}")
+        #         model_scores['lstm'] = 0.0
         
-        # Entrenar Transformer
-        if TENSORFLOW_AVAILABLE and 'transformer' in self.models:
-            try:
-                transformer_success = self.models['transformer'].train(data, target_col)
-                model_scores['transformer'] = 0.6 if transformer_success else 0.0
-            except Exception as e:
-                logger.error(f"❌ Error entrenando Transformer: {e}")
-                model_scores['transformer'] = 0.0
+        # if TENSORFLOW_AVAILABLE and 'transformer' in self.models:
+        #     try:
+        #         transformer_success = self.models['transformer'].train(data, target_col)
+        #         model_scores['transformer'] = 0.6 if transformer_success else 0.0
+        #     except Exception as e:
+        #         logger.error(f"❌ Error entrenando Transformer: {e}")
+        #         model_scores['transformer'] = 0.0
         
         # Calcular pesos basados en performance
         total_score = sum(model_scores.values())
