@@ -99,8 +99,8 @@ def prepare_training_data(all_data):
     full_dataset = full_dataset.dropna(subset=['close', 'target'])
     full_dataset = full_dataset.fillna(method='ffill').fillna(method='bfill').fillna(0)
     
-    # Remover columnas auxiliares
-    full_dataset = full_dataset.drop(['future_return'], axis=1)
+    # Remover columnas auxiliares y no numéricas  
+    full_dataset = full_dataset.drop(['future_return', 'symbol'], axis=1)
     
     print(f"✅ Dataset combinado: {len(full_dataset)} filas, {len(full_dataset.columns)} columnas")
     print(f"   • Distribución target: SELL={sum(full_dataset['target'] == -1)}, HOLD={sum(full_dataset['target'] == 0)}, BUY={sum(full_dataset['target'] == 1)}")
