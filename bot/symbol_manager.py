@@ -35,7 +35,9 @@ class SymbolManager:
         
         self.etf_symbols = {
             'SPY', 'QQQ', 'IWM', 'VTI', 'VOO', 'VEA', 'VWO', 'AGG', 'BND',
-            'GLD', 'SLV', 'TLT', 'EEM', 'FXI', 'EWJ', 'VGK', 'IEFA'
+            'GLD', 'SLV', 'TLT', 'EEM', 'FXI', 'EWJ', 'VGK', 'IEFA',
+            # NEW ETFs
+            'XLE', 'XLF', 'XLK', 'XLV', 'VNQ'
         }
         
         # Mapeo de normalizaciones comunes
