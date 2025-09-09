@@ -39,6 +39,7 @@ class DynamicShortManager:
                 symbol=symbol,
                 qty=buy_qty,
                 side="buy",
+                price=current_price,
                 is_crypto=True
             )
             
@@ -59,7 +60,9 @@ class DynamicShortManager:
             short_result = place_order(
                 symbol=symbol,
                 qty=short_qty,
-                side=short_side
+                side=short_side,
+                price=current_price,
+                is_crypto=True
             )
             
             if not short_result or short_result.get("status") not in ["filled", "new", "partially_filled"]:
