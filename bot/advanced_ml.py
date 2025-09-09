@@ -122,8 +122,18 @@ class LSTMPredictor:
     
     def train(self, data: pd.DataFrame, target_col: str = 'target', epochs: int = 50):
         """Entrena el modelo LSTM."""
-        if not TENSORFLOW_AVAILABLE or self.model is None:
+        if not TENSORFLOW_AVAILABLE:
             return False
+        
+        # Detectar dimensiones de features automáticamente
+        feature_cols = [col for col in data.columns if col != target_col]
+        if self.features_dim is None:
+            self.features_dim = len(feature_cols)
+            logger.info(f"🔧 LSTM: Auto-detectado {self.features_dim} features")
+        
+        # Construir modelo si no existe
+        if self.model is None:
+            self.model = self._build_lstm_model()
         
         X_seq, y_seq = self.prepare_sequences(data, target_col)
         
@@ -256,8 +266,18 @@ class TransformerPredictor:
     
     def train(self, data: pd.DataFrame, target_col: str = 'target', epochs: int = 30):
         """Entrena el modelo Transformer."""
-        if not TENSORFLOW_AVAILABLE or self.model is None:
+        if not TENSORFLOW_AVAILABLE:
             return False
+        
+        # Detectar dimensiones de features automáticamente
+        feature_cols = [col for col in data.columns if col != target_col]
+        if self.features_dim is None:
+            self.features_dim = len(feature_cols)
+            logger.info(f"🔧 Transformer: Auto-detectado {self.features_dim} features")
+        
+        # Construir modelo si no existe
+        if self.model is None:
+            self.model = self._build_transformer_model()
         
         # Reutilizar lógica de LSTM para preparar secuencias
         lstm_helper = LSTMPredictor(self.sequence_length, self.features_dim)
