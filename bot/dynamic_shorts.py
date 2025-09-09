@@ -32,13 +32,20 @@ class DynamicShortManager:
             # PASO 1: Comprar $1 del token para habilitar short
             logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
             
+            # Calcular cantidad aproximada para $1
+            # Obtener precio actual para calcular qty
+            from .data import get_current_price
+            current_price = get_current_price(symbol)
+            if current_price and current_price > 0:
+                buy_qty = self.token_purchase_amount / current_price
+            else:
+                buy_qty = 0.001  # Fallback cantidad mínima
+            
             buy_result = place_order(
                 symbol=symbol,
-                qty=None,
+                qty=buy_qty,
                 side="buy",
-                order_type="market",
-                time_in_force="day",
-                notional=self.token_purchase_amount  # Comprar por valor en USD
+                is_crypto=True
             )
             
             if not buy_result or buy_result.get("status") not in ["filled", "new", "partially_filled"]:
@@ -58,9 +65,7 @@ class DynamicShortManager:
             short_result = place_order(
                 symbol=symbol,
                 qty=short_qty,
-                side=short_side,
-                order_type="market",
-                time_in_force="day"
+                side=short_side
             )
             
             if not short_result or short_result.get("status") not in ["filled", "new", "partially_filled"]:
