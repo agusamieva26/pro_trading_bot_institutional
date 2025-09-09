@@ -590,7 +590,7 @@ def main():
             logger.exception("💥 Error en el loop principal")
             alert_error("Error en loop principal", str(e))
         logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
-        time.sleep(15)  # 🔥 ULTRA-AGRESIVO: 15 segundos para meta $1000
+        time.sleep(8)   # 🔥 ULTRA-VELOCIDAD: 8 segundos para máxima frecuencia
 
 
 if __name__ == "__main__":

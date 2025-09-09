@@ -211,7 +211,7 @@ class MultiTimeframeAnalyzer:
             return "DÉBIL"
 
 
-def parallel_multi_timeframe_analysis(symbols: List[str], clf, max_workers: int = 4) -> List[Dict]:
+def parallel_multi_timeframe_analysis(symbols: List[str], clf, max_workers: int = 8) -> List[Dict]:
     """
     Análisis multi-timeframe paralelo para múltiples símbolos.
     """

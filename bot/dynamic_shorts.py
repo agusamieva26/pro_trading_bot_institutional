@@ -12,7 +12,7 @@ class DynamicShortManager:
     """Gestiona shorts con compra dinámica de tokens."""
     
     def __init__(self):
-        self.token_purchase_amount = 1.0  # $1 por token
+        self.token_purchase_amount = 10.0  # $10 mínimo requerido por Alpaca
         
     def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell") -> Dict:
         """
@@ -27,7 +27,7 @@ class DynamicShortManager:
             Dict con resultado de la operación
         """
         try:
-            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando $1 + Short {short_qty}")
+            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando $10 + Short {short_qty}")
             
             # PASO 1: Comprar $1 del token para habilitar short
             logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
@@ -44,7 +44,7 @@ class DynamicShortManager:
             )
             
             if not buy_result or buy_result.get("status") not in ["filled", "new", "partially_filled"]:
-                logger.error(f"❌ {symbol}: Fallo en compra de $1 - {buy_result}")
+                logger.error(f"❌ {symbol}: Fallo en compra de $10 - {buy_result}")
                 return {
                     "success": False,
                     "step_failed": "token_purchase",
