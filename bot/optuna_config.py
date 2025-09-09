@@ -6,8 +6,8 @@ Este archivo contiene los parámetros óptimos encontrados por la optimización.
 # Parámetros optimizados por Optuna (15 trials, score: 5911.78)
 OPTIMIZED_PARAMS = {
     "risk_per_trade": 0.015,      # 1.5% - Riesgo optimizado para meta $1000
-    "take_profit_pct": 0.05,      # 5.0% - Target de ganancia optimizado
-    "stop_loss_pct": 0.01,        # 1.0% - Stop loss optimizado
+    "take_profit_pct": 0.03,      # 3.0% - Scalping agresivo para meta $1000
+    "stop_loss_pct": 0.008,       # 0.8% - Stop loss ultra-tight
 }
 
 # Métricas de rendimiento esperado
