@@ -244,7 +244,7 @@ def run_once(state: BotState, clf):
     logger.info(f"💰 BTC: {btc_percentage:.1%} del portafolio, Disponible para otros: ${equity_for_rest:,.2f} (DIVERSIFICADO)")
 
     # 🚀 ANÁLISIS PARALELO ULTRA-RÁPIDO: Descarga + análisis simultáneo
-    symbols_batch = other_symbols[:4]  # OPTIMIZADO: Solo 4 activos para evitar colgadas
+    symbols_batch = other_symbols[:8]  # AMPLIADO: 8 activos (mejores pesos y análisis más completo)
     logger.info(f"⚡ Análisis optimizado: procesando {len(symbols_batch)} de {len(other_symbols)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
