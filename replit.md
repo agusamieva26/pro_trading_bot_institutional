@@ -22,6 +22,13 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **Ganancia esperada:** $18.30 por trade ganador
 - **Meta diaria:** 55 trades para alcanzar $1,000 (matemáticamente viable)
 
+**🔥 OPTIMIZACIONES ULTRA-AGRESIVAS IMPLEMENTADAS:**
+- **CRYPTO SHORTS ACTIVADOS:** Duplica oportunidades (16 señales bajistas detectadas)
+- **TIMEFRAMES ACELERADOS:** 30Sec bars vs 1Min (3x más datos)
+- **ANÁLISIS ULTRA-RÁPIDO:** 15 segundos vs 30 segundos (2x más frecuencia)
+- **RATIOS R/R SCALPING:** TP 3% vs 5%, SL 0.8% vs 1% (ejecución más rápida)
+- **HORARIOS EXTENDIDOS:** Pre/post market habilitado para máxima cobertura
+
 **🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
 - **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
 - **17 Cryptos Completos:** BTC, ETH, SOL, AVAX, LINK, DOGE, DOT, LTC, SHIB, XRP, UNI, AAVE, PEPE, BCH, MKR, CRV, GRT
