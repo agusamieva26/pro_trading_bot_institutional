@@ -13,6 +13,7 @@ def run_reporter():
     madrid_tz = pytz.timezone("Europe/Madrid")
     last_known_equity = None
     reset_detected = False
+    last_reset_time = None
     
     logger.info("⏰ Reporter en modo DETECTAR RESET: generará reporte cuando Alpaca resetee daily change")
     
@@ -36,8 +37,12 @@ def run_reporter():
             if last_known_equity is not None:
                 # Reset detectado si last_equity se acerca al equity anterior
                 if abs(last_equity - last_known_equity) < abs(current_equity - last_known_equity):
-                    if not reset_detected:
-                        now = datetime.now(madrid_tz)
+                    now = datetime.now(madrid_tz)
+                    
+                    # Evitar reportes duplicados: mínimo 2 horas entre reportes
+                    if not reset_detected and (last_reset_time is None or 
+                        (now - last_reset_time).total_seconds() > 7200):  # 2 horas = 7200 segundos
+                        
                         logger.info(f"🔄 RESET DETECTADO a las {now.strftime('%H:%M:%S')} - last_equity: ${last_equity:,.2f}")
                         logger.info("📅 Generando reporte diario tras reset automático de Alpaca...")
                         
@@ -74,7 +79,12 @@ def run_reporter():
                             logger.error(f"❌ Error en distribución de beneficios durante reset: {e}")
                         
                         reset_detected = True
+                        last_reset_time = now
                         logger.info("✅ Reporte generado y beneficios procesados tras detectar reset del daily change")
+                    
+                    else:
+                        # Reset ya detectado recientemente, skip
+                        logger.debug(f"⏩ Reset ya procesado recientemente, skipping...")
             
             # Actualizar equity conocido
             last_known_equity = current_equity
