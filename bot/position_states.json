@@ -1,0 +1,114 @@
+{
+  "BA": {
+    "trailing_activated": false,
+    "max_price_reached": 228.2,
+    "partial_profit_taken": false,
+    "original_quantity": 57.267284301,
+    "entry_price": 228.2
+  },
+  "BTC/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 113927.52,
+    "partial_profit_taken": false,
+    "original_quantity": 4.776e-06,
+    "entry_price": 113927.52
+  },
+  "CRV/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 0.784344506,
+    "partial_profit_taken": false,
+    "original_quantity": 61.111535135,
+    "entry_price": 0.784344506
+  },
+  "CVX": {
+    "trailing_activated": false,
+    "max_price_reached": 156.91,
+    "partial_profit_taken": false,
+    "original_quantity": 1.244472496,
+    "entry_price": 156.91
+  },
+  "ETH/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 4346.0,
+    "partial_profit_taken": false,
+    "original_quantity": 0.009198194,
+    "entry_price": 4346.0
+  },
+  "GOOGL": {
+    "trailing_activated": false,
+    "max_price_reached": 239.77,
+    "partial_profit_taken": false,
+    "original_quantity": 3.778379523,
+    "entry_price": 239.77
+  },
+  "LINK/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 23.58,
+    "partial_profit_taken": false,
+    "original_quantity": 0.568058241,
+    "entry_price": 23.58
+  },
+  "PEPE/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 1.052e-05,
+    "partial_profit_taken": false,
+    "original_quantity": 5188991.130333088,
+    "entry_price": 1.052e-05
+  },
+  "PFE": {
+    "trailing_activated": false,
+    "max_price_reached": 24.6,
+    "partial_profit_taken": false,
+    "original_quantity": 1.147070043,
+    "entry_price": 24.6
+  },
+  "PG": {
+    "trailing_activated": false,
+    "max_price_reached": 156.26,
+    "partial_profit_taken": false,
+    "original_quantity": 2.683791468,
+    "entry_price": 156.26
+  },
+  "SHIB/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 1.3052e-05,
+    "partial_profit_taken": false,
+    "original_quantity": 3970857.964425699,
+    "entry_price": 1.3052e-05
+  },
+  "SPY": {
+    "trailing_activated": false,
+    "max_price_reached": 652.63,
+    "partial_profit_taken": false,
+    "original_quantity": 1.00053295,
+    "entry_price": 652.63
+  },
+  "VNQ": {
+    "trailing_activated": false,
+    "max_price_reached": 91.64,
+    "partial_profit_taken": false,
+    "original_quantity": 1.071596245,
+    "entry_price": 91.64
+  },
+  "VTI": {
+    "trailing_activated": false,
+    "max_price_reached": 322.25,
+    "partial_profit_taken": false,
+    "original_quantity": 1.181982575,
+    "entry_price": 322.25
+  },
+  "XLF": {
+    "trailing_activated": false,
+    "max_price_reached": 53.04,
+    "partial_profit_taken": false,
+    "original_quantity": 103.569062208,
+    "entry_price": 53.04
+  },
+  "XLK": {
+    "trailing_activated": false,
+    "max_price_reached": 269.11,
+    "partial_profit_taken": false,
+    "original_quantity": 2.177210852,
+    "entry_price": 269.11
+  }
+}

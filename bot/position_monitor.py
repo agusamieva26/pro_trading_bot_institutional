@@ -15,10 +15,12 @@ from .telegram import alert_trade_exit, alert_risk_stop
 from .util import logger
 from .data import fetch_bars
 from .features import make_features
+from .liquidity_unlocker import liquidity_unlocker
 
 
 TRADES_FILE = "trades_log.csv"
 POSITION_TIMES_FILE = "bot/position_entry_times.json"
+POSITION_STATE_FILE = "bot/position_states.json"
 
 # Clientes Alpaca
 trading_client = TradingClient(
@@ -86,6 +88,137 @@ def _cleanup_closed_positions(current_symbols: set, position_times: dict) -> boo
         logger.debug(f"🧹 Posición cerrada removida del tracking: {symbol}")
     
     return len(position_times) != initial_count
+
+# 🎯 POSITION STATE TRACKING SYSTEM (for trailing stops & partial profits)
+def _load_position_states():
+    """Cargar estados de posiciones desde archivo JSON."""
+    try:
+        if os.path.exists(POSITION_STATE_FILE):
+            with open(POSITION_STATE_FILE, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        logger.warning(f"⚠️ Error cargando position states: {e}")
+    return {}
+
+def _save_position_states(position_states):
+    """Guardar estados de posiciones a archivo JSON."""
+    try:
+        os.makedirs(os.path.dirname(POSITION_STATE_FILE), exist_ok=True)
+        with open(POSITION_STATE_FILE, 'w') as f:
+            json.dump(position_states, f, indent=2)
+    except Exception as e:
+        logger.error(f"❌ Error guardando position states: {e}")
+
+def _init_new_position_state(symbol: str, entry_price: float, quantity: float, position_states: dict):
+    """Inicializa el estado de una nueva posición."""
+    position_states[symbol] = {
+        "trailing_activated": False,
+        "max_price_reached": entry_price,
+        "partial_profit_taken": False,
+        "original_quantity": abs(quantity),
+        "entry_price": entry_price
+    }
+    logger.debug(f"🎯 Estado inicial posición: {symbol} @ ${entry_price:.4f} (qty: {abs(quantity):.6f})")
+
+def _update_position_state(symbol: str, current_price: float, position_states: dict) -> dict:
+    """Actualiza el estado de la posición y retorna información de trailing/partial."""
+    if symbol not in position_states:
+        return {"trailing_stop_triggered": False, "partial_profit_triggered": False}
+    
+    state = position_states[symbol]
+    entry_price = state["entry_price"]
+    current_pnl_pct = (current_price - entry_price) / entry_price
+    
+    # Actualizar precio máximo alcanzado (solo para LONG, para SHORT sería mínimo)
+    if current_price > state["max_price_reached"]:
+        state["max_price_reached"] = current_price
+    
+    result = {"trailing_stop_triggered": False, "partial_profit_triggered": False}
+    
+    # 1. Verificar si activar trailing stop (+2%)
+    if not state["trailing_activated"] and current_pnl_pct >= settings.trailing_activation_pct:
+        state["trailing_activated"] = True
+        logger.info(f"🎯 TRAILING ACTIVADO: {symbol} @ {current_pnl_pct:+.2%} (≥{settings.trailing_activation_pct:.1%})")
+    
+    # 2. Verificar trailing stop trigger (si está activado)
+    if state["trailing_activated"]:
+        # Calcular precio de trailing stop (-1% desde el máximo)
+        trailing_stop_price = state["max_price_reached"] * (1 - settings.trailing_distance_pct)
+        if current_price <= trailing_stop_price:
+            result["trailing_stop_triggered"] = True
+            decline_pct = (state["max_price_reached"] - current_price) / state["max_price_reached"]
+            logger.info(f"🎯 TRAILING STOP TRIGGER: {symbol} bajó {decline_pct:.2%} desde máximo ${state['max_price_reached']:.4f}")
+    
+    # 3. Verificar cierre parcial (+3%)
+    if not state["partial_profit_taken"] and current_pnl_pct >= settings.partial_profit_pct:
+        result["partial_profit_triggered"] = True
+        state["partial_profit_taken"] = True
+        logger.info(f"💎 PARTIAL PROFIT TRIGGER: {symbol} @ {current_pnl_pct:+.2%} (≥{settings.partial_profit_pct:.1%})")
+    
+    return result
+
+def _cleanup_position_states(current_symbols: set, position_states: dict) -> bool:
+    """Limpia estados de posiciones cerradas. Retorna True si hubo cambios."""
+    initial_count = len(position_states)
+    symbols_to_remove = [sym for sym in position_states.keys() if sym not in current_symbols]
+    
+    for symbol in symbols_to_remove:
+        del position_states[symbol]
+        logger.debug(f"🧹 Estado de posición cerrada removido: {symbol}")
+    
+    return len(position_states) != initial_count
+
+def _execute_partial_close(pos, symbol: str, qty: float, current_price: float, pnl_pct: float, position_states: dict) -> bool:
+    """Ejecuta cierre parcial del 50% de la posición."""
+    try:
+        # Import the close_position function for partial close
+        from .execution import place_order
+        
+        # Calcular cantidad para vender (50% de la posición)
+        original_qty = abs(qty)
+        partial_qty = original_qty * 0.5
+        side_str = "long" if qty > 0 else "short"
+        sell_side = "sell" if qty > 0 else "buy"  # Para short, necesitamos "buy" para cerrar
+        
+        is_crypto = "/" in symbol
+        
+        # Ejecutar la venta parcial
+        success = place_order(
+            symbol=symbol,
+            qty=partial_qty,
+            side=sell_side,
+            price=current_price,
+            fractional=True,
+            is_crypto=is_crypto
+        )
+        
+        if success:
+            # Calcular P&L del 50% vendido
+            entry_price = position_states[symbol]["entry_price"]
+            partial_pnl = (current_price - entry_price) * partial_qty if qty > 0 else (entry_price - current_price) * partial_qty
+            
+            logger.info(f"💎 CIERRE PARCIAL 50%: {side_str} {partial_qty:.6f} {symbol} @ ${current_price:.4f} | P&L: ${partial_pnl:+.2f} ({pnl_pct:+.2%})")
+            
+            # Actualizar estado: activar trailing para el 50% restante
+            position_states[symbol]["trailing_activated"] = True
+            position_states[symbol]["original_quantity"] = original_qty / 2  # Actualizar a 50% restante
+            
+            # Enviar notificación
+            from .telegram import alert_trade_exit
+            alert_trade_exit(symbol, f"PARTIAL {side_str}", partial_qty, current_price, partial_pnl, pnl_pct)
+            
+            # Log trade exit para el cierre parcial
+            from .trade_logger import log_trade_exit
+            log_trade_exit(symbol, partial_qty, current_price, partial_pnl, pnl_pct)
+            
+            return True
+        else:
+            logger.warning(f"⚠️ Fallo en cierre parcial {symbol}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error ejecutando cierre parcial {symbol}: {e}")
+        return False
 
 def normalize_symbol(symbol: str) -> str:
     if "/" in symbol:
@@ -159,9 +292,12 @@ def monitor_closed_positions(clf):
     """
     logger.info("🔄 Position Monitor iniciado - monitoreando posiciones cada 10 segundos...")
     logger.info(f"⏰ TIME-BASED EXIT configurado: {settings.max_position_time_normal}min estancadas, {settings.max_position_time_force}min forzado")
+    logger.info(f"🎯 TRAILING STOPS configurado: activación {settings.trailing_activation_pct:.1%}, distancia {settings.trailing_distance_pct:.1%}")
+    logger.info(f"💎 PARTIAL PROFIT configurado: cierre parcial 50% @ {settings.partial_profit_pct:.1%}")
     
-    # Cargar timestamps de posiciones
+    # Cargar timestamps y estados de posiciones
     position_times = _load_position_times()
+    position_states = _load_position_states()
     
     while True:
         try:
@@ -185,11 +321,13 @@ def monitor_closed_positions(clf):
             try:
                 positions = trading_client.get_all_positions()
                 if not positions:
-                    # Limpiar position_times si no hay posiciones
-                    if position_times:
+                    # Limpiar position_times y states si no hay posiciones
+                    if position_times or position_states:
                         position_times.clear()
+                        position_states.clear()
                         _save_position_times(position_times)
-                        logger.debug("🧹 Position times limpiados - sin posiciones abiertas")
+                        _save_position_states(position_states)
+                        logger.debug("🧹 Position times y states limpiados - sin posiciones abiertas")
                     
                     logger.debug("💤 Sin posiciones abiertas para monitorear")
                     time.sleep(10)  # Esperar 10 segundos antes de la próxima verificación
@@ -204,23 +342,47 @@ def monitor_closed_positions(clf):
             # 3. Actualizar tracking de posiciones
             current_symbols = set()
             position_times_changed = False
+            position_states_changed = False
             
             for pos in positions:
                 symbol = normalize_symbol(getattr(pos, 'symbol', ''))
+                entry_price = float(getattr(pos, 'avg_entry_price', 0))
+                quantity = float(getattr(pos, 'qty', 0))
                 current_symbols.add(symbol)
                 
                 # Trackear nueva posición si no existe
                 if symbol not in position_times:
                     _track_new_position(symbol, position_times)
                     position_times_changed = True
+                
+                # Inicializar estado de nueva posición si no existe
+                if symbol not in position_states:
+                    _init_new_position_state(symbol, entry_price, quantity, position_states)
+                    position_states_changed = True
             
             # Limpiar posiciones cerradas del tracking
             if _cleanup_closed_positions(current_symbols, position_times):
                 position_times_changed = True
+            if _cleanup_position_states(current_symbols, position_states):
+                position_states_changed = True
             
-            # Guardar cambios en position_times si hubo modificaciones
+            # Guardar cambios si hubo modificaciones
             if position_times_changed:
                 _save_position_times(position_times)
+            if position_states_changed:
+                _save_position_states(position_states)
+
+            # 💰 3.5. LIQUIDITY UNLOCK: Verificar si necesitamos liberar capital
+            try:
+                unlock_executed = liquidity_unlocker.check_and_unlock_liquidity()
+                if unlock_executed:
+                    # Si se ejecutó un unlock, saltar este ciclo para que el siguiente 
+                    # ciclo evalúe las nuevas posiciones abiertas
+                    logger.info("💰 Liquidity unlock ejecutado - continuando monitoreo en próximo ciclo")
+                    time.sleep(10)
+                    continue
+            except Exception as e:
+                logger.error(f"❌ Error en liquidity unlock: {e}")
 
             # 4. Revisar cada posición (TP/SL, ML Reversal, TIME-BASED EXIT)
             for pos in positions:
@@ -247,6 +409,26 @@ def monitor_closed_positions(clf):
                 
                 # Obtener edad de la posición
                 position_age_minutes = _get_position_age_minutes(symbol, position_times)
+                
+                # --- PRIORITY 0: TRAILING STOPS & PARTIAL PROFIT (nocturnal optimization) ---
+                trailing_info = _update_position_state(symbol, current_price, position_states)
+                
+                # 🎯 TRAILING STOP: Verificar si se activó el trailing stop
+                if trailing_info["trailing_stop_triggered"]:
+                    should_close = True
+                    reason = f"🎯 TRAILING STOP: precio bajó {settings.trailing_distance_pct:.1%} desde máximo"
+                
+                # 💎 PARTIAL PROFIT: Verificar si se activó el cierre parcial (solo si no hay trailing stop)
+                elif trailing_info["partial_profit_triggered"]:
+                    # Aquí necesitamos ejecutar el cierre parcial (50%)
+                    try:
+                        success = _execute_partial_close(pos, symbol, qty, current_price, pnl_pct, position_states)
+                        if success:
+                            # Actualizar position_states después del cierre parcial
+                            position_states_changed = True
+                            continue  # Continuar con la posición restante (50%)
+                    except Exception as e:
+                        logger.error(f"❌ Error en cierre parcial {symbol}: {e}")
                 
                 # --- PRIORITY 1: TIME-BASED EXIT SYSTEM (antes que TP/SL tradicional) ---
                 
@@ -358,6 +540,10 @@ def monitor_closed_positions(clf):
                     price_str = f"${current_price:.6f}" if current_price < 0.01 else f"${current_price:.2f}"
                     logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ {price_str} | P&L: {pnl_str} ({pnl_pct:+.2%})")
                     _close_position(pos, symbol, qty, current_price, pnl, pnl_pct, reason)
+            
+            # Guardar estados de posiciones después de procesar todas las posiciones
+            if position_states_changed:
+                _save_position_states(position_states)
 
         except Exception as e:
             logger.error(f"💥 Error en cycle de position monitor: {e}")

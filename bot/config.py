@@ -33,6 +33,11 @@ class Settings(BaseModel):
     stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.007")))  # ROTACIÓN RÁPIDA: 0.7%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.001")))  # ULTRA-SCALPING: 0.1%
     
+    # 🎯 TRAILING STOPS & PARTIAL PROFIT SYSTEM (Nocturnal crypto optimization)
+    trailing_activation_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_ACTIVATION_PCT","0.020")))  # 2.0% gain to activate trailing
+    trailing_distance_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_DISTANCE_PCT","0.010")))  # 1.0% distance from peak to trigger stop
+    partial_profit_pct: float = Field(default_factory=lambda: float(os.getenv("PARTIAL_PROFIT_PCT","0.030")))  # 3.0% gain for 50% partial close
+    
     # ⏰ TIME-BASED EXIT SYSTEM (Capital rotation optimization)
     max_position_time_normal: float = Field(default_factory=lambda: float(os.getenv("MAX_POSITION_TIME_NORMAL","45")))  # 45 minutos para posiciones estancadas
     max_position_time_force: float = Field(default_factory=lambda: float(os.getenv("MAX_POSITION_TIME_FORCE","75")))  # 75 minutos cierre forzado
