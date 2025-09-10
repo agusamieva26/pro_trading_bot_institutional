@@ -43,6 +43,13 @@ This is a sophisticated institutional-grade trading bot written in Python that c
 - **CERO CAPITAL INMOVILIZADO:** No mantiene tokens innecesarios
 - **EJECUCIÓN AUTOMÁTICA:** Proceso completamente transparente e instantáneo
 
+**🔄 UNIFICACIÓN SISTEMA DAILY CHANGE (2025-09-10):**
+- **CAMBIO CRÍTICO:** Bot, Dashboard y Telegram ahora usan Alpaca como fuente única de verdad
+- **ELIMINADO:** Sistema de reset de medianoche interno del bot
+- **NUEVO:** Cálculo unificado: `current_equity - last_equity` (igual que dashboard de Alpaca)
+- **HORARIO:** Daily change se resetea automáticamente con el horario de Alpaca (8:15-8:30 AM Madrid)
+- **CONSISTENCIA TOTAL:** Los 3 sistemas (bot/dashboard/telegram) muestran exactamente los mismos valores
+
 **🎯 CONFIGURACIÓN SYMBOL COMPLETA:**
 - **RESUELTO:** Problema de configuración de símbolos - ahora analiza 17 cryptos + 37 stocks/ETFs (54 total)
 - **17 Cryptos Completos:** BTC, ETH, SOL, AVAX, LINK, DOGE, DOT, LTC, SHIB, XRP, UNI, AAVE, PEPE, BCH, MKR, CRV, GRT

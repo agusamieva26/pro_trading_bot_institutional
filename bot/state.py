@@ -16,16 +16,9 @@ def _now_cet():
         return datetime.now()  # Fallback
 
 def _is_new_day(last_reset: str) -> bool:
-    """Verifica si ha pasado a un nuevo día (CET/CEST)"""
-    try:
-        if not last_reset or last_reset.strip() == "":
-            return True  # Si no hay fecha, asumimos nuevo día
-        last = datetime.fromisoformat(last_reset)
-        now = _now_cet()
-        return now.date() > last.date()
-    except Exception as e:
-        logger.error(f"❌ Error al comparar fechas: {e}")
-        return True  # Por seguridad, reinicia si hay error
+    """DESHABILITADO: Ahora usamos Alpaca como fuente de verdad para daily change"""
+    # Ya no necesitamos reset de medianoche - Alpaca maneja esto
+    return False
 
 class BotState:
     def __init__(self):
@@ -45,12 +38,9 @@ class BotState:
             with open(STATE_FILE, "r") as f:
                 state = json.load(f)
 
-            # Validar y resetear si es nuevo día
-            if _is_new_day(state.get("last_reset_date", "")):
-                logger.info(f"🌅 Nuevo día detectado. Reiniciando P&L diario.")
-                current_equity = state.get("equity", INITIAL_EQUITY)
-                state["daily_start_equity"] = current_equity
-                state["last_reset_date"] = _now_cet().isoformat()
+            # DESHABILITADO: Reset automático - ahora usamos Alpaca
+            # El daily change viene directamente de Alpaca (equity - last_equity)
+            pass
 
             return state
         except Exception as e:

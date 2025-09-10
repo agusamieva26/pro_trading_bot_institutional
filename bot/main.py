@@ -101,41 +101,39 @@ def run_once(state: BotState, clf):
     
     logger.debug(f"🔧 Config dinámico: risk={settings.risk_per_trade:.3f}, tp={settings.take_profit_pct:.3f}, sl={settings.stop_loss_pct:.3f}")
 
-    # 1. Equity actual y cash disponible
+    # 1. Equity actual y cash disponible - USANDO ALPACA COMO FUENTE DE VERDAD
     try:
         account = client.get_account()
         current_equity = float(account.equity)
         available_cash = float(account.cash)
+        last_equity = float(getattr(account, "last_equity", current_equity))
         
-        # Actualizar equity y daily_pnl, guardar estado
-        old_equity = state.state.get("equity", 0)
+        # Calcular daily change usando Alpaca (igual que dashboard y telegram)
+        daily_change = current_equity - last_equity
+        daily_change_pct = (daily_change / last_equity) if last_equity > 0 else 0.0
+        
+        # Actualizar estado con valores de Alpaca
         state.state["equity"] = current_equity
-        state.update_daily_pnl(current_equity)  # ✅ NUEVO: Actualizar daily_pnl
-        state.save()  # ✅ ARREGLO: Guardar estado después de actualizar equity
+        state.state["daily_pnl"] = daily_change
+        state.state["last_equity"] = last_equity
+        state.save()
         
         logger.info(f"💵 Cash disponible: ${available_cash:,.2f} | Equity: ${current_equity:,.2f}")
-        
-        # Debug info para P&L
-        daily_start = state.state.get("daily_start_equity", 25000)
-        logger.debug(f"🔍 Debug P&L: Inicio=${daily_start:,.2f}, Actual=${current_equity:,.2f}, Anterior=${old_equity:,.2f}")
+        logger.debug(f"🔍 Alpaca P&L: Actual=${current_equity:,.2f}, Ayer=${last_equity:,.2f}, Cambio=${daily_change:+,.2f}")
         
     except Exception as e:
         logger.error(f"❌ No se pudo obtener equity: {e}")
         return
 
-    # 2. Stop diario por pérdida
-    daily_pnl_pct = state.get_daily_pnl_pct(current_equity)
-    daily_start_equity = state.state.get("daily_start_equity", 25000)
-    daily_change = current_equity - daily_start_equity
-    
-    if daily_pnl_pct < -settings.max_daily_loss_pct:
-        msg = f"Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de {settings.max_daily_loss_pct:.0%}"
+    # 2. Stop diario por pérdida - USANDO VALORES DE ALPACA
+    if daily_change_pct < -settings.max_daily_loss_pct * 100:
+        msg = f"Pérdida diaria de {daily_change_pct:.2f}% ≥ límite de {settings.max_daily_loss_pct*100:.0f}%"
         logger.critical(f"🛑 {msg}")
         alert_risk_stop(msg)
         return "STOP"  # ✅ Único return "STOP" válido
     
-    # ✅ ARREGLO: P&L diario mejorado con más información
-    logger.info(f"📈 P&L diario: {daily_pnl_pct:.2%} (${daily_change:+,.2f}) | Inicio: ${daily_start_equity:,.2f}")
+    # ✅ P&L diario usando valores reales de Alpaca
+    logger.info(f"📈 P&L diario Alpaca: {daily_change_pct:+.2f}% (${daily_change:+,.2f}) | Ayer: ${last_equity:,.2f}")
     
     # 🎯 TAKE PROFIT DIARIO: $1000 - Cerrar todas las posiciones
     if daily_change >= 1000:
