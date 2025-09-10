@@ -130,12 +130,6 @@ def run_once(state: BotState, clf):
         logger.error(f"❌ No se pudo obtener equity: {e}")
         return
 
-    # 2. Stop diario por pérdida - USANDO VALORES DE ALPACA
-    if daily_change_pct <= -settings.max_daily_loss_pct / 100:
-        msg = f"Pérdida diaria de {daily_change_pct*100:.2f}% ≥ límite de {settings.max_daily_loss_pct:.0f}%"
-        logger.critical(f"🛑 {msg}")
-        alert_risk_stop(msg)
-        return "STOP"  # ✅ Único return "STOP" válido
     
     # ✅ P&L diario usando valores reales de Alpaca
     logger.info(f"📈 P&L diario Alpaca: {daily_change_pct:+.2f}% (${daily_change:+,.2f}) | Ayer: ${last_equity:,.2f}")
