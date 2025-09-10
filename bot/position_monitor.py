@@ -140,7 +140,7 @@ def monitor_closed_positions(clf):
             if df.empty or len(df) < 100:
                 continue
 
-            feats = make_features(df)
+            feats = make_features(df, symbol=symbol)
             latest = feats.iloc[-1]
 
             # Validar features

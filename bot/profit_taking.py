@@ -83,7 +83,7 @@ def execute_profit_taking(client, symbol, current_qty, reason, target_reduction=
         
         df = fetch_bars(symbol, start="2024-09-07")
         if not df.empty:
-            feats = make_features(df)
+            feats = make_features(df, symbol=symbol)
             current_price = float(feats.iloc[-1]["close"])
             
             place_order(

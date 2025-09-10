@@ -260,7 +260,7 @@ def run_once(state: BotState, clf):
         try:
             df = fetch_bars("BTC/USD", start=None, end=None, min_bars=50)  # Solo mínimo necesario
             if not df.empty and len(df) >= 100:
-                feats = make_features(df)
+                feats = make_features(df, symbol="BTC/USD")
                 latest = feats.iloc[-1]
 
                 sig = hybrid_signal(latest, clf)

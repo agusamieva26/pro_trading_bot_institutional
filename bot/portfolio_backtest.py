@@ -10,7 +10,7 @@ def _concat_symbols(symbols, start, end):
     for s in symbols:
         df = fetch_bars(s, start, end)
         if df.empty: logger.warning(f"No data {s}"); continue
-        f = make_features(df); f["symbol"] = s; frames[s] = f
+        f = make_features(df, symbol=s); f["symbol"] = s; frames[s] = f
     return frames
 
 def backtest_vectorbt(frames: dict[str, pd.DataFrame]):

@@ -23,8 +23,8 @@ def analyze_symbol(symbol_data: Tuple[str, pd.DataFrame, object]) -> Dict:
         if df.empty or len(df) < 50:
             return {"symbol": symbol, "error": "Sin datos suficientes"}
         
-        # 1. Calcular features
-        feats = make_features(df)
+        # 1. Calcular features (con symbol específico)
+        feats = make_features(df, symbol=symbol)
         latest = feats.iloc[-1]
         
         # 2. Calcular señal híbrida

@@ -59,8 +59,8 @@ class MultiTimeframeAnalyzer:
                     logger.warning(f"⚠️ {symbol} {tf}: Datos insuficientes")
                     continue
                     
-                # Calcular features y señal
-                features = make_features(df)
+                # Calcular features y señal (pasar symbol explícitamente)
+                features = make_features(df, symbol=symbol)
                 latest = features.iloc[-1]
                 signal = hybrid_signal(latest, clf)
                 
@@ -103,7 +103,7 @@ class MultiTimeframeAnalyzer:
             base_signal = 0.0
         
         # Lógica de confirmación multi-timeframe
-        confirmation_score = self._calculate_confirmation(signals, data)
+        confirmation_score = self._calculate_confirmation(signals, data, symbol)
         
         # Señal final ajustada por confirmación
         final_signal = base_signal * confirmation_score
@@ -124,7 +124,7 @@ class MultiTimeframeAnalyzer:
             "error": None
         }
     
-    def _calculate_confirmation(self, signals: Dict, data: Dict) -> float:
+    def _calculate_confirmation(self, signals: Dict, data: Dict, symbol: str = None) -> float:
         """
         Calcula score de confirmación diversificado basado en alineación de timeframes.
         """
@@ -132,7 +132,9 @@ class MultiTimeframeAnalyzer:
             return 0.5  # Confirmación neutral si hay pocos timeframes
         
         # 🎯 DIVERSIFICACIÓN: Umbrales específicos por crypto basados en volatilidad
-        symbol = list(data.keys())[0] if data else "BTC/USD"
+        # FIXED: Pass symbol parameter instead of trying to extract from data keys
+        if symbol is None:
+            symbol = "BTC/USD"  # Fallback if no symbol provided
         crypto_base = symbol.split('/')[0] if '/' in symbol else symbol.replace('USD', '')
         
         # Factores de diversificación por crypto
@@ -165,7 +167,10 @@ class MultiTimeframeAnalyzer:
         
         # ⚡ SCALPING: Mayor randomness para señales más diversas
         import random
-        random.seed(hash(symbol) % 1000)  # Seed consistente por símbolo
+        import hashlib
+        # FIXED: Use more robust hash to avoid collisions
+        symbol_hash = int(hashlib.md5(symbol.encode()).hexdigest(), 16) % 100000
+        random.seed(symbol_hash)  # More unique seed per symbol
         noise_factor = 1.0 + random.uniform(-0.25, 0.25)  # ±25% variación para scalping
         
         # Contar alineación direccional con umbrales dinámicos

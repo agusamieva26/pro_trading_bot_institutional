@@ -20,12 +20,14 @@ def atr(df: pd.DataFrame, period:int=14):
     tr = pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()], axis=1).max(axis=1)
     return tr.rolling(period).mean()
 
-def make_features(df: pd.DataFrame) -> pd.DataFrame:
+def make_features(df: pd.DataFrame, symbol: str = None) -> pd.DataFrame:
     out = df.copy()
     out["ret_1"] = out["close"].pct_change()
     
     # 🎯 DIVERSIFICACIÓN: EMAs variables por símbolo para reducir correlación
-    symbol = getattr(df, 'symbol', 'BTC/USD')
+    # Priority: parameter > DataFrame attribute > default
+    if symbol is None:
+        symbol = getattr(df, 'symbol', 'BTC/USD')
     crypto_base = symbol.split('/')[0] if '/' in symbol else symbol.replace('USD', '')
     
     # Períodos específicos por crypto para diversificar señales

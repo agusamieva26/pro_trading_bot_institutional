@@ -178,7 +178,8 @@ def prepare_xy(df: pd.DataFrame):
     Prepara X e y para entrenamiento.
     y = 0 (SELL), 1 (HOLD), 2 (BUY) basado en retorno futuro
     """
-    feats = make_features(df)
+    # For training, use default symbol since this is combined data from multiple symbols
+    feats = make_features(df, symbol="TRAINING_DATA")
     feats = feats.dropna(subset=FEATURES + ["close"])
     
     # Usar retorno futuro con 3 clases
