@@ -1,7 +1,7 @@
 # dashboard.py
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh  # Para recarga automática
@@ -70,6 +70,57 @@ def calculate_daily_change(account_info):
         return daily_change, daily_change_pct
     except Exception:
         return 0.0, 0.0
+
+def calculate_time_to_target(daily_change, target=1000.0):
+    """Calcula el tiempo estimado para alcanzar la meta basado en la velocidad actual"""
+    try:
+        # Obtener tiempo transcurrido desde inicio del día de mercado (6:30 AM Madrid)
+        now = datetime.now(timezone.utc)
+        madrid_now = now.astimezone(timezone(timedelta(hours=1)))  # UTC+1
+        
+        # Inicio del día de trading (6:30 AM Madrid = 4:30 AM UTC)
+        market_start = madrid_now.replace(hour=4, minute=30, second=0, microsecond=0)
+        if madrid_now.hour < 4 or (madrid_now.hour == 4 and madrid_now.minute < 30):
+            market_start = market_start - timedelta(days=1)
+        
+        # Tiempo transcurrido en horas
+        elapsed_time = (now - market_start.astimezone(timezone.utc)).total_seconds() / 3600
+        
+        # Si han pasado menos de 30 minutos, usar 30 min como mínimo para evitar estimaciones locas
+        elapsed_time = max(elapsed_time, 0.5)
+        
+        # Velocidad actual ($/hora)
+        current_rate = daily_change / elapsed_time if elapsed_time > 0 else 0
+        
+        # Cantidad restante para alcanzar meta
+        remaining = max(target - daily_change, 0)
+        
+        if remaining <= 0:
+            return "¡Meta Alcanzada!", 0, current_rate
+        
+        if current_rate <= 0:
+            return "Sin progreso", float('inf'), current_rate
+        
+        # Tiempo estimado en horas
+        hours_to_target = remaining / current_rate
+        
+        # Convertir a formato legible
+        if hours_to_target < 1:
+            minutes = int(hours_to_target * 60)
+            time_str = f"{minutes}min"
+        elif hours_to_target < 24:
+            hours = int(hours_to_target)
+            minutes = int((hours_to_target - hours) * 60)
+            time_str = f"{hours}h {minutes}min"
+        else:
+            days = int(hours_to_target / 24)
+            hours = int(hours_to_target % 24)
+            time_str = f"{days}d {hours}h"
+        
+        return time_str, hours_to_target, current_rate
+        
+    except Exception:
+        return "Error", 0, 0
 
 def get_total_unrealized_pnl():
     """Obtiene el P&L no realizado total de todas las posiciones"""
@@ -195,8 +246,11 @@ with tab1:
     progress_pct = min((daily_change / DAILY_TARGET) * 100, 100) if DAILY_TARGET > 0 else 0
     remaining = max(DAILY_TARGET - daily_change, 0)
     
-    # Métricas de la meta
-    meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
+    # Calcular tiempo estimado
+    time_estimate, hours_to_target, current_rate = calculate_time_to_target(daily_change, DAILY_TARGET)
+    
+    # Métricas de la meta (ahora 5 columnas)
+    meta_col1, meta_col2, meta_col3, meta_col4, meta_col5 = st.columns(5)
     
     # Meta objetivo
     meta_col1.metric(
@@ -219,6 +273,15 @@ with tab1:
         value=f"${remaining:,.0f}" if remaining > 0 else "✅ Meta Alcanzada!"
     )
     
+    # Tiempo estimado para completar
+    time_color = "normal" if daily_change <= 0 else "inverse"
+    meta_col4.metric(
+        label="⏰ Tiempo Estimado",
+        value=time_estimate,
+        delta=f"${current_rate:.0f}/h" if current_rate > 0 else "Sin velocidad",
+        delta_color=time_color
+    )
+    
     # Estado de la meta
     if daily_change >= DAILY_TARGET:
         meta_status = "🎉 COMPLETADA"
@@ -236,7 +299,7 @@ with tab1:
         meta_status = "📊 Comenzando"
         meta_color = "⚪"
     
-    meta_col4.metric(
+    meta_col5.metric(
         label=f"{meta_color} Estado",
         value=meta_status
     )
@@ -253,7 +316,17 @@ with tab1:
         # Calcular trades aproximados necesarios (usando configuración actual)
         expected_win_per_trade = 34.03  # Basado en cálculos previos
         trades_needed = remaining / expected_win_per_trade if expected_win_per_trade > 0 else 0
-        st.info(f"💪 Necesitas aproximadamente ${remaining:,.0f} más para alcanzar la meta. Esto equivale a ~{trades_needed:.0f} trades ganadores.")
+        
+        # Información combinada con tiempo estimado
+        if current_rate > 0 and hours_to_target < 24:
+            st.info(f"💪 Necesitas ${remaining:,.0f} más para alcanzar la meta (~{trades_needed:.0f} trades ganadores). "
+                   f"A tu velocidad actual de ${current_rate:.0f}/hora, la completarás en aproximadamente **{time_estimate}**.")
+        elif current_rate > 0:
+            st.warning(f"💪 Necesitas ${remaining:,.0f} más para alcanzar la meta (~{trades_needed:.0f} trades ganadores). "
+                      f"Tu velocidad actual es ${current_rate:.0f}/hora, pero necesitarías **{time_estimate}** al ritmo actual.")
+        else:
+            st.info(f"💪 Necesitas ${remaining:,.0f} más para alcanzar la meta (~{trades_needed:.0f} trades ganadores). "
+                   f"¡Empieza a operar para ver el tiempo estimado!")
 
     # Posiciones abiertas
     st.subheader("💼 Posiciones Abiertas")
@@ -298,10 +371,10 @@ with tab3:
         # Gráfico de P&L acumulado (solo trades cerrados)
         df_closed = df[df["status"] == "closed"].copy()
         if "realized_pnl" in df_closed.columns and not df_closed.empty:
-            df_closed = df_closed.sort_values("exit_date", na_position='last')
+            df_closed = df_closed.sort_values("exit_date")
             df_closed["cum_pnl"] = df_closed["realized_pnl"].cumsum()
             
-            if PLOTLY_AVAILABLE:
+            if PLOTLY_AVAILABLE and 'px' in globals():
                 fig = px.line(
                     df_closed,
                     x="exit_date",
