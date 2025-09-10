@@ -90,7 +90,11 @@ def _get_position_cached(symbol: str, client):
 def run_once(state: BotState, clf):
     client = _client()
 
-    # 0. Configuración Dinámica y Auto-ajuste
+    # 0. RESETEAR CASH RESERVADO al inicio de cada iteración
+    from bot.execution import reset_reserved_cash
+    reset_reserved_cash()
+
+    # 1. Configuración Dinámica y Auto-ajuste
     dynamic_config = dynamic_config_manager.get_current_config()
     performance_metrics = dynamic_config_manager.analyze_recent_performance()
     
