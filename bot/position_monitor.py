@@ -97,104 +97,119 @@ def _get_current_price(symbol: str) -> float:
 
 def monitor_closed_positions(clf):
     """
-    Monitorea posiciones y cierra cuando el modelo predice una reversión.
+    Monitorea posiciones continuamente y cierra cuando el modelo predice una reversión.
+    Ejecuta en un bucle continuo cada 10 segundos.
     """
-    # 1. Verificar stop diario por pérdida
-    try:
-        account = trading_client.get_account()
-        equity = float(account.equity)
-        last_equity = float(getattr(account, "last_equity", equity))
-        daily_pnl = equity - last_equity
-        daily_pnl_pct = daily_pnl / last_equity if last_equity != 0 else 0.0
-
-        if daily_pnl_pct < -0.10:  # -10% (aumentado para operar hoy)
-            msg = f"🛑 Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de 10%"
-            logger.critical(f"🚨 {msg}")
-            alert_risk_stop(msg)
-            return "STOP"
-    except Exception as e:
-        logger.error(f"❌ No se pudo calcular P&L diario: {e}")
-
-    # 2. Obtener posiciones abiertas
-    try:
-        positions = trading_client.get_all_positions()
-        if not positions:
-            return
-    except Exception as e:
-        logger.error(f"❌ No se pudieron obtener posiciones: {e}")
-        return
-
-    # 3. Revisar cada posición
-    for pos in positions:
-        symbol = normalize_symbol(pos.symbol)
-        qty = float(pos.qty)
-        entry_price = float(pos.avg_entry_price)
-        current_price = _get_current_price(symbol)
-
-        if not current_price:
-            continue
-
-        # --- Obtener predicción del modelo ---
+    logger.info("🔄 Position Monitor iniciado - monitoreando posiciones cada 10 segundos...")
+    
+    while True:
         try:
-            df = fetch_bars(symbol, start="2023-01-01")
-            if df.empty or len(df) < 100:
+            # 1. Verificar stop diario por pérdida
+            try:
+                account = trading_client.get_account()
+                equity = float(account.equity)
+                last_equity = float(getattr(account, "last_equity", equity))
+                daily_pnl = equity - last_equity
+                daily_pnl_pct = daily_pnl / last_equity if last_equity != 0 else 0.0
+
+                if daily_pnl_pct < -0.10:  # -10% (aumentado para operar hoy)
+                    msg = f"🛑 Pérdida diaria de {daily_pnl_pct:.2%} ≥ límite de 10%"
+                    logger.critical(f"🚨 {msg}")
+                    alert_risk_stop(msg)
+                    return "STOP"
+            except Exception as e:
+                logger.error(f"❌ No se pudo calcular P&L diario: {e}")
+
+            # 2. Obtener posiciones abiertas
+            try:
+                positions = trading_client.get_all_positions()
+                if not positions:
+                    logger.debug("💤 Sin posiciones abiertas para monitorear")
+                    time.sleep(10)  # Esperar 10 segundos antes de la próxima verificación
+                    continue
+                else:
+                    logger.info(f"👁️ Monitoreando {len(positions)} posiciones abiertas...")
+            except Exception as e:
+                logger.error(f"❌ No se pudieron obtener posiciones: {e}")
+                time.sleep(10)
                 continue
 
-            feats = make_features(df, symbol=symbol)
-            latest = feats.iloc[-1]
+            # 3. Revisar cada posición
+            for pos in positions:
+                symbol = normalize_symbol(pos.symbol)
+                qty = float(pos.qty)
+                entry_price = float(pos.avg_entry_price)
+                current_price = _get_current_price(symbol)
 
-            # Validar features
-            missing = [f for f in clf.feature_names_in_ if f not in latest.index]
-            if missing:
-                logger.warning(f"⚠️ Features faltantes para {symbol}: {missing}")
-                continue
+                if not current_price:
+                    continue
 
-            X = latest[clf.feature_names_in_].to_frame().T
-            predicted_signal = clf.predict(X)[0]
-            current_side = "long" if qty > 0 else "short"
-            predicted_side = "long" if predicted_signal > 0 else "short"
+                # --- Obtener predicción del modelo ---
+                try:
+                    df = fetch_bars(symbol, start="2023-01-01")
+                    if df.empty or len(df) < 100:
+                        continue
 
-            # --- LÓGICA DE CIERRE SIMPLIFICADA Y AGRESIVA ---
-            should_close = False
-            reason = ""
-            
-            # Calcular P&L actual
-            if qty > 0:  # LONG
-                pnl = (current_price - entry_price) * qty
-                pnl_pct = (current_price - entry_price) / entry_price
-            else:  # SHORT
-                pnl = (entry_price - current_price) * abs(qty)
-                pnl_pct = (entry_price - current_price) / entry_price
-            
-            # 1. TAKE PROFIT: Cerrar si ganancia >= 3%
-            if pnl_pct >= settings.take_profit_pct:
-                should_close = True
-                reason = f"TAKE PROFIT alcanzado: {pnl_pct:.2%} >= {settings.take_profit_pct:.2%}"
-            
-            # 2. STOP LOSS: Cerrar si pérdida >= 1%
-            elif pnl_pct <= -settings.stop_loss_pct:
-                should_close = True
-                reason = f"STOP LOSS activado: {pnl_pct:.2%} <= -{settings.stop_loss_pct:.2%}"
-            
-            # 3. REVERSIÓN DE SEÑAL: Cerrar si señal cambia
-            elif current_side == "long" and predicted_signal < -0.05:
-                should_close = True
-                reason = f"Reversión bajista: {predicted_signal:+.3f}"
-            elif current_side == "short" and predicted_signal > 0.05:
-                should_close = True
-                reason = f"Reversión alcista: {predicted_signal:+.3f}"
+                    feats = make_features(df, symbol=symbol)
+                    latest = feats.iloc[-1]
 
-            if should_close:
-                # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
-                pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
-                price_str = f"${current_price:.6f}" if current_price < 0.01 else f"${current_price:.2f}"
-                logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ {price_str} | P&L: {pnl_str} ({pnl_pct:+.2%})")
-                _close_position(pos, symbol, qty, current_price, pnl, pnl_pct, reason)
+                    # Validar features
+                    missing = [f for f in clf.feature_names_in_ if f not in latest.index]
+                    if missing:
+                        logger.warning(f"⚠️ Features faltantes para {symbol}: {missing}")
+                        continue
+
+                    X = latest[clf.feature_names_in_].to_frame().T
+                    predicted_signal = clf.predict(X)[0]
+                    current_side = "long" if qty > 0 else "short"
+                    predicted_side = "long" if predicted_signal > 0 else "short"
+
+                    # --- LÓGICA DE CIERRE SIMPLIFICADA Y AGRESIVA ---
+                    should_close = False
+                    reason = ""
+                    
+                    # Calcular P&L actual
+                    if qty > 0:  # LONG
+                        pnl = (current_price - entry_price) * qty
+                        pnl_pct = (current_price - entry_price) / entry_price
+                    else:  # SHORT
+                        pnl = (entry_price - current_price) * abs(qty)
+                        pnl_pct = (entry_price - current_price) / entry_price
+                    
+                    # 1. TAKE PROFIT: Cerrar si ganancia >= 3%
+                    if pnl_pct >= settings.take_profit_pct:
+                        should_close = True
+                        reason = f"TAKE PROFIT alcanzado: {pnl_pct:.2%} >= {settings.take_profit_pct:.2%}"
+                    
+                    # 2. STOP LOSS: Cerrar si pérdida >= 1%
+                    elif pnl_pct <= -settings.stop_loss_pct:
+                        should_close = True
+                        reason = f"STOP LOSS activado: {pnl_pct:.2%} <= -{settings.stop_loss_pct:.2%}"
+                    
+                    # 3. REVERSIÓN DE SEÑAL: Cerrar si señal cambia
+                    elif current_side == "long" and predicted_signal < -0.05:
+                        should_close = True
+                        reason = f"Reversión bajista: {predicted_signal:+.3f}"
+                    elif current_side == "short" and predicted_signal > 0.05:
+                        should_close = True
+                        reason = f"Reversión alcista: {predicted_signal:+.3f}"
+
+                    if should_close:
+                        # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
+                        pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
+                        price_str = f"${current_price:.6f}" if current_price < 0.01 else f"${current_price:.2f}"
+                        logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ {price_str} | P&L: {pnl_str} ({pnl_pct:+.2%})")
+                        _close_position(pos, symbol, qty, current_price, pnl, pnl_pct, reason)
+
+                except Exception as e:
+                    logger.error(f"❌ Error al evaluar cierre para {symbol}: {e}")
 
         except Exception as e:
-            logger.error(f"❌ Error al evaluar cierre para {symbol}: {e}")
-
-    return "CONTINUE"
+            logger.error(f"💥 Error en cycle de position monitor: {e}")
+            
+        # Esperar 10 segundos antes del próximo ciclo
+        logger.debug("⏱️ Position Monitor: esperando 10 segundos...")
+        time.sleep(10)
 
 
 def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float, pnl_pct: float, reason: str):
