@@ -1,0 +1,20 @@
+{
+  "total_profits_protected": 6.233999999999651,
+  "total_profits_reinvested": 4.155999999999767,
+  "capital_base_original": 24522.49,
+  "capital_available_trading": 24526.646,
+  "daily_distributions": [
+    {
+      "date": "2025-09-10T00:18:59.029077+00:00",
+      "daily_profit": 10.389999999999418,
+      "amount_reinvested": 4.155999999999767,
+      "amount_protected": 6.233999999999651,
+      "new_trading_capital": 24526.646,
+      "total_protected_accumulated": 6.233999999999651,
+      "total_reinvested_accumulated": 4.155999999999767
+    }
+  ],
+  "last_distribution_date": "2025-09-10",
+  "reinvestment_rate": 0.4,
+  "protection_rate": 0.6
+}
