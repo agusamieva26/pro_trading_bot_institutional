@@ -368,37 +368,31 @@ def monitor_closed_positions(clf):
 
 
 def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float, pnl_pct: float, reason: str):
-    """Cierra una posición y registra el cierre."""
+    """Cierra una posición usando la función mejorada de execution.py y registra el cierre."""
     try:
-        from alpaca.trading.requests import MarketOrderRequest
-        from alpaca.trading.enums import OrderSide, TimeInForce
+        # Import the enhanced close_position function
+        from .execution import close_position
         
-        base_symbol = symbol.replace("/", "")
-        order_side = OrderSide.SELL if qty > 0 else OrderSide.BUY
-        
-        # ✅ ARREGLO: Usar MarketOrderRequest correctamente
-        # Para crypto, reducir ligeramente la cantidad para evitar errores de precisión
-        safe_qty = abs(qty)
-        if "/USD" in symbol:  # Es crypto
-            safe_qty = abs(qty) * 0.9999  # Reducir 0.01% para evitar errores microscópicos
-        
-        # ✅ ARREGLO CRÍTICO: Usar TimeInForce correcto según asset type
-        # Crypto requiere GTC, stocks requieren DAY para market orders
-        tif = TimeInForce.GTC if "/USD" in symbol else TimeInForce.DAY
-        
-        order_request = MarketOrderRequest(
-            symbol=base_symbol,
-            qty=safe_qty,
-            side=order_side,
-            time_in_force=tif
-        )
-        
-        trading_client.submit_order(order_request)
         side_str = "long" if qty > 0 else "short"
-        # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
-        pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
-        logger.info(f"✅ Cerrada {side_str} {abs(qty)} {symbol} | P&L: {pnl_str} ({pnl_pct:+.2%}) [{reason}]")
-        alert_trade_exit(symbol, side_str, abs(qty), exit_price, pnl, pnl_pct)
-        log_trade_exit(symbol, abs(qty), exit_price, pnl, pnl_pct)
+        
+        # Use the enhanced close_position function with PDT and balance protection
+        success = close_position(symbol, force_close=False)
+        
+        if success:
+            # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
+            pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
+            logger.info(f"✅ Cerrada {side_str} {abs(qty)} {symbol} | P&L: {pnl_str} ({pnl_pct:+.2%}) [{reason}]")
+            alert_trade_exit(symbol, side_str, abs(qty), exit_price, pnl, pnl_pct)
+            log_trade_exit(symbol, abs(qty), exit_price, pnl, pnl_pct)
+        else:
+            # Handle failed closure gracefully
+            is_crypto = "/" in symbol
+            asset_type = "CRYPTO" if is_crypto else "STOCK"
+            
+            if not is_crypto:
+                logger.warning(f"⏳ {asset_type} {symbol}: Cierre bloqueado (probablemente PDT) - esperando hasta mañana")
+            else:
+                logger.warning(f"⚠️ {asset_type} {symbol}: Cierre falló - balance insuficiente o error de sincronización")
+                
     except Exception as e:
-        logger.error(f"❌ No se pudo cerrar {symbol}: {e}")
+        logger.error(f"❌ Error crítico cerrando {symbol}: {e}")
