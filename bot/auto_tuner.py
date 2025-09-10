@@ -109,15 +109,15 @@ def tune_risk_parameters():
     # ✅ Ajustar risk_per_trade
     current_risk = config["risk_per_trade"]
     if pnl > 0:
-        new_risk = min(current_risk * 1.1, 0.05)  # Hasta 5%
+        new_risk = min(current_risk * 1.05, 0.025)  # Hasta 2.5% MÁXIMO
     elif pnl < 0:
-        new_risk = max(current_risk * 0.9, 0.005)  # Mínimo 0.5%
+        new_risk = max(current_risk * 0.95, 0.01)   # Mínimo 1.0%
     else:
         new_risk = current_risk
 
     # ✅ Ajustar exposición para SCALPING AGRESIVO
-    new_exp = new_risk * 25  # Mayor multiplicador para scalping
-    new_exp = max(1.0, min(new_exp, 3.0))  # Rango 1.0x - 3.0x para scalping
+    new_exp = new_risk * 10  # Multiplicador conservador
+    new_exp = max(0.2, min(new_exp, 0.4))  # Rango 0.2x - 0.4x CONSERVADOR
 
     # ✅ Actualizar config
     config["risk_per_trade"] = round(new_risk, 4)
