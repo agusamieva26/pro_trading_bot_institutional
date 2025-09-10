@@ -107,9 +107,10 @@ def run_once(state: BotState, clf):
         current_equity = float(account.equity)
         available_cash = float(account.cash)
         
-        # Actualizar equity y guardar estado
+        # Actualizar equity y daily_pnl, guardar estado
         old_equity = state.state.get("equity", 0)
         state.state["equity"] = current_equity
+        state.update_daily_pnl(current_equity)  # ✅ NUEVO: Actualizar daily_pnl
         state.save()  # ✅ ARREGLO: Guardar estado después de actualizar equity
         
         logger.info(f"💵 Cash disponible: ${available_cash:,.2f} | Equity: ${current_equity:,.2f}")

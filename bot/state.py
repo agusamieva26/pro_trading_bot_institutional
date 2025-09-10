@@ -74,6 +74,16 @@ class BotState:
         if start <= 0:
             return 0.0
         return (current_equity / start) - 1
+    
+    def get_daily_pnl_absolute(self, current_equity: float) -> float:
+        """Calcula el P&L diario en valor absoluto"""
+        start = self.state.get("daily_start_equity", INITIAL_EQUITY)
+        return current_equity - start
+    
+    def update_daily_pnl(self, current_equity: float):
+        """Actualiza el daily_pnl en estado"""
+        daily_pnl = self.get_daily_pnl_absolute(current_equity)
+        self.state["daily_pnl"] = daily_pnl
 
     def reset_daily_pnl(self, current_equity: float):
         """
