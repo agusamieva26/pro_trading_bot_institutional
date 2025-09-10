@@ -112,8 +112,8 @@ def run_once(state: BotState, clf):
     # 1. Equity actual y cash disponible - USANDO ALPACA COMO FUENTE DE VERDAD
     try:
         account = client.get_account()
-        current_equity = float(account.equity)
-        available_cash = float(account.cash)
+        current_equity = float(getattr(account, 'equity', 0))
+        available_cash = float(getattr(account, 'cash', 0))
         last_equity = float(getattr(account, "last_equity", current_equity))
         
         # Calcular daily change usando Alpaca (igual que dashboard y telegram)
@@ -190,6 +190,7 @@ def run_once(state: BotState, clf):
         if milestone_250 or milestone_500 or milestone_750:
             from bot.telegram import send_telegram
             try:
+                telegram_msg = ""
                 if milestone_750:
                     telegram_msg = f"🔥 ¡75% DEL OBJETIVO! 🔥\n\n💰 Beneficio: ${daily_change:+,.2f}\n🎯 Faltan solo: ${1000-daily_change:.2f} para $1,000\n⚡ ¡Casi en la meta!"
                     state.state["notified_750"] = True
@@ -200,7 +201,8 @@ def run_once(state: BotState, clf):
                     telegram_msg = f"📈 ¡Primer cuarto! 📈\n\n💰 Beneficio: ${daily_change:+,.2f}\n🎯 Progreso: 25% hacia $1,000\n✨ ¡Buen comienzo!"
                     state.state["notified_250"] = True
                 
-                send_telegram(telegram_msg)
+                if telegram_msg:
+                    send_telegram(telegram_msg)
                 state.save()  # Guardar estado de notificaciones
                 logger.info(f"📱 Telegram: Notificación de progreso enviada ({progress_pct:.1f}%)")
             except Exception as e:
@@ -214,14 +216,15 @@ def run_once(state: BotState, clf):
             logger.warning(f"⚠️ Exposición {current_exposure:.2f}x ≥ límite {settings.max_gross_exposure}x. Reduciendo...")
             try:
                 positions = client.get_all_positions()
-                sorted_positions = sorted(positions, key=lambda p: abs(float(p.qty)), reverse=False)
+                sorted_positions = sorted(positions, key=lambda p: abs(float(getattr(p, 'qty', 0))), reverse=False)
                 for pos in sorted_positions:
-                    qty = float(pos.qty)
-                    symbol = pos.symbol
+                    qty = float(getattr(pos, 'qty', 0))
+                    symbol = getattr(pos, 'symbol', '')
                     side = "long" if qty > 0 else "short"
                     logger.info(f"🔁 Reduciendo exposición: cerrando {abs(qty)} de {symbol}")
                     # ✅ Pasar el objeto de posición directamente para evitar inconsistencias
-                    close_position(symbol, side, position_obj=pos)
+                    if symbol:
+                        close_position(symbol)
                     exposure_managed = True
                     break
             except Exception as e:
@@ -246,9 +249,9 @@ def run_once(state: BotState, clf):
         logger.info("💰 Profit-taking ejecutado. Actualizando equity...")
         # Actualizar equity tras profit-taking
         account = client.get_account()
-        current_equity = float(account.equity)
+        current_equity = float(getattr(account, 'equity', 0))
         total_equity = current_equity
-        available_cash = float(account.cash)
+        available_cash = float(getattr(account, 'cash', 0))
         logger.info(f"📊 Equity actualizado: ${total_equity:,.2f}, Cash: ${available_cash:,.2f}")
 
     # --- 6. BTC/USD DIVERSIFICADO (máximo 40% para balance) ---
@@ -283,7 +286,7 @@ def run_once(state: BotState, clf):
                         pos = _get_position("BTC/USD")
 
                         if pos:
-                            current_qty = float(pos.qty)
+                            current_qty = float(getattr(pos, 'qty', 0))
                             if side == "buy" and current_qty > 0:
                                 logger.info(f"🟢 Posición larga existente en BTC/USD. Aumentando...")
                                 place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
@@ -312,8 +315,8 @@ def run_once(state: BotState, clf):
     try:
         positions = get_cached_positions(client)  # 🚀 CACHE INTELIGENTE
         for pos in positions:
-            if pos.symbol == "BTCUSD":
-                btc_position_value = abs(float(pos.market_value))
+            if getattr(pos, 'symbol', '') == "BTCUSD":
+                btc_position_value = abs(float(getattr(pos, 'market_value', 0)))
                 break
     except:
         pass
@@ -361,7 +364,7 @@ def run_once(state: BotState, clf):
     logger.info(f"⚡ Análisis completo: procesando TODOS los {len(symbols_batch)} activos")
     
     # 🚀 DESCARGA PARALELA: todos los símbolos a la vez
-    all_data = fetch_all_bars(symbols_batch, start=None, end=None, min_bars=50)
+    all_data = fetch_all_bars(symbols_batch, start="", end="", min_bars=50)
     
     # 🌍 ANÁLISIS DE ENTORNO DE RIESGO: Detectar regímenes de mercado
     risk_environment = analyze_risk_environment(all_data)
@@ -386,7 +389,7 @@ def run_once(state: BotState, clf):
     
     # 🔄 REBALANCEO DE PORTFOLIO: Ajustar por diversificación
     portfolio_analysis = portfolio_rebalancer.analyze_current_portfolio(
-        [{'symbol': pos.symbol, 'market_value': pos.market_value} for pos in get_cached_positions(client)]
+        [{'symbol': getattr(pos, 'symbol', ''), 'market_value': getattr(pos, 'market_value', 0)} for pos in get_cached_positions(client)]
     )
     signals = portfolio_rebalancer.apply_rebalancing_to_signals(sentiment_enhanced_signals, portfolio_analysis)
     

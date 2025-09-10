@@ -1,7 +1,7 @@
 import argparse, pandas as pd, numpy as np
 from .data import fetch_bars
 from .features import make_features
-from .strategy import load_model, hybrid_signal
+from .strategy import load_trading_model, hybrid_signal
 from .config import settings
 from .util import logger
 
@@ -22,7 +22,7 @@ def backtest_vectorbt(frames: dict[str, pd.DataFrame]):
 
     # Build wide price and signals
     closes = pd.concat({s: f["close"] for s,f in frames.items()}, axis=1).dropna()
-    clf = load_model()
+    clf = load_trading_model()
     sigs = {}
     for s,f in frames.items():
         sig = f.apply(lambda r: hybrid_signal(r, clf, symbol=s), axis=1)
@@ -49,7 +49,7 @@ def backtest_simple(frames: dict[str, pd.DataFrame]):
     pos = {s:0 for s in frames}
     entry = {s:0.0 for s in frames}
     all_idx = sorted(set().union(*[f.index for f in frames.values()]))
-    clf = load_model()
+    clf = load_trading_model()
 
     for ts in all_idx:
         for s,f in frames.items():

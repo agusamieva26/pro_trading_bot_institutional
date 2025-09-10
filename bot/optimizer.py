@@ -1,7 +1,7 @@
 import argparse, optuna, pandas as pd, numpy as np
 from .data import fetch_bars
 from .features import make_features, ema, rsi, macd, atr
-from .strategy import load_model, hybrid_signal, FEATURES
+from .strategy import load_trading_model, hybrid_signal, FEATURES
 from .config import settings
 from .util import logger
 
@@ -20,15 +20,15 @@ def objective(trial: optuna.Trial, symbols, start, end):
         if df.empty: continue
         f = df.copy()
         f["ret_1"] = f["close"].pct_change()
-        f["ema_12"] = ema(f["close"], 12)
-        f["ema_26"] = ema(f["close"], 26)
-        f["rsi_14"] = rsi(f["close"], rsi_len)
-        m, sig, h = macd(f["close"], macd_fast, macd_slow, macd_sig)
+        f["ema_12"] = ema(pd.Series(f["close"]), 12)
+        f["ema_26"] = ema(pd.Series(f["close"]), 26)
+        f["rsi_14"] = rsi(pd.Series(f["close"]), rsi_len)
+        m, sig, h = macd(pd.Series(f["close"]), macd_fast, macd_slow, macd_sig)
         f["macd"], f["macd_sig"], f["macd_hist"] = m, sig, h
         f["atr_14"] = atr(f, 14)
         f["vol_roll"] = f["ret_1"].rolling(24).std() * (24**0.5)
         f = f.dropna()
-        clf = load_model()
+        clf = load_trading_model()
         pos = 0; entry=0; equity=0
         for _, row in f.iterrows():
             hs = hybrid_signal(row, clf, symbol=s)  # usa features modificadas
@@ -37,7 +37,7 @@ def objective(trial: optuna.Trial, symbols, start, end):
                 pos = 1 if hs>0 else -1; entry = row["close"]
         if pos!=0: equity += pos*(f.iloc[-1]["close"]-entry)
         pnl += equity
-    return pnl
+    return float(pnl)
 
 def run(symbols, start, end, n_trials):
     study = optuna.create_study(direction="maximize")
