@@ -24,7 +24,7 @@ class Settings(BaseModel):
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
     bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","1Min"))  # ⚡ SCALPING OPTIMIZADO
     initial_equity: float = 30000.0  # Valor fijo
-    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.02")))  # OBJETIVO $1000: 2.0%
+    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.047")))  # OBJETIVO $1000: 4.7%
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","10.0")))  # Aumentado para operar hoy
     max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))  # SCALPING: Exposición moderada pero funcional
     enable_extended_hours: bool = Field(default_factory=lambda: os.getenv("ENABLE_EXTENDED_HOURS","true").lower() in ("1","true","yes"))  # 🔥 PRE/POST MARKET
