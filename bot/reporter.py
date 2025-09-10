@@ -37,7 +37,7 @@ def generate_daily_report():
     # Siempre reportar el día anterior (período completo desde reset anterior hasta reset actual)
     trading_day = (now_madrid.date() - timedelta(days=1))
     
-    df_closed = df[df["status"] == "closed"].copy()
+    df_closed = df[df["status"].isin(["closed", "partially_closed"])].copy()
     df_closed["exit_day"] = df_closed["exit_date"].dt.date
     df_today = df_closed[df_closed["exit_day"] == trading_day].copy()  # ✅ .copy() aquí
 
@@ -46,6 +46,7 @@ def generate_daily_report():
         return
 
     # 4. Convertir P&L a número
+    df_today = df_today.copy()  # Evitar warnings de pandas
     df_today.loc[:, "realized_pnl"] = pd.to_numeric(df_today["realized_pnl"], errors="coerce")
     df_today.loc[:, "realized_pnl_pct"] = df_today["realized_pnl_pct"].str.replace("%", "").astype(float) / 100
 
