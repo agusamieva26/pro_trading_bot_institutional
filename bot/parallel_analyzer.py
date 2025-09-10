@@ -28,7 +28,7 @@ def analyze_symbol(symbol_data: Tuple[str, pd.DataFrame, object]) -> Dict:
         latest = feats.iloc[-1]
         
         # 2. Calcular señal híbrida
-        sig = hybrid_signal(latest, clf)
+        sig = hybrid_signal(latest, clf, symbol=symbol)
         
         # 3. Evaluación de score
         score_status = "🟢 FUERTE" if abs(sig) >= 0.2 else "🟡 MODERADA" if abs(sig) >= 0.1 else "🔴 DÉBIL"

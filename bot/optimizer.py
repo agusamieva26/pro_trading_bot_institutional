@@ -31,7 +31,7 @@ def objective(trial: optuna.Trial, symbols, start, end):
         clf = load_model()
         pos = 0; entry=0; equity=0
         for _, row in f.iterrows():
-            hs = hybrid_signal(row, clf)  # usa features modificadas
+            hs = hybrid_signal(row, clf, symbol=s)  # usa features modificadas
             if pos!=0 and hs*pos < thr_exit: equity += pos*(row["close"]-entry); pos=0
             if pos==0 and abs(hs) > thr_entry:
                 pos = 1 if hs>0 else -1; entry = row["close"]

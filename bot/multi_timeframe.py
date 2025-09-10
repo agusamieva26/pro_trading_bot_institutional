@@ -62,7 +62,7 @@ class MultiTimeframeAnalyzer:
                 # Calcular features y señal (pasar symbol y timeframe explícitamente)
                 features = make_features(df, symbol=symbol)
                 latest = features.iloc[-1]
-                signal = hybrid_signal(latest, clf, timeframe=tf)
+                signal = hybrid_signal(latest, clf, timeframe=tf, symbol=symbol)
                 
                 timeframe_signals[tf] = signal
                 timeframe_data[tf] = {

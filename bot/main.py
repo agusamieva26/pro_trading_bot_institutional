@@ -263,7 +263,7 @@ def run_once(state: BotState, clf):
                 feats = make_features(df, symbol="BTC/USD")
                 latest = feats.iloc[-1]
 
-                sig = hybrid_signal(latest, clf)
+                sig = hybrid_signal(latest, clf, symbol="BTC/USD")
                 if sig != 0:
                     price = float(latest["close"])
                     atr = float(latest["atr_14"])

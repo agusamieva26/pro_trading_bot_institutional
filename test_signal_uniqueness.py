@@ -32,7 +32,7 @@ for symbol in test_symbols:
         latest = features.iloc[-1]
         
         # Get the signal
-        signal = hybrid_signal(latest, clf)
+        signal = hybrid_signal(latest, clf, symbol=symbol)
         
         results[symbol] = {
             'signal': signal,

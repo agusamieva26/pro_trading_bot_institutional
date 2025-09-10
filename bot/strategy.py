@@ -257,7 +257,7 @@ def reset_signal_memory():
     _last_signals.clear()
     logger.info("🔄 Memoria de señales reseteada - permitiendo recálculo limpio")
 
-def hybrid_signal(features, model=None, timeframe=None):
+def hybrid_signal(features, model=None, timeframe=None, symbol=None):
     """
     Genera señal híbrida:
     - Si el modelo está disponible: combina predicción + reglas
@@ -316,7 +316,9 @@ def hybrid_signal(features, model=None, timeframe=None):
         current_signal = float(np.clip(combined_signal, -1.0, 1.0))
 
         # 🎯 FILTRO DE ESTABILIDAD: Sin sesgo artificial - mantener integridad de señal
-        symbol = features.get("symbol", f"UNK_{hash(str(features))%10000}")
+        # Usar symbol explícito o extraer de features como fallback
+        if symbol is None:
+            symbol = features.get("symbol", f"UNK_{hash(str(features))%10000}")
         
         # Aplicar solo clipping sin ruido artificial 
         current_signal = float(np.clip(current_signal, -1.0, 1.0))

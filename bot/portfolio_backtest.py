@@ -25,7 +25,7 @@ def backtest_vectorbt(frames: dict[str, pd.DataFrame]):
     clf = load_model()
     sigs = {}
     for s,f in frames.items():
-        sig = f.apply(lambda r: hybrid_signal(r, clf), axis=1)
+        sig = f.apply(lambda r: hybrid_signal(r, clf, symbol=s), axis=1)
         sigs[s] = sig.reindex(closes.index).fillna(0)
     sigs = pd.concat(sigs, axis=1).reindex(closes.index).fillna(0)
 
@@ -55,7 +55,7 @@ def backtest_simple(frames: dict[str, pd.DataFrame]):
         for s,f in frames.items():
             if ts not in f.index: continue
             row = f.loc[ts]
-            sig = hybrid_signal(row, clf)
+            sig = hybrid_signal(row, clf, symbol=s)
             px = float(row["close"])
             # Exit on opposite signal
             if pos[s]!=0 and sig*pos[s] < -0.5:
