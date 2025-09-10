@@ -9,12 +9,12 @@ from .util import logger
 from .execution import place_order
 import time
 
-# Configuración de profit-taking optimizada
-PROFIT_THRESHOLD_BTC = 0.08      # 8% ganancia para BTC (movimientos reales)
-PROFIT_THRESHOLD_OTHER = 0.06    # 6% ganancia para otros activos
-MAX_CONCENTRATION_BTC = 0.70     # Máximo 70% en BTC
-MIN_CASH_RESERVE = 0.05          # Mantener 5% en cash
-REBALANCE_THRESHOLD = 0.15       # 15% desviación para rebalancear
+# Configuración de profit-taking AGRESIVA para rotación rápida
+PROFIT_THRESHOLD_BTC = 0.025     # 2.5% ganancia para BTC (rotación rápida)
+PROFIT_THRESHOLD_OTHER = 0.020   # 2.0% ganancia para otros activos (aligned con 1.5% config)
+MAX_CONCENTRATION_BTC = 0.60     # Máximo 60% en BTC (más diversificación)
+MIN_CASH_RESERVE = 0.15          # Mantener 15% en cash (agresivo)
+REBALANCE_THRESHOLD = 0.10       # 10% desviación para rebalancear (más frecuente)
 
 def _client():
     """Cliente de Alpaca"""
@@ -30,10 +30,10 @@ def get_position_allocation(client, symbol, total_equity):
     try:
         positions = client.get_all_positions()
         for pos in positions:
-            if pos.symbol == symbol.replace("/", ""):
-                market_value = float(pos.market_value)
+            if (getattr(pos, 'symbol', '') or "") == symbol.replace("/", ""):
+                market_value = float(getattr(pos, 'market_value', 0) or 0)
                 allocation = abs(market_value) / total_equity
-                return allocation, float(pos.unrealized_pl)
+                return allocation, float(getattr(pos, 'unrealized_pl', 0) or 0)
     except Exception as e:
         logger.error(f"❌ Error obteniendo posición de {symbol}: {e}")
     return 0.0, 0.0
@@ -48,13 +48,13 @@ def should_take_profits(symbol, allocation, unrealized_pnl, entry_value):
     
     # Condiciones para profit-taking
     if symbol == "BTC/USD":
-        # BTC: Tomar profits si >8% ganancia O >70% concentración
+        # BTC: Tomar profits si >2.5% ganancia O >60% concentración (rotación rápida)
         if pnl_pct >= PROFIT_THRESHOLD_BTC:
             return True, f"Ganancia {pnl_pct:.1%} ≥ objetivo {PROFIT_THRESHOLD_BTC:.1%}"
         if allocation >= MAX_CONCENTRATION_BTC:
             return True, f"Concentración {allocation:.1%} ≥ límite {MAX_CONCENTRATION_BTC:.1%}"
     else:
-        # Otros activos: Tomar profits con 6% ganancia (evitar micro-profits)
+        # Otros activos: Tomar profits con 2% ganancia (alineado con config 1.5%)
         if pnl_pct >= PROFIT_THRESHOLD_OTHER:
             return True, f"Ganancia {pnl_pct:.1%} ≥ {PROFIT_THRESHOLD_OTHER:.1%}"
     
@@ -109,7 +109,7 @@ def rebalance_portfolio(client, total_equity, target_allocations):
     """Rebalancea el portafolio hacia las asignaciones objetivo"""
     try:
         positions = client.get_all_positions()
-        current_cash = float(client.get_account().cash)
+        current_cash = float(getattr(client.get_account(), 'cash', 0) or 0)
         cash_allocation = current_cash / total_equity
         
         logger.info(f"🔄 REBALANCEO: Equity=${total_equity:,.2f}, Cash={cash_allocation:.1%}")
@@ -122,7 +122,7 @@ def rebalance_portfolio(client, total_equity, target_allocations):
             elif symbol.endswith("USD") and len(symbol) <= 6:
                 symbol = symbol[:-3] + "/USD"
                 
-            market_value = abs(float(pos.market_value))
+            market_value = abs(float(getattr(pos, 'market_value', 0) or 0))
             current_allocation = market_value / total_equity
             target_allocation = target_allocations.get(symbol, 0.05)  # 5% por defecto
             
@@ -132,7 +132,7 @@ def rebalance_portfolio(client, total_equity, target_allocations):
                 if current_allocation > target_allocation:
                     # Sobrepeso: reducir posición
                     excess_pct = current_allocation - target_allocation
-                    qty_current = float(pos.qty)
+                    qty_current = float(getattr(pos, 'qty', 0) or 0)
                     qty_to_reduce = abs(qty_current) * (excess_pct / current_allocation)
                     
                     logger.info(f"⚖️ REBALANCEO: {symbol} sobrepeso {current_allocation:.1%} > {target_allocation:.1%}")
@@ -155,7 +155,7 @@ def auto_profit_taking():
     try:
         client = _client()
         account = client.get_account()
-        total_equity = float(account.equity)
+        total_equity = float(getattr(account, 'equity', 0) or 0)
         
         logger.info(f"💎 AUTO PROFIT-TAKING: Analizando portafolio (${total_equity:,.2f})")
         
@@ -172,15 +172,15 @@ def auto_profit_taking():
         # Revisar cada posición para profit-taking
         positions = client.get_all_positions()
         for pos in positions:
-            symbol = pos.symbol
+            symbol = getattr(pos, 'symbol', '') or ""
             if symbol == "BTCUSD":
                 symbol = "BTC/USD"
             elif symbol.endswith("USD"):
                 symbol = symbol[:-3] + "/USD"
             
-            qty = float(pos.qty)
-            unrealized_pnl = float(pos.unrealized_pl)
-            entry_value = abs(float(pos.cost_basis))
+            qty = float(getattr(pos, 'qty', 0) or 0)
+            unrealized_pnl = float(getattr(pos, 'unrealized_pl', 0) or 0)
+            entry_value = abs(float(getattr(pos, 'cost_basis', 0) or 0))
             
             allocation, _ = get_position_allocation(client, symbol, total_equity)
             
@@ -199,7 +199,7 @@ def auto_profit_taking():
             
             # Actualizar equity tras profit-taking
             account = client.get_account()
-            total_equity = float(account.equity)
+            total_equity = float(getattr(account, 'equity', 0) or 0)
             
             # Ejecutar rebalanceo
             rebalance_portfolio(client, total_equity, target_allocations)

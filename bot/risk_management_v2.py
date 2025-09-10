@@ -260,7 +260,7 @@ def analyze_risk_environment(symbols_data: Dict[str, pd.DataFrame]) -> Dict:
             if vol_conditions.get(symbol, {}).get("vol_regime") in ["high", "extreme"]:
                 high_vol_count += 1
         
-        dominant_regime = max(regime_counts, key=regime_counts.get)
+        dominant_regime = max(regime_counts, key=lambda k: regime_counts.get(k, 0))
         avg_volatility /= len(market_regimes)
         high_vol_ratio = high_vol_count / len(market_regimes)
         

@@ -24,13 +24,13 @@ class Settings(BaseModel):
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
     bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","1Min"))  # ⚡ SCALPING OPTIMIZADO
     initial_equity: float = 30000.0  # Valor fijo
-    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.0235")))  # OPTIMIZADO: 2.35% (50% reducción)
+    risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.013")))  # AGRESIVO: 1.3% (rotación rápida)
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","10.0")))  # Aumentado para operar hoy
-    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","0.3")))  # CONSERVADOR: Exposición limitada para evitar over-leverage
+    max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","0.40")))  # MODERADO: Mayor exposición con rotación rápida
     enable_extended_hours: bool = Field(default_factory=lambda: os.getenv("ENABLE_EXTENDED_HOURS","true").lower() in ("1","true","yes"))  # 🔥 PRE/POST MARKET
     enable_crypto_shorts: bool = Field(default_factory=lambda: os.getenv("ENABLE_CRYPTO_SHORTS","true").lower() in ("1","true","yes"))  # 🔥 CRYPTO SHORTS FULL
-    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.03")))  # SCALPING REALISTA: 3%
-    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.01")))  # SCALPING REALISTA: 1%
+    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.015")))  # ROTACIÓN RÁPIDA: 1.5%
+    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.007")))  # ROTACIÓN RÁPIDA: 0.7%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.001")))  # ULTRA-SCALPING: 0.1%
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))

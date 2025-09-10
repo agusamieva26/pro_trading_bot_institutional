@@ -30,17 +30,20 @@ def get_available_cash():
     try:
         client = _client()
         account = client.get_account()
-        total_cash = float(account.cash)
-        # Usar 90% del cash para mayor liquidez (era 95%)
-        available = total_cash * 0.90 - _reserved_cash  
+        total_cash = float(getattr(account, 'cash', 0.0) or 0.0)
+        # Usar 85% del cash para rotación agresiva (reservar 15%)
+        available = total_cash * 0.85 - _reserved_cash  
         return max(0, available), total_cash
     except Exception as e:
         logger.error(f"❌ Error obteniendo cash disponible: {e}")
         return 0.0, 0.0
 
-def place_order(symbol: str, qty: float, side: str, price: float = None, fractional: bool = True, is_crypto: bool = False):
+def place_order(symbol: str, qty: float, side: str, price: float | None = None, fractional: bool = True, is_crypto: bool = False):
     """Places a buy or sell order for the given symbol and quantity."""
     global _reserved_cash
+    
+    # Initialize notional_value to prevent undefined errors
+    notional_value = 0.0
     
     try:
         # Convert symbol for API (remove slash for crypto)
@@ -119,8 +122,8 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
         
     except Exception as e:
         logger.error(f"❌ Error placing order for {symbol}: {e}")
-        # Release reserved cash on error
-        if side.lower() == "buy":
+        # Release reserved cash on error (only if notional_value was set)
+        if side.lower() == "buy" and notional_value > 0:
             _reserved_cash = max(0, _reserved_cash - notional_value)
         return False
 
@@ -138,17 +141,18 @@ def close_all():
         
         for position in positions:
             try:
-                symbol = position.symbol
-                qty = abs(float(position.qty))
-                side = "sell" if float(position.qty) > 0 else "buy"
+                pos_symbol = getattr(position, 'symbol', '') or ""
+                qty = abs(float(getattr(position, 'qty', 0) or 0))
+                side = "sell" if float(getattr(position, 'qty', 0) or 0) > 0 else "buy"
                 
                 # Cerrar posición individual
-                close_position(symbol)
+                close_position(pos_symbol)
                 closed_count += 1
-                logger.info(f"✅ {symbol}: Posición cerrada ({closed_count}/{len(positions)})")
+                logger.info(f"✅ {pos_symbol}: Posición cerrada ({closed_count}/{len(positions)})")
                 
             except Exception as e:
-                logger.error(f"❌ Error cerrando {symbol}: {e}")
+                error_symbol = getattr(position, 'symbol', 'UNKNOWN') or 'UNKNOWN'
+                logger.error(f"❌ Error cerrando {error_symbol}: {e}")
                 
         logger.critical(f"🎯 TAKE-PROFIT COMPLETADO: {closed_count} posiciones cerradas")
         
@@ -168,7 +172,7 @@ def close_position(symbol: str):
                 logger.info(f"ℹ️ No hay posición abierta para {symbol}")
                 return True
                 
-            qty = float(str(position.qty))
+            qty = float(str(getattr(position, 'qty', 0) or 0))
             side = "sell" if qty > 0 else "buy"
             abs_qty = abs(qty)
             
