@@ -68,6 +68,9 @@ def _get_current_price(symbol: str) -> float:
                 limit=1
             )
             bars = crypto_client.get_crypto_bars(request)
+            if bars.df.empty:
+                logger.warning(f"⚠️ No hay datos de precio para {symbol} (cripto)")
+                return None
             price = float(bars.df.iloc[-1]["close"])
         else:  # Acciones
             request = StockBarsRequest(
@@ -76,7 +79,14 @@ def _get_current_price(symbol: str) -> float:
                 limit=1
             )
             bars = stock_client.get_stock_bars(request)
-            price = float(bars.df.iloc[-1]["close"])
+            if bars.df.empty:
+                logger.warning(f"⚠️ No hay datos de precio para {symbol} (probablemente mercado cerrado)")
+                return None
+            # Manejar MultiIndex si existe
+            df = bars.df
+            if hasattr(df.index, 'levels'):  # MultiIndex
+                df = df.reset_index()
+            price = float(df.iloc[-1]["close"])
 
         _price_cache[cache_key] = (price, now)
         return price
