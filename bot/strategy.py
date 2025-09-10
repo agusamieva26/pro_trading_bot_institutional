@@ -155,7 +155,7 @@ def rule_signal(row):
         # Cerca de resistencia = señal bajista  
         # Tendencia Fibonacci refuerza la dirección
         fib_signal = (row['fib_support'] * 1.5 +  # Soporte es bullish
-                     row['fib_resistance'] * 1.5 +  # Resistencia es bearish (ya es negativo)
+                     row['fib_resistance'] * -1.5 +  # Resistencia es bearish (invertir signo)
                      row['fib_trend'] * 0.8)  # Tendencia general
         fib_signal = np.clip(fib_signal, -1.0, 1.0)
     
