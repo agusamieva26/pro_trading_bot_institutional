@@ -14,7 +14,7 @@ def run_reporter():
     madrid_tz = pytz.timezone("Europe/Madrid")  # ✅ pytz.timezone
 
     # Programar el reporte a las 08:35 (5 minutos después del BOD sync de Alpaca)
-    schedule.every().day.at("08:35", madrid_tz).do(
+    schedule.every().day.at("08:35").do(
         lambda: logger.info("📅 Generando reporte diario tras actualización Alpaca (08:35)...") or generate_daily_report()
     )
 

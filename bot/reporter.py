@@ -1,7 +1,8 @@
 # bot/reporter.py
 import pandas as pd
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import pytz
 from .util import logger
 from .config import settings
 
@@ -28,14 +29,20 @@ def generate_daily_report():
     df["entry_date"] = pd.to_datetime(df["entry_date"], errors="coerce", utc=True)
     df["exit_date"] = pd.to_datetime(df["exit_date"], errors="coerce", utc=True)
 
-    # 3. Filtrar trades cerrados de hoy
-    today = datetime.now(timezone.utc).date()
+    # 3. Filtrar trades cerrados en el período de trading anterior (día anterior)
+    # El reporte se ejecuta después del reset de Alpaca, por lo que reportamos el día anterior
+    madrid_tz = pytz.timezone("Europe/Madrid")
+    now_madrid = datetime.now(madrid_tz)
+    
+    # Siempre reportar el día anterior (período completo desde reset anterior hasta reset actual)
+    trading_day = (now_madrid.date() - timedelta(days=1))
+    
     df_closed = df[df["status"] == "closed"].copy()
     df_closed["exit_day"] = df_closed["exit_date"].dt.date
-    df_today = df_closed[df_closed["exit_day"] == today].copy()  # ✅ .copy() aquí
+    df_today = df_closed[df_closed["exit_day"] == trading_day].copy()  # ✅ .copy() aquí
 
     if df_today.empty:
-        logger.info("🟡 No hay trades cerrados hoy. Reporte no generado.")
+        logger.info(f"🟡 No hay trades cerrados en {trading_day}. Reporte no generado.")
         return
 
     # 4. Convertir P&L a número
@@ -64,7 +71,7 @@ def generate_daily_report():
             "Mayor Pérdida"
         ],
         "Valor": [
-            today.strftime("%Y-%m-%d"),
+            trading_day.strftime("%Y-%m-%d"),
             num_trades,
             f"${total_pnl:.2f}",
             f"{total_pnl_pct:.2%}",
@@ -84,7 +91,7 @@ def generate_daily_report():
     df_export["exit_date"] = df_export["exit_date"].dt.strftime("%H:%M:%S")
 
     # 8. Guardar en Excel
-    filename = f"{REPORTS_DIR}/reporte_{today}.xlsx"
+    filename = f"{REPORTS_DIR}/reporte_{trading_day}.xlsx"
     with pd.ExcelWriter(filename, engine="openpyxl") as writer:
         summary.to_excel(writer, sheet_name="Resumen", index=False)
         df_export.to_excel(writer, sheet_name="Trades", index=False)
@@ -97,7 +104,7 @@ def generate_daily_report():
         msg = (
             f"📊 *Reporte Diario*\n"
             f"──────────────────\n"
-            f"• *Fecha:* `{today}`\n"
+            f"• *Fecha:* `{trading_day}`\n"
             f"• *Trades:* `{num_trades}`\n"
             f"• *P&L:* `${total_pnl:.2f}` ({total_pnl_pct:+.2%})\n"
             f"• *Win Rate:* `{win_rate:.1%}`"
