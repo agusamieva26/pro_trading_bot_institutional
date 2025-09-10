@@ -184,6 +184,77 @@ with tab1:
         value=account_info.get("status", "N/A")
     )
 
+    # --- SECCIÓN META DIARIA ---
+    st.markdown("---")
+    st.markdown("### 🎯 Meta Diaria")
+    
+    # Configuración de la meta
+    DAILY_TARGET = 1000.0
+    
+    # Progreso hacia la meta
+    progress_pct = min((daily_change / DAILY_TARGET) * 100, 100) if DAILY_TARGET > 0 else 0
+    remaining = max(DAILY_TARGET - daily_change, 0)
+    
+    # Métricas de la meta
+    meta_col1, meta_col2, meta_col3, meta_col4 = st.columns(4)
+    
+    # Meta objetivo
+    meta_col1.metric(
+        label="🎯 Objetivo Diario",
+        value=f"${DAILY_TARGET:,.0f}"
+    )
+    
+    # Progreso actual
+    progress_color = "normal" if daily_change == 0 else ("inverse" if daily_change > 0 else "off")
+    meta_col2.metric(
+        label="📈 Progreso Actual",
+        value=f"${daily_change:+,.2f}",
+        delta=f"{progress_pct:.1f}% de la meta",
+        delta_color=progress_color
+    )
+    
+    # Restante para alcanzar
+    meta_col3.metric(
+        label="⏳ Restante",
+        value=f"${remaining:,.0f}" if remaining > 0 else "✅ Meta Alcanzada!"
+    )
+    
+    # Estado de la meta
+    if daily_change >= DAILY_TARGET:
+        meta_status = "🎉 COMPLETADA"
+        meta_color = "🟢"
+    elif progress_pct >= 75:
+        meta_status = "🔥 Muy Cerca"
+        meta_color = "🟡"
+    elif progress_pct >= 50:
+        meta_status = "⚡ En Progreso"
+        meta_color = "🟠"
+    elif progress_pct >= 25:
+        meta_status = "🚀 Iniciando"
+        meta_color = "🔵"
+    else:
+        meta_status = "📊 Comenzando"
+        meta_color = "⚪"
+    
+    meta_col4.metric(
+        label=f"{meta_color} Estado",
+        value=meta_status
+    )
+    
+    # Barra de progreso visual
+    st.markdown("#### 📊 Progreso Visual")
+    progress_bar_value = min(daily_change / DAILY_TARGET, 1.0) if DAILY_TARGET > 0 else 0
+    st.progress(max(progress_bar_value, 0), text=f"${daily_change:+,.2f} / ${DAILY_TARGET:,.0f} ({progress_pct:.1f}%)")
+    
+    # Información adicional de la meta
+    if daily_change >= DAILY_TARGET:
+        st.success(f"🎉 ¡Felicidades! Has alcanzado la meta diaria con ${daily_change - DAILY_TARGET:+,.2f} de excedente.")
+    elif remaining > 0:
+        # Calcular trades aproximados necesarios (usando configuración actual)
+        expected_win_per_trade = 34.03  # Basado en cálculos previos
+        trades_needed = remaining / expected_win_per_trade if expected_win_per_trade > 0 else 0
+        st.info(f"💪 Necesitas aproximadamente ${remaining:,.0f} más para alcanzar la meta. Esto equivale a ~{trades_needed:.0f} trades ganadores.")
+
     # Posiciones abiertas
     st.subheader("💼 Posiciones Abiertas")
     positions = get_open_positions()
