@@ -29,8 +29,8 @@ class Settings(BaseModel):
     max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.5")))  # SCALPING: Exposición moderada pero funcional
     enable_extended_hours: bool = Field(default_factory=lambda: os.getenv("ENABLE_EXTENDED_HOURS","true").lower() in ("1","true","yes"))  # 🔥 PRE/POST MARKET
     enable_crypto_shorts: bool = Field(default_factory=lambda: os.getenv("ENABLE_CRYPTO_SHORTS","true").lower() in ("1","true","yes"))  # 🔥 CRYPTO SHORTS FULL
-    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.08")))  # SCALPING OPTIMIZADO: 8%
-    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.015")))  # SCALPING OPTIMIZADO: 1.5%
+    take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.03")))  # SCALPING REALISTA: 3%
+    stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.01")))  # SCALPING REALISTA: 1%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.001")))  # ULTRA-SCALPING: 0.1%
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
