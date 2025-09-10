@@ -200,10 +200,16 @@ def train_model(df: pd.DataFrame):
         logger.error("❌ No hay suficientes datos para entrenar.")
         return None
 
+    # 🎯 REPRODUCIBILIDAD: Seed fijo para entrenamientos determinísticos
+    import hashlib
+    # Seed basado en contenido de datos, no en tiempo
+    data_hash = hashlib.md5(str(sorted(X.columns.tolist())).encode()).hexdigest()[:8]
+    fixed_seed = int(data_hash, 16) % 2**31
+    
     clf = RandomForestClassifier(
         n_estimators=300,
         max_depth=8,
-        random_state=42,
+        random_state=fixed_seed,  # 🔥 SEED DETERMINÍSTICO basado en datos
         n_jobs=-1,
         class_weight="balanced"
     )
@@ -251,7 +257,7 @@ def reset_signal_memory():
     _last_signals.clear()
     logger.info("🔄 Memoria de señales reseteada - permitiendo recálculo limpio")
 
-def hybrid_signal(features, model=None):
+def hybrid_signal(features, model=None, timeframe=None):
     """
     Genera señal híbrida:
     - Si el modelo está disponible: combina predicción + reglas
@@ -309,15 +315,23 @@ def hybrid_signal(features, model=None):
 
         current_signal = float(np.clip(combined_signal, -1.0, 1.0))
 
-        # Filtro de estabilidad (simétrico)
-        symbol = features.get("symbol", "UNKNOWN")
-        last_signal = _last_signals.get(symbol)
+        # 🎯 FILTRO DE ESTABILIDAD: Sin sesgo artificial - mantener integridad de señal
+        symbol = features.get("symbol", f"UNK_{hash(str(features))%10000}")
+        
+        # Aplicar solo clipping sin ruido artificial 
+        current_signal = float(np.clip(current_signal, -1.0, 1.0))
+        
+        # Filtro de estabilidad con clave por (symbol, timeframe) para evitar cross-talk
+        tf_key = f"{symbol}:{timeframe or 'default'}"
+        last_signal = _last_signals.get(tf_key)
         if last_signal is not None:
-            if abs(current_signal - last_signal) < 0.15:
-                logger.debug(f"🔧 [hybrid_signal] Señal estable → mantener {last_signal:.4f}")
+            if abs(current_signal - last_signal) < 0.03:  # 🔥 REDUCIDO: 0.15 → 0.03 (5x más restrictivo)
+                logger.debug(f"🔧 [hybrid_signal] {tf_key}: Señal estable → mantener {last_signal:.6f}")
                 current_signal = last_signal
+            else:
+                logger.debug(f"🆕 [hybrid_signal] {tf_key}: Nueva señal {current_signal:.6f} (cambio: {abs(current_signal - last_signal):.6f})")
 
-        _last_signals[symbol] = current_signal
+        _last_signals[tf_key] = current_signal
         return current_signal
 
     except Exception as e:
@@ -341,10 +355,13 @@ def generate_signals(market_data, model=None):
             last_row = df.iloc[-1].copy()
             last_row["symbol"] = symbol
 
-            # 🔍 DEBUG: Ver features en detalle (por si alguna viene igual entre símbolos)
+            # 🔍 DEBUG: Ver features en detalle + verificar unicidad
             try:
                 features_dict = {f: float(last_row[f]) for f in FEATURES}
-                logger.debug(f"🧪 [{symbol}] features: {features_dict}")
+                features_hash = hash(str(sorted(features_dict.items())))
+                logger.debug(f"🧪 [{symbol}] features_hash: {features_hash}, unique_features: {len(set(features_dict.values()))}")
+                if len(set(features_dict.values())) < len(FEATURES) / 2:
+                    logger.warning(f"⚠️ [{symbol}] Demasiadas features duplicadas - posible problema de datos")
             except Exception as e:
                 logger.error(f"❌ No se pudieron loggear las features de {symbol}: {e}")
 

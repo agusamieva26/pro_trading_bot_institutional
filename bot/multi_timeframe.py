@@ -59,10 +59,10 @@ class MultiTimeframeAnalyzer:
                     logger.warning(f"⚠️ {symbol} {tf}: Datos insuficientes")
                     continue
                     
-                # Calcular features y señal (pasar symbol explícitamente)
+                # Calcular features y señal (pasar symbol y timeframe explícitamente)
                 features = make_features(df, symbol=symbol)
                 latest = features.iloc[-1]
-                signal = hybrid_signal(latest, clf)
+                signal = hybrid_signal(latest, clf, timeframe=tf)
                 
                 timeframe_signals[tf] = signal
                 timeframe_data[tf] = {
@@ -165,13 +165,10 @@ class MultiTimeframeAnalyzer:
         vol_factor = factors['volatility_factor']
         boost = factors['confirmation_boost']
         
-        # ⚡ SCALPING: Mayor randomness para señales más diversas
-        import random
-        import hashlib
-        # FIXED: Use more robust hash to avoid collisions
-        symbol_hash = int(hashlib.md5(symbol.encode()).hexdigest(), 16) % 100000
-        random.seed(symbol_hash)  # More unique seed per symbol
-        noise_factor = 1.0 + random.uniform(-0.25, 0.25)  # ±25% variación para scalping
+        # Solo aplicar epsilon mínimo en caso de igualdad exacta entre timeframes
+        signal_values = list(signals.values())
+        has_exact_equality = len(set(round(s, 10) for s in signal_values)) < len(signal_values)
+        epsilon = 1e-6 if has_exact_equality else 0
         
         # Contar alineación direccional con umbrales dinámicos
         bullish_count = sum(1 for s in signals.values() if s > threshold * vol_factor)
@@ -180,16 +177,16 @@ class MultiTimeframeAnalyzer:
         
         total_signals = len(signals)
         
-        # Score basado en consenso DIVERSIFICADO
+        # Score basado en consenso sin manipulación artificial
         if bullish_count > bearish_count:
             # Señal alcista - mejor si más timeframes confirman
-            confirmation = (bullish_count / total_signals) * boost * noise_factor
+            confirmation = (bullish_count / total_signals) * boost + epsilon
         elif bearish_count > bullish_count:
             # Señal bajista - mejor si más timeframes confirman  
-            confirmation = (bearish_count / total_signals) * boost * noise_factor
+            confirmation = (bearish_count / total_signals) * boost + epsilon
         else:
             # Señales mixtas - menor confirmación
-            confirmation = 0.6
+            confirmation = 0.6 + epsilon
         
         # ⚡ SCALPING: Bonus por tendencia en timeframes cortos
         if "5Min" in signals and abs(signals["5Min"]) > 0.1:
