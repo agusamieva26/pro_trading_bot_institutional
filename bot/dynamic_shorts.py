@@ -12,7 +12,7 @@ class DynamicShortManager:
     """Gestiona shorts con compra dinámica de tokens."""
     
     def __init__(self):
-        self.default_purchase_amount = 10.0  # Mínimo por defecto
+        self.default_purchase_amount = 50.0  # Cantidad moderada por defecto
         
     def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell", purchase_amount: float = None) -> Dict:
         """
@@ -29,8 +29,13 @@ class DynamicShortManager:
             Dict con resultado de la operación
         """
         try:
-            # Usar la cantidad basada en riesgo o valor por defecto
-            token_purchase_amount = purchase_amount or self.default_purchase_amount
+            # Limitar la cantidad máxima para evitar problemas de liquidez
+            max_purchase = 200.0  # Máximo $200 por short dinámico
+            if purchase_amount and purchase_amount > max_purchase:
+                token_purchase_amount = max_purchase
+                logger.info(f"🔧 {symbol}: Limitando purchase_amount de ${purchase_amount:.2f} a ${max_purchase:.2f}")
+            else:
+                token_purchase_amount = purchase_amount or self.default_purchase_amount
             
             # Calcular la cantidad que realmente podemos comprar y hacer short
             buy_qty = token_purchase_amount / current_price if current_price > 0 else 0.001

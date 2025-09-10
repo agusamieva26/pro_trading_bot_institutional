@@ -31,7 +31,7 @@ def get_available_cash():
         client = _client()
         account = client.get_account()
         total_cash = float(account.cash)
-        available = total_cash * 0.9 - _reserved_cash
+        available = total_cash * 0.95 - _reserved_cash  # Usar 95% del cash para más liquidez
         return max(0, available), total_cash
     except Exception as e:
         logger.error(f"❌ Error obteniendo cash disponible: {e}")
