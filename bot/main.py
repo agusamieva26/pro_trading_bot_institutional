@@ -507,11 +507,15 @@ def run_once(state: BotState, clf):
             if is_crypto and side == "sell":
                 logger.info(f"🔥 CRYPTO {action} DINÁMICO {symbol}: score={sig:+.3f}, qty={qty:.6f}")
                 
-                # USAR SHORT DINÁMICO: Compra $1 + Short
+                # USAR SHORT DINÁMICO: Compra basado en riesgo + Short
                 if dynamic_short_manager.should_use_dynamic_short(symbol):
-                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, price, side)
+                    # Calcular cantidad basada en riesgo (2% del equity)
+                    current_equity = equity  # Variable definida más arriba en la función
+                    purchase_amount = current_equity * settings.risk_per_trade
+                    
+                    result = dynamic_short_manager.execute_dynamic_short(symbol, qty, price, side, purchase_amount)
                     if result["success"]:
-                        logger.info(f"✅ SHORT DINÁMICO EXITOSO {symbol}: $1 comprado + short ejecutado")
+                        logger.info(f"✅ SHORT DINÁMICO EXITOSO {symbol}: ${purchase_amount:.0f} comprado + short ejecutado")
                     else:
                         logger.error(f"❌ SHORT DINÁMICO FALLÓ {symbol}: {result.get('error', 'Error desconocido')}")
                 else:

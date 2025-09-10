@@ -12,30 +12,35 @@ class DynamicShortManager:
     """Gestiona shorts con compra dinámica de tokens."""
     
     def __init__(self):
-        self.token_purchase_amount = 10.0  # $10 mínimo requerido por Alpaca
+        self.default_purchase_amount = 10.0  # Mínimo por defecto
         
-    def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell") -> Dict:
+    def execute_dynamic_short(self, symbol: str, short_qty: float, current_price: float, short_side: str = "sell", purchase_amount: float = None) -> Dict:
         """
-        Ejecuta short dinámico: compra $10 del token, luego hace short del 80% comprado.
+        Ejecuta short dinámico: compra cantidad basada en riesgo, luego hace short del 80% comprado.
         
         Args:
             symbol: Símbolo a operar (ej: BTC/USD)
             short_qty: Cantidad original (se ignora, se calcula del token comprado)
+            current_price: Precio actual del activo
             short_side: Debe ser "sell" para short
+            purchase_amount: Cantidad en USD a comprar (usa riesgo si no se especifica)
             
         Returns:
             Dict con resultado de la operación
         """
         try:
+            # Usar la cantidad basada en riesgo o valor por defecto
+            token_purchase_amount = purchase_amount or self.default_purchase_amount
+            
             # Calcular la cantidad que realmente podemos comprar y hacer short
-            buy_qty = self.token_purchase_amount / current_price if current_price > 0 else 0.001
+            buy_qty = token_purchase_amount / current_price if current_price > 0 else 0.001
             # Solo hacer short del 80% de lo comprado para dejar margen de seguridad
             actual_short_qty = buy_qty * 0.8
             
-            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando ${self.token_purchase_amount} + Short {actual_short_qty:.6f} (vs original {short_qty:.6f})")
+            logger.info(f"🔄 INICIO SHORT DINÁMICO {symbol}: Comprando ${token_purchase_amount:.2f} + Short {actual_short_qty:.6f} (vs original {short_qty:.6f})")
             
-            # PASO 1: Comprar $10 del token para habilitar short
-            logger.info(f"💰 Paso 1/2: Comprando ${self.token_purchase_amount} de {symbol}...")
+            # PASO 1: Comprar cantidad basada en riesgo del token para habilitar short
+            logger.info(f"💰 Paso 1/2: Comprando ${token_purchase_amount:.2f} de {symbol}...")
             
             buy_result = place_order(
                 symbol=symbol,
@@ -77,7 +82,7 @@ class DynamicShortManager:
                     }
                 buy_order_id = buy_result.get('id', 'unknown')
             
-            logger.info(f"✅ {symbol}: $10 comprado exitosamente - Order ID: {buy_order_id}")
+            logger.info(f"✅ {symbol}: ${token_purchase_amount:.2f} comprado exitosamente - Order ID: {buy_order_id}")
             
             # PASO 2: Ejecutar el short principal (solo el 80% de lo comprado)
             logger.info(f"📉 Paso 2/2: Ejecutando SHORT de {actual_short_qty:.6f} {symbol} (80% de {buy_qty:.6f} comprado)...")
@@ -125,7 +130,7 @@ class DynamicShortManager:
                 short_order_id = short_result.get('id', 'unknown')
             
             logger.info(f"🔥 {symbol}: SHORT DINÁMICO COMPLETADO")
-            logger.info(f"   💰 Compra: ${self.token_purchase_amount} = {buy_qty:.6f} tokens (ID: {buy_order_id})")
+            logger.info(f"   💰 Compra: ${token_purchase_amount:.2f} = {buy_qty:.6f} tokens (ID: {buy_order_id})")
             logger.info(f"   📉 Short: {actual_short_qty:.6f} tokens = 80% comprado (ID: {short_order_id})")
             
             return {
