@@ -258,23 +258,32 @@ def hybrid_signal(features, model=None):
 
     try:
         # Preparar input
-        if isinstance(features, pd.Series):
-            X = pd.DataFrame([features[FEATURES]], columns=FEATURES)
-        elif isinstance(features, dict):
-            X = pd.DataFrame([features], columns=FEATURES)
-        elif isinstance(features, pd.DataFrame):
-            X = features[FEATURES]
-        else:
-            logger.error(f"❌ Tipo no soportado: {type(features)}")
-            return 0.0
+        try:
+            if isinstance(features, pd.Series):
+                data_row = {col: features[col] for col in FEATURES}
+                X = pd.DataFrame([data_row])
+            elif isinstance(features, dict):
+                data_row = {col: features[col] for col in FEATURES}
+                X = pd.DataFrame([data_row])
+            elif isinstance(features, pd.DataFrame):
+                X = features[FEATURES].copy()
+            else:
+                logger.error(f"❌ Tipo no soportado: {type(features)}")
+                return 0.0
+        except KeyError as e:
+            logger.error(f"❌ Feature faltante: {e}")
+            return rule_signal(features)
 
-        if X.isna().any(axis=1).any():
+        if pd.isna(X).any().any():
             logger.warning("⚠️ Input contiene NaN. Usando solo reglas.")
             return rule_signal(features)
 
         # Predicción del modelo
-        proba = model.predict_proba(X)[0]  # [P(0), P(1)]
-        model_signal = float(proba[1] - proba[0])  # rango -1 a +1
+        proba = model.predict_proba(X)[0]  # [P(0), P(1), P(2)] para SELL/HOLD/BUY
+        if len(proba) == 3:  # 3 clases: SELL(0), HOLD(1), BUY(2)
+            model_signal = float(proba[2] - proba[0])  # BUY - SELL probabilidad
+        else:  # Fallback por si hay modelo binario
+            model_signal = float(proba[1] - proba[0])
 
         # Señal de reglas
         rule_sig = rule_signal(features)
