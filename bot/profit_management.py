@@ -69,7 +69,15 @@ class ProfitManager:
         # Solo distribuir si:
         # 1. Hay beneficio positivo
         # 2. No se ha distribuido hoy
-        return daily_profit > 0 and last_distribution != today
+        should_distribute = daily_profit > 0 and last_distribution != today
+        
+        if not should_distribute:
+            if daily_profit <= 0:
+                logger.debug(f"📊 No hay beneficios para distribuir: ${daily_profit:+,.2f}")
+            elif last_distribution == today:
+                logger.debug(f"📊 Beneficios ya distribuidos hoy ({today})")
+        
+        return should_distribute
     
     def distribute_daily_profits(self, current_equity: float, daily_profit: float) -> Dict:
         """
@@ -114,12 +122,13 @@ class ProfitManager:
         self._save_profit_state()
         
         # Log de la distribución
-        logger.info(f"💰 DISTRIBUCIÓN DE BENEFICIOS:")
+        logger.info(f"💰 DISTRIBUCIÓN DE BENEFICIOS EJECUTADA:")
         logger.info(f"   📈 Beneficio diario: ${daily_profit:+,.2f}")
         logger.info(f"   🔄 Reinversión (40%): ${amount_to_reinvest:+,.2f}")
         logger.info(f"   🛡️ Protegido (60%): ${amount_to_protect:+,.2f}")
         logger.info(f"   💵 Nuevo capital trading: ${new_trading_capital:,.2f}")
-        logger.info(f"   📊 Total protegido: ${self.profit_state['total_profits_protected']:,.2f}")
+        logger.info(f"   📊 Total protegido acumulado: ${self.profit_state['total_profits_protected']:,.2f}")
+        logger.info(f"   📊 Total reinvertido acumulado: ${self.profit_state['total_profits_reinvested']:,.2f}")
         
         return {
             "distributed": True,

@@ -43,9 +43,38 @@ def run_reporter():
                         
                         # Generar reporte del día anterior
                         generate_daily_report()
-                        reset_detected = True
                         
-                        logger.info("✅ Reporte generado tras detectar reset del daily change")
+                        # 💰 DISTRIBUCIÓN DE BENEFICIOS 40-60% AL FINAL DEL DÍA
+                        try:
+                            from bot.profit_management import profit_manager
+                            
+                            # Calcular beneficio del día que acaba de terminar
+                            previous_daily_profit = last_known_equity - last_equity
+                            
+                            logger.info(f"💰 Evaluando distribución de beneficios del día anterior: ${previous_daily_profit:+,.2f}")
+                            
+                            if previous_daily_profit > 0:
+                                # Verificar si ya se distribuyó (para evitar duplicados)
+                                if profit_manager.should_distribute_profits(previous_daily_profit):
+                                    logger.info("🔄 Ejecutando distribución 40-60% tras reset diario...")
+                                    distribution_result = profit_manager.distribute_daily_profits(last_known_equity, previous_daily_profit)
+                                    
+                                    if distribution_result["distributed"]:
+                                        # Enviar notificación de distribución
+                                        profit_manager.send_distribution_notification(distribution_result)
+                                        logger.info(f"✅ DISTRIBUCIÓN COMPLETADA: Reinversión ${distribution_result['amount_reinvested']:,.2f}, Protegido ${distribution_result['amount_protected']:,.2f}")
+                                    else:
+                                        logger.info(f"⚠️ Distribución omitida: {distribution_result.get('reason', 'Ya distribuido hoy')}")
+                                else:
+                                    logger.info("ℹ️ Beneficios ya distribuidos anteriormente durante el día")
+                            else:
+                                logger.info(f"ℹ️ Sin beneficios para distribuir (${previous_daily_profit:+,.2f})")
+                                
+                        except Exception as e:
+                            logger.error(f"❌ Error en distribución de beneficios durante reset: {e}")
+                        
+                        reset_detected = True
+                        logger.info("✅ Reporte generado y beneficios procesados tras detectar reset del daily change")
             
             # Actualizar equity conocido
             last_known_equity = current_equity
