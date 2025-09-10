@@ -13,14 +13,14 @@ def run_reporter():
     # Zona horaria de España
     madrid_tz = pytz.timezone("Europe/Madrid")  # ✅ pytz.timezone
 
-    # Programar el reporte a las 00:00 (medianoche) en hora local de España
-    schedule.every().day.at("00:00", madrid_tz).do(
-        lambda: logger.info("📅 Generando reporte diario a medianoche (España)...") or generate_daily_report()
+    # Programar el reporte a las 08:35 (5 minutos después del BOD sync de Alpaca)
+    schedule.every().day.at("08:35", madrid_tz).do(
+        lambda: logger.info("📅 Generando reporte diario tras actualización Alpaca (08:35)...") or generate_daily_report()
     )
 
     # Mostrar la hora actual en España
     now = datetime.now(madrid_tz)
-    logger.info(f"⏰ Reporter programado: generará reporte diario a las 00:00 CET/CEST (España). Hora actual: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    logger.info(f"⏰ Reporter programado: generará reporte diario a las 08:35 CET/CEST (tras sync Alpaca). Hora actual: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
     while True:
         schedule.run_pending()
