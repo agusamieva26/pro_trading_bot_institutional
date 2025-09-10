@@ -185,7 +185,10 @@ def monitor_closed_positions(clf):
                 reason = f"Reversión alcista: {predicted_signal:+.3f}"
 
             if should_close:
-                logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ ${current_price:.2f} | P&L: ${pnl:+.2f} ({pnl_pct:+.2%})")
+                # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
+                pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
+                price_str = f"${current_price:.6f}" if current_price < 0.01 else f"${current_price:.2f}"
+                logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ {price_str} | P&L: {pnl_str} ({pnl_pct:+.2%})")
                 _close_position(pos, symbol, qty, current_price, pnl, pnl_pct, reason)
 
         except Exception as e:
@@ -218,7 +221,9 @@ def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float,
         
         trading_client.submit_order(order_request)
         side_str = "long" if qty > 0 else "short"
-        logger.info(f"✅ Cerrada {side_str} {abs(qty)} {symbol} | P&L: ${pnl:.2f} ({pnl_pct:+.2%}) [{reason}]")
+        # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
+        pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
+        logger.info(f"✅ Cerrada {side_str} {abs(qty)} {symbol} | P&L: {pnl_str} ({pnl_pct:+.2%}) [{reason}]")
         alert_trade_exit(symbol, side_str, abs(qty), exit_price, pnl, pnl_pct)
         log_trade_exit(symbol, abs(qty), exit_price, pnl, pnl_pct)
     except Exception as e:
