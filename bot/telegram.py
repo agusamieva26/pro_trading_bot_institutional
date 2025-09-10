@@ -104,13 +104,17 @@ def alert_trade_exit(symbol: str, side: str, qty: float, exit_price: float, pnl:
         daily_emoji = "📈" if daily_change >= 0 else "📉"
         pnl_emoji = "💚" if pnl >= 0 else "💔"
 
+        # Formatear precios con lógica condicional
+        exit_price_str = f"{exit_price:.6f}" if exit_price < 0.01 else f"{exit_price:,.2f}"
+        pnl_str = f"{pnl:+.6f}" if abs(pnl) < 0.01 else f"{pnl:+.2f}"
+        
         msg = (
             f"❌ 🟢 {side.upper()} cerrado\n"
             "──────────────────\n"
             f"• Par: {symbol.replace('/', '')}\n"
             f"• Cantidad: {qty:.6f}\n"
-            f"• Precio salida: ${exit_price:.6f if exit_price < 0.01 else exit_price:,.2f}\n"
-            f"{pnl_emoji} P&L: `${pnl:+.6f if abs(pnl) < 0.01 else pnl:+.2f}` ({pnl_pct:+.2%})\n"
+            f"• Precio salida: ${exit_price_str}\n"
+            f"{pnl_emoji} P&L: `${pnl_str}` ({pnl_pct:+.2%})\n"
             f"──────────────────\n"
             f"{daily_emoji} Daily Change: `${daily_change:+,.2f}` ({daily_change_pct:+.2f}%)\n"
             f"💰 Equity: `${current_equity:,.2f}`"
