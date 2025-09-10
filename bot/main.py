@@ -1,6 +1,7 @@
 # bot/main.py
 import logging
 import time
+import threading
 import pandas as pd
 from tenacity import retry, wait_exponential, stop_after_attempt
 from alpaca.trading.client import TradingClient
@@ -529,13 +530,8 @@ def run_once(state: BotState, clf):
                 logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
                 place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
-    # 7. Monitorear cierres
-    try:
-        result = monitor_closed_positions(clf)
-        if result == "STOP":
-            return "STOP"
-    except Exception as e:
-        logger.error(f"❌ Error en monitor de cierres: {e}")
+    # 7. Monitorear cierres ahora se ejecuta en thread separado
+    # (removido de aquí para evitar bloqueo del bucle principal)
 
     # 8. Guardar estado
     try:
@@ -581,6 +577,17 @@ def main():
     except Exception as e:
         logger.warning(f"⚠️ Error cargando modelos ML avanzados: {e}")
         logger.info("ℹ️ Continuando con modelo tradicional")
+    
+    # 🔧 INICIAR POSITION MONITOR EN THREAD SEPARADO
+    logger.info("🔄 Iniciando Position Monitor en thread separado...")
+    monitor_thread = threading.Thread(
+        target=monitor_closed_positions, 
+        args=(clf,),
+        daemon=True,
+        name="PositionMonitor"
+    )
+    monitor_thread.start()
+    logger.info("✅ Position Monitor activo en thread paralelo")
 
     while True:
         try:
