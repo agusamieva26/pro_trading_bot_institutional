@@ -178,11 +178,13 @@ def close_position(symbol: str):
             
             # Create market order to close position
             order_side = OrderSide.SELL if qty > 0 else OrderSide.BUY
+            # ✅ ARREGLO CRÍTICO: Usar TimeInForce correcto según asset type
+            tif = TimeInForce.GTC if "/USD" in symbol else TimeInForce.DAY
             order_request = MarketOrderRequest(
                 symbol=api_symbol,
                 qty=abs_qty,
                 side=order_side,
-                time_in_force=TimeInForce.DAY
+                time_in_force=tif
             )
             
             order = client.submit_order(order_request)

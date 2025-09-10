@@ -32,6 +32,14 @@ class Settings(BaseModel):
     take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.015")))  # ROTACIÓN RÁPIDA: 1.5%
     stop_loss_pct: float = Field(default_factory=lambda: float(os.getenv("STOP_LOSS_PCT","0.007")))  # ROTACIÓN RÁPIDA: 0.7%
     trailing_stop_pct: float = Field(default_factory=lambda: float(os.getenv("TRAILING_STOP_PCT","0.001")))  # ULTRA-SCALPING: 0.1%
+    
+    # ⏰ TIME-BASED EXIT SYSTEM (Capital rotation optimization)
+    max_position_time_normal: float = Field(default_factory=lambda: float(os.getenv("MAX_POSITION_TIME_NORMAL","45")))  # 45 minutos para posiciones estancadas
+    max_position_time_force: float = Field(default_factory=lambda: float(os.getenv("MAX_POSITION_TIME_FORCE","75")))  # 75 minutos cierre forzado
+    min_pnl_keep_long: float = Field(default_factory=lambda: float(os.getenv("MIN_PNL_KEEP_LONG","0.012")))  # 1.2% mínimo para mantener en cierre forzado
+    stagnant_pnl_min: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MIN","-0.003")))  # -0.3% límite inferior estancamiento
+    stagnant_pnl_max: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MAX","0.007")))  # +0.7% límite superior estancamiento
+    
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))
