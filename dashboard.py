@@ -122,6 +122,48 @@ def calculate_time_to_target(daily_change, target=1000.0):
     except Exception:
         return "Error", 0, 0
 
+def calculate_time_to_reset():
+    """Calcula el tiempo restante hasta el próximo reset del daily change (8:15 AM Madrid)"""
+    try:
+        now = datetime.now(timezone.utc)
+        madrid_now = now.astimezone(timezone(timedelta(hours=1)))  # UTC+1 Madrid
+        
+        # Próximo reset: 8:15 AM Madrid (7:15 AM UTC)
+        next_reset = madrid_now.replace(hour=8, minute=15, second=0, microsecond=0)
+        
+        # Si ya pasó las 8:15 AM de hoy, el reset es mañana
+        if madrid_now.hour > 8 or (madrid_now.hour == 8 and madrid_now.minute >= 15):
+            next_reset = next_reset + timedelta(days=1)
+        
+        # Calcular tiempo restante
+        time_to_reset = next_reset.astimezone(timezone.utc) - now
+        total_seconds = time_to_reset.total_seconds()
+        
+        if total_seconds <= 0:
+            return "¡Reseteando!", "🔄"
+        
+        # Convertir a formato legible
+        hours = int(total_seconds // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        
+        if hours > 0:
+            time_str = f"{hours}h {minutes}min"
+        else:
+            time_str = f"{minutes}min"
+        
+        # Emoji basado en tiempo restante
+        if hours < 1:
+            emoji = "🔴"  # Rojo - muy poco tiempo
+        elif hours < 6:
+            emoji = "🟡"  # Amarillo - pocas horas
+        else:
+            emoji = "🟢"  # Verde - mucho tiempo
+        
+        return time_str, emoji
+        
+    except Exception:
+        return "Error", "❌"
+
 def get_total_unrealized_pnl():
     """Obtiene el P&L no realizado total de todas las posiciones"""
     try:
@@ -249,8 +291,11 @@ with tab1:
     # Calcular tiempo estimado
     time_estimate, hours_to_target, current_rate = calculate_time_to_target(daily_change, DAILY_TARGET)
     
-    # Métricas de la meta (ahora 5 columnas)
-    meta_col1, meta_col2, meta_col3, meta_col4, meta_col5 = st.columns(5)
+    # Calcular tiempo al reset
+    reset_time, reset_emoji = calculate_time_to_reset()
+    
+    # Métricas de la meta (ahora 6 columnas)
+    meta_col1, meta_col2, meta_col3, meta_col4, meta_col5, meta_col6 = st.columns(6)
     
     # Meta objetivo
     meta_col1.metric(
@@ -302,6 +347,14 @@ with tab1:
     meta_col5.metric(
         label=f"{meta_color} Estado",
         value=meta_status
+    )
+    
+    # Tiempo al reset del daily change
+    meta_col6.metric(
+        label=f"{reset_emoji} Reset Daily",
+        value=reset_time,
+        delta="8:15 AM Madrid",
+        delta_color="normal"
     )
     
     # Barra de progreso visual
@@ -371,20 +424,30 @@ with tab3:
         # Gráfico de P&L acumulado (solo trades cerrados)
         df_closed = df[df["status"] == "closed"].copy()
         if "realized_pnl" in df_closed.columns and not df_closed.empty:
-            df_closed = df_closed.sort_values("exit_date")
+            # Asegurar que exit_date es datetime y manejar NaN
+            if "exit_date" in df_closed.columns:
+                df_closed = df_closed.dropna(subset=["exit_date"])
+                if not df_closed.empty:
+                    df_closed = df_closed.sort_values("exit_date")
             df_closed["cum_pnl"] = df_closed["realized_pnl"].cumsum()
             
-            if PLOTLY_AVAILABLE and 'px' in globals():
-                fig = px.line(
-                    df_closed,
-                    x="exit_date",
-                    y="cum_pnl",
-                    title="P&L Acumulado (Trades Cerrados)",
-                    labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
-                )
-                st.plotly_chart(fig, use_column_width=True)
+            if PLOTLY_AVAILABLE and not df_closed.empty:
+                try:
+                    fig = px.line(
+                        df_closed,
+                        x="exit_date",
+                        y="cum_pnl",
+                        title="P&L Acumulado (Trades Cerrados)",
+                        labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
+                    )
+                    st.plotly_chart(fig, use_column_width=True)
+                except Exception:
+                    # Fallback si plotly falla
+                    if not df_closed.empty and "exit_date" in df_closed.columns:
+                        st.line_chart(df_closed.set_index("exit_date")["cum_pnl"])
             else:
-                st.line_chart(df_closed.set_index("exit_date")["cum_pnl"])
+                if not df_closed.empty and "exit_date" in df_closed.columns:
+                    st.line_chart(df_closed.set_index("exit_date")["cum_pnl"])
 
         st.dataframe(df, width='stretch')
     else:
