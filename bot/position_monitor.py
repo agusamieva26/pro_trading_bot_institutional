@@ -154,47 +154,38 @@ def monitor_closed_positions(clf):
             current_side = "long" if qty > 0 else "short"
             predicted_side = "long" if predicted_signal > 0 else "short"
 
-            # --- Lógica de cierre inteligente con COOLDOWN ---
+            # --- LÓGICA DE CIERRE SIMPLIFICADA Y AGRESIVA ---
             should_close = False
             reason = ""
             
-            # ⚡ ANTI-OVERTRADING: Verificar que la posición tenga al menos 3 minutos
-            # 🔧 FIX: Verificar atributos de posición
-            if not hasattr(pos, 'created_at') and not hasattr(pos, 'created_time'):
-                # Si no tiene timestamp, asumir que es nueva (skip por seguridad)
-                continue
-                
-            # Usar created_at o created_time según disponibilidad  
-            if hasattr(pos, 'created_at'):
-                position_age_minutes = (pos.created_at.timestamp() if hasattr(pos.created_at, 'timestamp') else 0)
-            elif hasattr(pos, 'created_time'):
-                position_age_minutes = (pos.created_time.timestamp() if hasattr(pos.created_time, 'timestamp') else 0)
-            else:
-                position_age_minutes = 0
-            current_time = time.time()
-            age_minutes = (current_time - position_age_minutes) / 60
+            # Calcular P&L actual
+            if qty > 0:  # LONG
+                pnl = (current_price - entry_price) * qty
+                pnl_pct = (current_price - entry_price) / entry_price
+            else:  # SHORT
+                pnl = (entry_price - current_price) * abs(qty)
+                pnl_pct = (entry_price - current_price) / entry_price
             
-            # 🔥 ULTRA-SCALPING: Solo esperar 15 segundos para cerrar
-            min_age_minutes = 0.25  # 15 segundos
-            
-            if age_minutes < min_age_minutes:
-                continue  # Skip - posición muy nueva
-                
-            # Requiere señal FUERTE para cerrar (no cualquier cambio)
-            signal_strength = abs(predicted_signal)
-            
-            if current_side == "long" and predicted_side == "short" and signal_strength >= 0.1:  # ⚡ SCALPING
+            # 1. TAKE PROFIT: Cerrar si ganancia >= 3%
+            if pnl_pct >= settings.take_profit_pct:
                 should_close = True
-                reason = f"Modelo predice giro a baja fuerte ({predicted_signal:+.3f})"
-            elif current_side == "short" and predicted_side == "long" and signal_strength >= 0.1:  # ⚡ SCALPING
+                reason = f"TAKE PROFIT alcanzado: {pnl_pct:.2%} >= {settings.take_profit_pct:.2%}"
+            
+            # 2. STOP LOSS: Cerrar si pérdida >= 1%
+            elif pnl_pct <= -settings.stop_loss_pct:
                 should_close = True
-                reason = f"Modelo predice giro a alza fuerte ({predicted_signal:+.3f})"
+                reason = f"STOP LOSS activado: {pnl_pct:.2%} <= -{settings.stop_loss_pct:.2%}"
+            
+            # 3. REVERSIÓN DE SEÑAL: Cerrar si señal cambia
+            elif current_side == "long" and predicted_signal < -0.05:
+                should_close = True
+                reason = f"Reversión bajista: {predicted_signal:+.3f}"
+            elif current_side == "short" and predicted_signal > 0.05:
+                should_close = True
+                reason = f"Reversión alcista: {predicted_signal:+.3f}"
 
             if should_close:
-                pnl = (current_price - entry_price) * qty if qty > 0 else (entry_price - current_price) * abs(qty)
-                pnl_pct = pnl / (entry_price * abs(qty)) if entry_price * abs(qty) != 0 else 0.0
-
-                logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ ${current_price:.2f}")
+                logger.info(f"🔄 {reason}. Cerrando {current_side} en {symbol} @ ${current_price:.2f} | P&L: ${pnl:+.2f} ({pnl_pct:+.2%})")
                 _close_position(pos, symbol, qty, current_price, pnl, pnl_pct, reason)
 
         except Exception as e:
