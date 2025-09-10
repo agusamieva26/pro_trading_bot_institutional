@@ -244,6 +244,12 @@ def load_trading_model():
 
 _last_signals = {}
 
+def reset_signal_memory():
+    """Resetea la memoria de señales para permitir recálculo limpio"""
+    global _last_signals
+    _last_signals.clear()
+    logger.info("🔄 Memoria de señales reseteada - permitiendo recálculo limpio")
+
 def hybrid_signal(features, model=None):
     """
     Genera señal híbrida:

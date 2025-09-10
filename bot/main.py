@@ -10,7 +10,7 @@ from .auto_tuner import tune_risk_parameters
 from .config import settings
 from .data import fetch_bars, fetch_all_bars
 from .features import make_features
-from .strategy import load_trading_model, hybrid_signal
+from .strategy import load_trading_model, hybrid_signal, reset_signal_memory
 from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
 from .execution import place_order, close_position
@@ -93,6 +93,9 @@ def run_once(state: BotState, clf):
     # 0. RESETEAR CASH RESERVADO al inicio de cada iteración
     from bot.execution import reset_reserved_cash
     reset_reserved_cash()
+    
+    # 0.1. RESETEAR MEMORIA DE SEÑALES (fix sesgo bajista perpetuo)
+    reset_signal_memory()
 
     # 1. Configuración Dinámica y Auto-ajuste
     dynamic_config = dynamic_config_manager.get_current_config()
