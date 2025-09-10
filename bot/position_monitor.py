@@ -204,9 +204,14 @@ def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float,
         order_side = OrderSide.SELL if qty > 0 else OrderSide.BUY
         
         # ✅ ARREGLO: Usar MarketOrderRequest correctamente
+        # Para crypto, reducir ligeramente la cantidad para evitar errores de precisión
+        safe_qty = abs(qty)
+        if "/USD" in symbol:  # Es crypto
+            safe_qty = abs(qty) * 0.9999  # Reducir 0.01% para evitar errores microscópicos
+        
         order_request = MarketOrderRequest(
             symbol=base_symbol,
-            qty=abs(qty),
+            qty=safe_qty,
             side=order_side,
             time_in_force=TimeInForce.GTC
         )
