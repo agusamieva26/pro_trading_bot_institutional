@@ -511,7 +511,7 @@ def run_once(state: BotState, clf):
                 # USAR SHORT DINÁMICO: Compra basado en riesgo + Short
                 if dynamic_short_manager.should_use_dynamic_short(symbol):
                     # Calcular cantidad basada en riesgo (2% del equity)
-                    current_equity = equity  # Variable definida más arriba en la función
+                    # Variable ya definida como current_equity anteriormente en la función
                     purchase_amount = current_equity * settings.risk_per_trade
                     
                     result = dynamic_short_manager.execute_dynamic_short(symbol, qty, price, side, purchase_amount)
