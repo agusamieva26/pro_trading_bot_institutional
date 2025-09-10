@@ -31,7 +31,8 @@ def get_available_cash():
         client = _client()
         account = client.get_account()
         total_cash = float(account.cash)
-        available = total_cash * 0.95 - _reserved_cash  # Usar 95% del cash para más liquidez
+        # Usar 90% del cash para mayor liquidez (era 95%)
+        available = total_cash * 0.90 - _reserved_cash  
         return max(0, available), total_cash
     except Exception as e:
         logger.error(f"❌ Error obteniendo cash disponible: {e}")
@@ -49,14 +50,27 @@ def place_order(symbol: str, qty: float, side: str, price: float = None, fractio
         if price is None:
             logger.error(f"❌ Price not provided for {symbol}")
             return False
-        notional_value = qty * price
+        notional_value = float(qty) * float(price)
         
         # Check available cash before placing order
         available_cash, total_cash = get_available_cash()
         
-        if side.lower() == "buy" and price and notional_value > available_cash:
-            logger.warning(f"⚠️ Saldo real insuficiente: necesitas ${notional_value:.2f}, solo tienes ${available_cash:.2f} (reservado: {_reserved_cash}). Skip {symbol}.")
-            return False
+        if side.lower() == "buy" and price:
+            # NUEVO: Si no hay suficiente cash, intentar orden escalada
+            if notional_value > available_cash:
+                if available_cash < 10.0:  # Menos de $10 disponibles
+                    logger.warning(f"⚠️ Liquidez crítica: ${available_cash:.2f} < $10. Skip {symbol}.")
+                    return False
+                    
+                # Escalar orden al 80% del cash disponible
+                scaled_notional = available_cash * 0.80
+                scaled_qty = scaled_notional / price
+                
+                logger.info(f"💡 Escalando orden {symbol}: ${notional_value:.2f} → ${scaled_notional:.2f} (qty: {qty:.6f} → {scaled_qty:.6f})")
+                
+                # Actualizar valores para la orden escalada
+                notional_value = scaled_notional
+                qty = scaled_qty
             
         # Reserve cash for this order
         if side.lower() == "buy":

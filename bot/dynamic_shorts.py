@@ -29,13 +29,23 @@ class DynamicShortManager:
             Dict con resultado de la operación
         """
         try:
-            # Limitar la cantidad máxima para evitar problemas de liquidez
-            max_purchase = 200.0  # Máximo $200 por short dinámico
-            if purchase_amount and purchase_amount > max_purchase:
-                token_purchase_amount = max_purchase
-                logger.info(f"🔧 {symbol}: Limitando purchase_amount de ${purchase_amount:.2f} a ${max_purchase:.2f}")
+            # NUEVO: Adaptar dinámicamente al cash disponible
+            from .execution import get_available_cash
+            available_cash, _ = get_available_cash()
+            
+            # Usar máximo 50% del cash disponible para shorts dinámicos
+            max_purchase_dynamic = min(200.0, available_cash * 0.50)
+            
+            if purchase_amount and purchase_amount > max_purchase_dynamic:
+                token_purchase_amount = max_purchase_dynamic
+                logger.info(f"🔧 {symbol}: Adaptando purchase_amount ${purchase_amount:.2f} → ${max_purchase_dynamic:.2f} (cash: ${available_cash:.2f})")
             else:
-                token_purchase_amount = purchase_amount or self.default_purchase_amount
+                token_purchase_amount = purchase_amount or min(self.default_purchase_amount, max_purchase_dynamic)
+            
+            # Si queda muy poco, usar un mínimo viable
+            if token_purchase_amount < 5.0:
+                token_purchase_amount = min(5.0, available_cash * 0.80)
+                logger.info(f"💡 {symbol}: Usando mínimo viable ${token_purchase_amount:.2f}")
             
             # Calcular la cantidad que realmente podemos comprar y hacer short
             buy_qty = token_purchase_amount / current_price if current_price > 0 else 0.001
