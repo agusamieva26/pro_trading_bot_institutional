@@ -1,0 +1,91 @@
+2025-09-11 06:48:13.766 | INFO     | bot.execution:close_position:304 - ✅ CRYPTO cerrado: SELL 0.00215180 BTC/USD
+2025-09-11 06:48:13.767 | INFO     | bot.position_monitor:_close_position:623 - ✅ Cerrada long 0.002152881 BTC/USD | P&L: $-0.99 (-0.40%) [🕐 CIERRE FORZADO: 416min ≥ 75.0min]
+2025-09-11 06:48:13.866 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:14.250 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:14.262 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001844 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:14.363 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:14.748 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:14.750 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.00184 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:14.848 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:15.255 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:15.256 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001786 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:15.349 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:15.408 | INFO     | bot.data:fetch_all_bars:189 - ✅ Descarga completada: 16/16 símbolos con datos.
+2025-09-11 06:48:15.439 | INFO     | bot.risk_management_v2:analyze_risk_environment:279 - 🌍 Entorno de mercado: RANGING | Vol promedio: 0.03 | Alto vol: 0.0%
+2025-09-11 06:48:15.440 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:76 - 🚀 Iniciando análisis paralelo de 16 símbolos (3 hilos)
+2025-09-11 06:48:15.842 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:15.854 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.001429 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:16.160 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:16.779 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:16.781 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000336 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:17.049 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:17.688 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:17.710 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.000553 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:17.957 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:18.469 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:18.486 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.00057 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:18.672 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:19.170 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:19.187 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.002145 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:19.434 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:20.041 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:20.042 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.002034 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:20.513 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:20.987 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:20.993 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000107 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:21.258 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:21.841 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:21.866 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001786 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:22.131 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:22.846 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:22.853 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.001429 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:23.074 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:23.686 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:23.697 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000336 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:23.940 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:24.461 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:24.463 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.002138 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:24.557 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 AVAX/USD: SCORE=+0.145 (🟡 MODERADA 🔺 ALCISTA) @ $24.89
+2025-09-11 06:48:24.569 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:24.798 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 BTC/USD: SCORE=+0.178 (🟡 MODERADA 🔺 ALCISTA) @ $111964.05
+2025-09-11 06:48:24.982 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:25.000 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.0 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:25.042 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 SOL/USD: SCORE=+0.217 (🟢 FUERTE 🔺 ALCISTA) @ $207.74
+2025-09-11 06:48:25.260 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:25.795 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:25.801 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001786 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:26.314 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:26.936 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:26.958 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.001429 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:27.197 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:27.788 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:27.812 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000336 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:28.076 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:28.656 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:28.729 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001708 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:29.032 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:29.558 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:29.575 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.001705 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:29.875 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:30.357 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:30.384 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.001786 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:30.568 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:31.240 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:31.252 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.001429 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:31.517 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:32.028 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:32.039 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000336 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:32.328 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:32.873 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:32.931 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: BUY 0.000512 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:33.128 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:33.866 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:33.908 | INFO     | bot.trade_logger:log_trade_exit:67 - ✅ Cerrado: SELL 0.000529 BTC/USD @ $114017.40 → P&L: $-0.99 (-0.40%)
+2025-09-11 06:48:34.126 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 ETH/USD: SCORE=+0.192 (🟡 MODERADA 🔺 ALCISTA) @ $4309.54
+2025-09-11 06:48:34.132 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:34.429 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 DOGE/USD: SCORE=-0.039 (🔴 DÉBIL 🔻 BAJISTA) @ $0.23
+2025-09-11 06:48:34.470 | INFO     | bot.parallel_analyzer:parallel_signal_analysis:101 - 📊 DOT/USD: SCORE=+0.031 (🔴 DÉBIL 🔺 ALCISTA) @ $4.05
+2025-09-11 06:48:34.573 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram
+2025-09-11 06:48:34.576 | INFO     | bot.trade_logger:log_trade_exit:79 - 🟡 Cierre parcial: BUY 0.002152881 BTC/USD @ $114017.40 → P&L: $-0.82
+2025-09-11 06:48:34.757 | INFO     | bot.telegram:send_telegram:50 - 📤 Enviando mensaje a Telegram...
+2025-09-11 06:48:35.293 | INFO     | bot.telegram:send_telegram:54 - ✅ Mensaje enviado correctamente a Telegram

@@ -476,8 +476,24 @@ def monitor_closed_positions(clf):
                 
                 # --- PRIORITY 1: TIME-BASED EXIT SYSTEM (antes que TP/SL tradicional) ---
                 
-                # A) CIERRE FORZADO (60-75 minutos): Todas las posiciones excepto excepciones
-                if position_age_minutes >= settings.max_position_time_force:
+                # A) CIERRE FORZADO (2-4 horas para crypto, 75min para stocks): Timing inteligente
+                # 🚀 CRYPTO 24/7: 2-4 horas para permitir movimientos nocturnos
+                # 📈 STOCKS: 75min durante horario de mercado
+                is_crypto_position = "/" in symbol or (symbol.endswith("USD") and len(symbol) <= 6)
+                
+                if is_crypto_position:
+                    # Crypto: 2-4 horas dinámico basado en volatilidad y P&L
+                    if pnl_pct > 0.02:  # +2% o más: extender a 4 horas
+                        max_time_crypto = 240  # 4 horas
+                    elif pnl_pct > 0:  # Beneficio pero < 2%: 3 horas
+                        max_time_crypto = 180  # 3 horas  
+                    else:  # Perdiendo: 2 horas máximo
+                        max_time_crypto = 120  # 2 horas
+                else:
+                    # Stocks: mantener 75min original
+                    max_time_crypto = settings.max_position_time_force
+                
+                if position_age_minutes >= max_time_crypto:
                     # EXCEPCIÓN: Mantener si P&L > 1.2% Y señal ML sigue fuerte
                     keep_position = False
                     if pnl_pct > settings.min_pnl_keep_long:
@@ -503,7 +519,11 @@ def monitor_closed_positions(clf):
                     
                     if not keep_position:
                         should_close = True
-                        reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {settings.max_position_time_force}min"
+                        if is_crypto_position:
+                            hours = max_time_crypto / 60
+                            reason = f"🕐 CIERRE FORZADO CRYPTO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min ({hours:.1f}h)"
+                        else:
+                            reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min"
                     else:
                         logger.info(f"⚡ {symbol}: MANTENIDO tras {position_age_minutes:.0f}min (P&L: {pnl_pct:+.2%}, señal fuerte)")
                 

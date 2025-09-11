@@ -13,7 +13,7 @@ from .features import make_features
 from .strategy import load_trading_model, hybrid_signal, reset_signal_memory
 from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
-from .execution import place_order, close_position
+from .execution import place_order, close_position, place_order_with_consolidation, consolidate_positions
 from .state import BotState
 from .exposure import get_total_exposure
 from .telegram import alert_risk_stop, alert_error
@@ -288,11 +288,13 @@ def run_once(state: BotState, clf):
                         if pos:
                             current_qty = float(getattr(pos, 'qty', 0))
                             if side == "buy" and current_qty > 0:
-                                logger.info(f"🟢 Posición larga existente en BTC/USD. Aumentando...")
-                                place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
+                                logger.info(f"🟢 Posición larga existente en BTC/USD. Consolidando y aumentando...")
+                                # 🚀 USAR CONSOLIDACIÓN para evitar micro-posiciones
+                                place_order_with_consolidation("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto, should_consolidate=True)
                             elif side == "buy" and current_qty < 0:
                                 logger.info("🔄 Cerrando corto y abriendo largo en BTC/USD")
-                                place_order("BTC/USD", abs(current_qty), "buy", price, fractional=False, is_crypto=is_crypto)
+                                # Consolidar primero, luego abrir nueva posición
+                                consolidate_positions("BTC/USD") 
                                 place_order("BTC/USD", qty, "buy", price, fractional=False, is_crypto=is_crypto)
                             elif side == "sell" and current_qty > 0:
                                 # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short (ARREGLADO SALDO)
@@ -303,6 +305,7 @@ def run_once(state: BotState, clf):
                             # ✅ CRYPTO: Solo abrir posición si es LONG (buy)
                             if side == "buy":
                                 logger.info(f"📈 Abriendo nueva posición LONG en BTC/USD")
+                                # Para nueva posición, no necesitar consolidación
                                 place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
                             else:
                                 logger.info(f"🔥 CRYPTO SHORT HABILITADO: BTC/USD señal bajista {sig:.3f}")
@@ -482,11 +485,14 @@ def run_once(state: BotState, clf):
 
             if side == "buy":
                 if is_long:
-                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (aumentando posición)")
-                    place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (consolidando y aumentando posición)")
+                    # 🚀 USAR CONSOLIDACIÓN para todos los símbolos, no solo BTC
+                    place_order_with_consolidation(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto, should_consolidate=True)
                 elif is_short:
-                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (cerrando short + abrir long)")
-                    place_order(symbol, abs(current_qty), "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
+                    logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (consolidando: cerrar short + abrir long)")
+                    # Primero consolidar y cerrar posición corta existente
+                    consolidate_positions(symbol)
+                    # Luego abrir nueva posición larga
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:
@@ -530,8 +536,9 @@ def run_once(state: BotState, clf):
                 # 🚫 STOCKS: No shorts permitidos
                 logger.warning(f"⚠️ STOCK SHORT BLOQUEADO {symbol}: score={sig:+.3f} → Alpaca no permite fractional shorts")
             else:
-                # ✅ LONGS (stocks y crypto)
+                # ✅ LONGS (stocks y crypto) - Nueva posición
                 logger.info(f"{action_emoji} {action} {symbol}: score={sig:+.3f}, qty={qty:.6f}, price=${price:.2f}")
+                # Para nuevas posiciones, no necesitar consolidación previa
                 place_order(symbol, qty, side, price, fractional=not is_crypto, is_crypto=is_crypto)
 
     # 7. Monitorear cierres ahora se ejecuta en thread separado
