@@ -46,6 +46,10 @@ stock_client = StockHistoricalDataClient(
 _price_cache = {}
 _LAST_KNOWN_PRICES = {}  # Fallback cache for when real-time data fails
 
+# 🔇 SPAM PREVENTION: Track which symbols have already shown warnings
+_WARNED_SYMBOLS = set()  # Symbols that already showed "no cached price" warning
+_MARKET_CLOSED_SYMBOLS = set()  # Track symbols outside market hours for grouped message
+
 
 # ⏰ POSITION ENTRY TIME TRACKING SYSTEM
 def _load_position_times():
@@ -256,7 +260,17 @@ def _get_current_price(symbol: str) -> Optional[float]:
             logger.debug(f"📊 {symbol}: Usando precio cached después de horas ${_LAST_KNOWN_PRICES[symbol]:.4f}")
             return _LAST_KNOWN_PRICES[symbol]
         else:
-            logger.warning(f"⚠️ {symbol}: No hay precio cached disponible fuera de horario")
+            # 🔇 RATE-LIMITED WARNING: Only warn once per symbol per session
+            if symbol not in _WARNED_SYMBOLS:
+                _WARNED_SYMBOLS.add(symbol)
+                _MARKET_CLOSED_SYMBOLS.add(symbol)
+                # Only log individual warnings for the first few symbols
+                if len(_WARNED_SYMBOLS) <= 3:
+                    logger.warning(f"⚠️ {symbol}: No hay precio cached disponible fuera de horario")
+                elif len(_WARNED_SYMBOLS) == 4:
+                    # Show consolidated message when we have 4+ symbols
+                    symbols_list = ', '.join(sorted(_MARKET_CLOSED_SYMBOLS))
+                    logger.warning(f"⚠️ Mercado cerrado - {len(_MARKET_CLOSED_SYMBOLS)} stocks sin precio en tiempo real: {symbols_list}")
             return None
     
     # 3. Obtener precio en tiempo real
