@@ -1,0 +1,30 @@
+[
+  {
+    "timestamp": 1757564836.2479985,
+    "datetime": "2025-09-11T04:27:16.248920",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757564856.02359,
+    "datetime": "2025-09-11T04:27:36.023592",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  }
+]
