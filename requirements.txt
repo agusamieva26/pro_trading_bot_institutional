@@ -1,3 +1,4 @@
+# Core dependencies
 pandas>=2.2
 numpy>=1.26
 scikit-learn>=1.4
@@ -5,47 +6,26 @@ joblib>=1.4
 python-dotenv>=1.0
 requests>=2.32
 pydantic>=2.8
-alpaca-py>=0.21
 tenacity>=8.2
 loguru>=0.7
 tabulate>=0.9
-# Institutional-lite add-ons
+pytz
+
+# Trading & APIs
+alpaca-py>=0.21
+
+# ML & Analytics
 vectorbt>=0.26
 optuna>=3.6
+tensorflow>=2.15
+xgboost>=2.0
+
+# Dashboard (optional)
 streamlit>=1.35
-alpaca-py>=0.20.0
-pandas
-numpy
-scikit-learn
-joblib
-tenacity
-python-dotenv
-pydantic
-requests
-schedule
-openpyxl
-alpaca-py
-joblib
-loguru
-numpy
-openpyxl
-optuna
-pandas
-pydantic
-python-dotenv
-pytz
-requests
-schedule
-scikit-learn
-streamlit
-streamlit-autorefresh
-tabulate
-tenacity
-vectorbt
-tensorflow
-xgboost
-streamlit
-streamlit-autorefresh
-tornado>=6.5.2
+streamlit-autorefresh>=1.0
 plotly>=5.22.0
+tornado>=6.5.2
+
+# Data handling
 openpyxl
+schedule
