@@ -371,10 +371,8 @@ class LiquidityUnlocker:
             if len(selected) >= 3:  # Max 3 positions per unlock (increased from 2)
                 break
                 
-            # Calcular target dinámico basado en equity
-            account = trading_client.get_account()
-            current_equity = float(account.equity)
-            dynamic_target = current_equity * TARGET_UNLOCK_PERCENT
+            # Calcular target dinámico basado en equity (5% del equity)
+            dynamic_target = current_equity * 0.05  # 5% target unlock
             
             if total_capital >= dynamic_target and len(selected) >= 2:  # Target reached with at least 2
                 break
@@ -385,7 +383,7 @@ class LiquidityUnlocker:
             logger.critical(f"🎯 SELECCIONADO PARA CIERRE: {weak_pos.symbol} liberará ${weak_pos.notional_value:.0f} capital "
                           f"(P&L actual: ${weak_pos.pnl:+.2f} / {weak_pos.pnl_pct:+.2%}, score: {weak_pos.weakness_score:.1f})")
         
-        logger.critical(f"💰 TOTAL CAPITAL A LIBERAR: ${total_capital:.0f} de {len(selected)} posiciones (objetivo: ${TARGET_UNLOCK_AMOUNT:.0f})")
+        logger.critical(f"💰 TOTAL CAPITAL A LIBERAR: ${total_capital:.0f} de {len(selected)} posiciones (objetivo: ${dynamic_target:.0f})")
         
         # Show what will be closed
         if selected:
@@ -400,6 +398,8 @@ class LiquidityUnlocker:
         closed_positions = []
         failed_positions = []
         
+        from .utils import get_trading_client
+        trading_client = get_trading_client()
         account = trading_client.get_account()
         current_equity = float(account.equity)
         cash_threshold = current_equity * CASH_THRESHOLD_PERCENT

@@ -57,6 +57,59 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
     # Initialize notional_value to prevent undefined errors
     notional_value = 0.0
     
+    # 🚨 CRISIS MODE & ORDER GATES: Verificar exposición y cash ANTES de cualquier orden
+    try:
+        # Calculate notional value needed for this order
+        if price is None:
+            logger.error(f"❌ Price not provided for {symbol}")
+            return False
+        notional_value = float(qty) * float(price)
+        
+        # Get current state for order gates
+        available_cash, _ = get_available_cash()
+        client = _client()
+        account = client.get_account()
+        current_equity = float(getattr(account, "equity", 0) or 0)
+        
+        # Guard against invalid equity
+        if current_equity <= 0:
+            logger.critical(f"🚨 ORDER BLOCKED: Invalid equity ${current_equity:.2f}")
+            if side.lower() == "buy":
+                return False
+        
+        # Get current exposure (get_total_exposure returns a float ratio)
+        from .exposure import get_total_exposure
+        current_exposure_ratio = float(get_total_exposure() or 0.0)
+        current_gross = current_exposure_ratio * current_equity
+        projected_gross_exposure = current_gross + notional_value
+        projected_exposure_ratio = projected_gross_exposure / max(current_equity, 1e-9)
+        
+        # CRISIS MODE: Block all new BUY orders if critical thresholds breached
+        if side.lower() == "buy":
+            # Check exposure limit (0.5x hardcoded limit)
+            max_exposure = 0.5  # 50% exposure limit
+            if projected_exposure_ratio > max_exposure:
+                logger.critical(f"🚨 ORDER BLOCKED: Exposure limit! Projected {projected_exposure_ratio:.2f}x > {max_exposure:.2f}x limit")
+                return False
+                
+            # Check cash buffer (15% minimum)
+            cash_after_trade = available_cash - notional_value
+            min_cash_required = current_equity * 0.15  # 15% minimum cash buffer
+            if cash_after_trade < min_cash_required:
+                logger.critical(f"🚨 ORDER BLOCKED: Cash buffer! After trade ${cash_after_trade:.0f} < ${min_cash_required:.0f} required (15%)")
+                return False
+                
+            # PDT check for stocks (disable day trading if equity < $25k)
+            if current_equity < 25000 and "/" not in symbol:  # Crypto has /, stocks don't
+                logger.critical(f"🚨 ORDER BLOCKED: PDT restriction! Equity ${current_equity:.0f} < $25,000 for stock day trading")
+                return False
+                
+    except Exception as e:
+        logger.critical(f"❌ CRISIS MODE ERROR - BLOCKING BUY: {e}")
+        # Block ALL BUY orders on any error to prevent bleeding
+        if side.lower() == "buy":
+            return False
+    
     try:
         # Convert symbol for API (remove slash for crypto)
         api_symbol = symbol.replace("/", "")
@@ -287,7 +340,8 @@ def close_position(symbol: str, force_close: bool = False, retry_count: int = 0)
                         dt_buying_power = float(getattr(account, 'day_trading_buying_power', 0))
                         
                         # PDT SAFE: Block new stock BUYS, but allow all SELLS (position reducing)
-                        if dt_buying_power < 1000 and not is_crypto_symbol(symbol) and side.lower() == "buy":
+                        is_crypto = "/" in symbol
+                        if dt_buying_power < 1000 and not is_crypto and side.lower() == "buy":
                             logger.warning(f"🚫 PDT MODE: Nueva compra {symbol} bloqueada. Solo ventas/cierres permitidos.")
                             return False  # Block new stock purchases only
                             
