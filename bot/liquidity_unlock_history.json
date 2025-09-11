@@ -586,5 +586,19 @@
       "XLF",
       "BA"
     ]
+  },
+  {
+    "timestamp": 1757591478.7575717,
+    "datetime": "2025-09-11T11:51:18.757572",
+    "trigger_cash": 9.765055457161552,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
   }
 ]
