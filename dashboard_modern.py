@@ -784,13 +784,21 @@ with tab1:
         )
     
     with col11:
-        total_protected_daily = protected_amount
+        # Calcular progreso hacia la meta diaria
+        try:
+            from bot.target_scaler import get_dynamic_target
+            current_target = get_dynamic_target()
+            progress_pct = (daily_change / current_target * 100) if current_target > 0 else 0
+        except:
+            current_target = 1000.0
+            progress_pct = (daily_change / current_target * 100) if current_target > 0 else 0
+            
         create_metric_card(
-            "💎 ACUMULADO PROTEGIDO",
-            f"${total_protected_daily:+,.2f}",
-            f"60% de ${daily_change:+.2f}" if daily_change > 0 else "Esperando beneficios",
+            "🎯 PROGRESO META",
+            f"{progress_pct:+.1f}%",
+            f"${daily_change:+,.2f} de ${current_target:,.0f}",
             "normal",
-            "equity"
+            "default"
         )
     
     with col12:
