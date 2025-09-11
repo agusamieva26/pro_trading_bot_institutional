@@ -124,5 +124,26 @@
     "partial_profit_taken": false,
     "original_quantity": 6.51234029,
     "entry_price": 228.22
+  },
+  "BTC/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 114338.148790559,
+    "partial_profit_taken": false,
+    "original_quantity": 0.00237799,
+    "entry_price": 114338.148790559
+  },
+  "VEA": {
+    "trailing_activated": false,
+    "max_price_reached": 59.97,
+    "partial_profit_taken": false,
+    "original_quantity": 1.113801132,
+    "entry_price": 59.97
+  },
+  "VGK": {
+    "trailing_activated": false,
+    "max_price_reached": 79.40084,
+    "partial_profit_taken": false,
+    "original_quantity": 2.641757797,
+    "entry_price": 79.40084
   }
 }
