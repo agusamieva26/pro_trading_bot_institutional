@@ -48,3 +48,4 @@ streamlit
 streamlit-autorefresh
 tornado>=6.5.2
 plotly>=5.22.0
+openpyxl
