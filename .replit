@@ -26,13 +26,13 @@ args = "Trading Bot"
 name = "Dashboard"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run dashboard.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run dashboard_modern.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Trading Bot"
@@ -48,3 +48,7 @@ outputType = "console"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 42819
+externalPort = 3000
