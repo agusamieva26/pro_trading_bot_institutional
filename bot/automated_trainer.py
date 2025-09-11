@@ -193,6 +193,14 @@ class AutomatedTrainer:
         # Generar reporte diario
         generate_daily_report()
         
+        # Actualizar meta dinámica basada en rendimiento
+        try:
+            from .target_scaler import update_daily_target
+            new_target, metrics, explanation = update_daily_target()
+            logger.info(f"🎯 Sistema de escalado: {explanation}")
+        except Exception as e:
+            logger.error(f"❌ Error en escalado automático de meta: {e}")
+        
         # Revisar triggers inteligentes
         triggers = self.check_intelligent_triggers()
         

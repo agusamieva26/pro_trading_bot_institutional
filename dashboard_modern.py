@@ -803,10 +803,80 @@ with tab1:
             "default"
         )
 
-    # Sección de Meta Diaria
+    # Sección de Meta Diaria Dinámica
     st.markdown("---")
-    DAILY_TARGET = 1000.0
-    create_progress_section(daily_change, DAILY_TARGET, "Meta Diaria $1,000")
+    
+    # Obtener meta dinámica del sistema de escalado
+    try:
+        from bot.target_scaler import get_dynamic_target, target_scaler
+        DAILY_TARGET = get_dynamic_target()
+        target_info = target_scaler.get_target_info()
+    except Exception as e:
+        DAILY_TARGET = 1000.0  # Fallback
+        target_info = {}
+    # Crear sección de progreso con meta dinámica
+    meta_title = f"Meta Diaria Dinámica ${DAILY_TARGET:,.0f}"
+    if target_info:
+        escalations = target_info.get('total_escalations', 0)
+        if escalations > 0:
+            meta_title += f" ({escalations} ajustes automáticos)"
+    
+    create_progress_section(daily_change, DAILY_TARGET, meta_title)
+    
+    # Sección de información del sistema de escalado
+    if target_info:
+        st.markdown("### 🎯 Sistema de Escalado Automático")
+        col_target1, col_target2, col_target3 = st.columns(3)
+        
+        with col_target1:
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                        padding: 15px; border-radius: 10px; text-align: center;">
+                <h4>🎯 Meta Base</h4>
+                <p style="font-size: 24px; font-weight: bold;">${target_info.get('base_target', 1000):.0f}</p>
+                <small>Meta inicial del sistema</small>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_target2:
+            escalations = target_info.get('total_escalations', 0)
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #0f4c75 0%, #3282b8 100%); 
+                        padding: 15px; border-radius: 10px; text-align: center;">
+                <h4>📊 Ajustes Totales</h4>
+                <p style="font-size: 24px; font-weight: bold;">{escalations}</p>
+                <small>Escalaciones automáticas</small>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_target3:
+            last_update = target_info.get('last_update', 'Nunca')
+            if last_update and last_update != 'Nunca':
+                try:
+                    from datetime import datetime
+                    update_date = datetime.fromisoformat(last_update.replace('Z', '+00:00'))
+                    last_update = update_date.strftime('%d/%m %H:%M')
+                except:
+                    last_update = 'Reciente'
+            
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%); 
+                        padding: 15px; border-radius: 10px; text-align: center;">
+                <h4>⏱️ Última Actualización</h4>
+                <p style="font-size: 20px; font-weight: bold;">{last_update}</p>
+                <small>Revisión automática</small>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Mostrar historial reciente de escalaciones
+        recent_escalations = target_info.get('recent_escalations', [])
+        if recent_escalations:
+            st.markdown("**📈 Escalaciones Recientes:**")
+            for i, escalation in enumerate(recent_escalations[-2:]):  # Últimas 2
+                direction = "📈" if escalation.get('direction') == 'up' else "📉"
+                old = escalation.get('old_target', 0)
+                new = escalation.get('new_target', 0)
+                st.markdown(f"• {direction} ${old:.0f} → ${new:.0f}")
     
     # Timeline de estado del bot
     st.markdown("### ⏰ Estado del Sistema")
