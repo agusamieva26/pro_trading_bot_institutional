@@ -66,7 +66,7 @@
     "trailing_activated": false,
     "max_price_reached": 0.09836,
     "partial_profit_taken": false,
-    "original_quantity": 127.756273669,
+    "original_quantity": 0.063878137,
     "entry_price": 0.09836
   },
   "SOL/USD": {
@@ -80,15 +80,8 @@
     "trailing_activated": false,
     "max_price_reached": 4.236996898,
     "partial_profit_taken": false,
-    "original_quantity": 2.681597099,
+    "original_quantity": 0.006165261,
     "entry_price": 4.236996898
-  },
-  "UNH": {
-    "trailing_activated": false,
-    "max_price_reached": 348.415,
-    "partial_profit_taken": false,
-    "original_quantity": 12.172959886,
-    "entry_price": 348.2
   },
   "QQQ": {
     "trailing_activated": false,
@@ -103,6 +96,13 @@
     "partial_profit_taken": false,
     "original_quantity": 3.272214162,
     "entry_price": 349.683888
+  },
+  "UNH": {
+    "trailing_activated": false,
+    "max_price_reached": 348.415,
+    "partial_profit_taken": false,
+    "original_quantity": 12.172959886,
+    "entry_price": 348.2
   },
   "XLV": {
     "trailing_activated": false,
