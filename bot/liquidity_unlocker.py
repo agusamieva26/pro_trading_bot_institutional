@@ -367,12 +367,16 @@ class LiquidityUnlocker:
         selected = []
         total_capital = 0.0
         
+        # Get current equity for dynamic calculations
+        from .utils import get_trading_client
+        trading_client = get_trading_client()
+        account = trading_client.get_account()
+        current_equity = float(account.equity)
+        dynamic_target = current_equity * 0.05  # 5% target unlock
+        
         for weak_pos in prioritized_positions:
             if len(selected) >= 3:  # Max 3 positions per unlock (increased from 2)
                 break
-                
-            # Calcular target dinámico basado en equity (5% del equity)
-            dynamic_target = current_equity * 0.05  # 5% target unlock
             
             if total_capital >= dynamic_target and len(selected) >= 2:  # Target reached with at least 2
                 break
@@ -398,6 +402,8 @@ class LiquidityUnlocker:
         closed_positions = []
         failed_positions = []
         
+        from .utils import get_trading_client
+        trading_client = get_trading_client()
         from .utils import get_trading_client
         trading_client = get_trading_client()
         account = trading_client.get_account()
@@ -431,7 +437,7 @@ class LiquidityUnlocker:
             'timestamp': time.time(),
             'datetime': datetime.now().isoformat(),
             'trigger_cash': current_cash,
-            'target_amount': TARGET_UNLOCK_AMOUNT,
+            'target_amount': dynamic_target,
             'positions_closed': len(closed_positions),
             'positions_failed': len(failed_positions),
             'capital_freed': total_freed_capital,

@@ -138,5 +138,12 @@
     "partial_profit_taken": false,
     "original_quantity": 0.063878137,
     "entry_price": 0.09836
+  },
+  "BTC/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 114124.3,
+    "partial_profit_taken": false,
+    "original_quantity": 0.00011447,
+    "entry_price": 114124.3
   }
 }

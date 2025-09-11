@@ -5,6 +5,28 @@ from alpaca.trading.enums import QueryOrderStatus
 from .config import settings
 from .util import logger
 
+def get_total_exposure_ratio() -> float:
+    """
+    Retorna SOLO el ratio de exposición bruta como float.
+    Usado por Crisis Mode para decisiones críticas de bloqueo.
+    """
+    client = TradingClient(
+        api_key=settings.alpaca_api_key,
+        secret_key=settings.alpaca_secret_key,
+        paper=(settings.mode == "paper")
+    )
+    try:
+        positions = client.get_all_positions()
+        equity = float(client.get_account().equity)
+        if equity <= 0:
+            return 0.0
+        gross_value = sum(abs(float(pos.market_value)) for pos in positions)
+        exposure_ratio = gross_value / equity
+        return exposure_ratio
+    except Exception as e:
+        logger.error(f"❌ Error calculando exposure ratio: {e}")
+        return 0.0
+
 def get_total_exposure():
     """
     Calcula la exposición bruta total como porcentaje del equity.
