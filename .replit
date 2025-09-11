@@ -16,11 +16,23 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Trading Bot"
+args = "Dashboard"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Garden App"
+args = "Trading Bot"
+
+[[workflows.workflow]]
+name = "Dashboard"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run dashboard_modern.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Trading Bot"
@@ -33,22 +45,6 @@ args = "python -u -m bot.main"
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "Garden App"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run garden_app.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 33547
-externalPort = 3000
