@@ -131,5 +131,12 @@
     "partial_profit_taken": false,
     "original_quantity": 0.137204484,
     "entry_price": 28.77
+  },
+  "LINK/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 23.896,
+    "partial_profit_taken": false,
+    "original_quantity": 0.704470969,
+    "entry_price": 23.896
   }
 }
