@@ -579,6 +579,15 @@ def monitor_closed_positions(clf):
 
                 # EJECUTAR CIERRE si cualquier condición se cumplió
                 if should_close:
+                    # 🚫 FILTRO FINAL ANTI-MICRO: No cerrar posiciones microscópicas
+                    market_value = abs(qty * current_price) if current_price else abs(qty * entry_price)
+                    min_value_threshold = 5.0  # $5 mínimo
+                    min_qty_threshold = 0.0001 if is_crypto_symbol(symbol) else 0.001
+                    
+                    if abs(qty) < min_qty_threshold or market_value < min_value_threshold:
+                        logger.info(f"🚫 SKIP CIERRE MICRO: {symbol} qty={abs(qty):.8f}, valor=${market_value:.6f} - NO vale la pena cerrar")
+                        continue  # Skip este cierre y continuar con siguiente posición
+                    
                     # Formateo inteligente para P&L pequeños (cryptos de bajo valor)
                     pnl_str = f"${pnl:+.6f}" if abs(pnl) < 0.01 else f"${pnl:+.2f}"
                     price_str = f"${current_price:.6f}" if current_price < 0.01 else f"${current_price:.2f}"

@@ -92,9 +92,9 @@
   },
   "ETH/USD": {
     "trailing_activated": false,
-    "max_price_reached": 4418.363,
+    "max_price_reached": 4416.094,
     "partial_profit_taken": false,
-    "original_quantity": 0.008000463,
-    "entry_price": 4418.363
+    "original_quantity": 0.022067522,
+    "entry_price": 4416.094
   }
 }
