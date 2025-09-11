@@ -1,9 +1,14 @@
 import csv
 import os
+import time
 from datetime import datetime, timezone
 from .util import logger
 from .telegram import alert_trade_entry, alert_trade_exit
 import pathlib
+
+# ANTI-SPAM SYSTEM: Track recent notifications to prevent duplicates
+_recent_notifications = {}
+_NOTIFICATION_COOLDOWN = 30  # seconds between same symbol notifications
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]  # carpeta raíz del proyecto
 TRADES_FILE = str(ROOT / "trades_log.csv")
@@ -65,7 +70,7 @@ def log_trade_exit(symbol: str, qty: float, exit_price: float, pnl: float, pnl_p
                 trade["status"] = "closed"
                 updated = True
                 logger.info(f"✅ Cerrado: {side.upper()} {entry_qty} {symbol} @ ${exit_price:.2f} → P&L: ${pnl:.2f} ({pnl_pct:+.2%})")
-                alert_trade_exit(symbol, side, entry_qty, exit_price, pnl, pnl_pct)
+                _send_exit_notification_with_cooldown(symbol, side, entry_qty, exit_price, pnl, pnl_pct, "FULL_CLOSE")
             else:
                 # Cierre parcial
                 partial_pnl = pnl * (qty / entry_qty)
@@ -77,7 +82,7 @@ def log_trade_exit(symbol: str, qty: float, exit_price: float, pnl: float, pnl_p
                 trade["status"] = "partially_closed"
                 updated = True
                 logger.info(f"🟡 Cierre parcial: {side.upper()} {qty} {symbol} @ ${exit_price:.2f} → P&L: ${partial_pnl:.2f}")
-                alert_trade_exit(symbol, side, qty, exit_price, partial_pnl, pnl_pct)
+                _send_exit_notification_with_cooldown(symbol, side, qty, exit_price, partial_pnl, pnl_pct, "PARTIAL_CLOSE")
                 qty = 0
 
             if qty <= 0:
@@ -126,7 +131,7 @@ def log_closed_trades(closed_trades: list):
             }
             _append_row(row)
             logger.info(f"📕 Trade cerrado registrado: {side.upper()} {qty} {symbol} @ {exit_price:.2f} → P&L: ${pnl:.2f} ({pnl_pct:+.2%})")
-            alert_trade_exit(symbol, side, qty, exit_price, pnl, pnl_pct)
+            _send_exit_notification_with_cooldown(symbol, side, qty, exit_price, pnl, pnl_pct, "AUTO_CLOSE")
 
         except Exception as e:
             logger.error(f"❌ Error registrando trade cerrado {t}: {e}")
@@ -164,3 +169,33 @@ def _append_row(row):
     with open(TRADES_FILE, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=HEADERS)
         writer.writerow(row)
+
+def _send_exit_notification_with_cooldown(symbol: str, side: str, qty: float, exit_price: float, pnl: float, pnl_pct: float, close_type: str):
+    """
+    Send exit notification with anti-spam cooldown system.
+    Prevents multiple notifications for the same symbol within cooldown period.
+    """
+    global _recent_notifications
+    
+    current_time = time.time()
+    notification_key = f"{symbol}_{close_type}"
+    
+    # Check if we recently sent a notification for this symbol/type
+    if notification_key in _recent_notifications:
+        time_since_last = current_time - _recent_notifications[notification_key]
+        if time_since_last < _NOTIFICATION_COOLDOWN:
+            logger.debug(f"🔇 Notificación omitida por cooldown: {symbol} ({close_type}) - {time_since_last:.1f}s < {_NOTIFICATION_COOLDOWN}s")
+            return
+    
+    # Update notification timestamp
+    _recent_notifications[notification_key] = current_time
+    
+    # Clean old notifications (older than 5 minutes)
+    cleanup_time = current_time - 300
+    keys_to_remove = [k for k, v in _recent_notifications.items() if v < cleanup_time]
+    for key in keys_to_remove:
+        del _recent_notifications[key]
+    
+    # Send the notification
+    logger.debug(f"📤 Enviando notificación de cierre: {symbol} ({close_type})")
+    alert_trade_exit(symbol, side, qty, exit_price, pnl, pnl_pct)
