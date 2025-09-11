@@ -70,6 +70,13 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
         # Check available cash before placing order
         available_cash, total_cash = get_available_cash()
         
+        # 🛡️ SIMPLE EXPOSURE LIMIT: Block buys when exposure is too high
+        if side.lower() == "buy":
+            # Simple check: if notional > available cash * 2, skip (emergency brake)
+            if notional_value > available_cash * 2.0:
+                logger.warning(f"🚫 EMERGENCY BRAKE: Order ${notional_value:.0f} > 2x available cash ${available_cash:.0f}. Skip {symbol}.")
+                return False
+        
         if side.lower() == "buy" and price:
             # NUEVO: Si no hay suficiente cash, intentar orden escalada
             if notional_value > available_cash:
@@ -279,10 +286,10 @@ def close_position(symbol: str, force_close: bool = False, retry_count: int = 0)
                         # Check day trading buying power
                         dt_buying_power = float(getattr(account, 'day_trading_buying_power', 0))
                         
-                        # If minimal day trading power, likely PDT restricted
-                        if dt_buying_power < 1000:
-                            logger.warning(f"⚠️ PDT RESTRICTION: {symbol} - Account bajo $25k con power limitado. Esperando hasta mañana.")
-                            return False  # Don't attempt closure
+                        # PDT SAFE: Block new stock BUYS, but allow all SELLS (position reducing)
+                        if dt_buying_power < 1000 and not is_crypto_symbol(symbol) and side.lower() == "buy":
+                            logger.warning(f"🚫 PDT MODE: Nueva compra {symbol} bloqueada. Solo ventas/cierres permitidos.")
+                            return False  # Block new stock purchases only
                             
                 except Exception as pdt_check_error:
                     logger.debug(f"Error checking PDT status for {symbol}: {pdt_check_error}")

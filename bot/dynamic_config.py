@@ -32,12 +32,12 @@ class DynamicConfigManager:
             'max_gross_exposure': settings.max_gross_exposure
         }
         
-        # Rangos permitidos para ajustes dinámicos
+        # Rangos permitidos para ajustes dinámicos - CLAMPED para seguridad
         self.config_ranges = {
-            'risk_per_trade': (0.002, 0.015),      # 0.2% - 1.5%
-            'take_profit_pct': (0.02, 0.10),       # 2% - 10%
-            'stop_loss_pct': (0.005, 0.03),        # 0.5% - 3%
-            'max_gross_exposure': (0.8, 2.0)       # 0.8x - 2x
+            'risk_per_trade': (0.002, 0.006),      # 0.2% - 0.6% (reducido)
+            'take_profit_pct': (0.02, 0.08),       # 2% - 8% (reducido)
+            'stop_loss_pct': (0.005, 0.02),        # 0.5% - 2% (reducido)
+            'max_gross_exposure': (0.30, 0.50)     # 0.3x - 0.5x (HARD CLAMP)
         }
         
         # Estados de configuración
