@@ -14,7 +14,7 @@ def run_reporter():
     madrid_tz = ZoneInfo("Europe/Madrid")
 
     # Programar el reporte a las 00:00 (medianoche) en hora local de España
-    schedule.every().day.at("00:00", madrid_tz).do(
+    schedule.every().day.at("00:00").do(
         lambda: logger.info("📅 Generando reporte diario a medianoche (España)...") or generate_daily_report()
     )
 
