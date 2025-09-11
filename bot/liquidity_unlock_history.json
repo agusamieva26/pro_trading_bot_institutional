@@ -334,5 +334,257 @@
       "BA",
       "XLF"
     ]
+  },
+  {
+    "timestamp": 1757579590.911516,
+    "datetime": "2025-09-11T08:33:10.911516",
+    "trigger_cash": 62.7555,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757579792.1009393,
+    "datetime": "2025-09-11T08:36:32.100939",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757580008.2084093,
+    "datetime": "2025-09-11T08:40:08.208410",
+    "trigger_cash": 62.407,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757580411.80889,
+    "datetime": "2025-09-11T08:46:51.808891",
+    "trigger_cash": 43.2225,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757580765.032232,
+    "datetime": "2025-09-11T08:52:45.032233",
+    "trigger_cash": 43.129,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757581105.850958,
+    "datetime": "2025-09-11T08:58:25.850958",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757583208.4454894,
+    "datetime": "2025-09-11T09:33:28.445490",
+    "trigger_cash": 31.564887753628852,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757583434.108028,
+    "datetime": "2025-09-11T09:37:14.108028",
+    "trigger_cash": 171.73908369390523,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757583678.173175,
+    "datetime": "2025-09-11T09:41:18.173175",
+    "trigger_cash": 135.80069874161262,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757584165.2190037,
+    "datetime": "2025-09-11T09:49:25.219004",
+    "trigger_cash": 84.69944692713605,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757584723.1896265,
+    "datetime": "2025-09-11T09:58:43.189626",
+    "trigger_cash": 182.48549999999997,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757585613.5829346,
+    "datetime": "2025-09-11T10:13:33.582935",
+    "trigger_cash": 53.0164890251383,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757587874.7534018,
+    "datetime": "2025-09-11T10:51:14.753402",
+    "trigger_cash": 59.37653208792263,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757588590.2177932,
+    "datetime": "2025-09-11T11:03:10.217794",
+    "trigger_cash": 132.81249999999997,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757589468.463439,
+    "datetime": "2025-09-11T11:17:48.463440",
+    "trigger_cash": 148.6395,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757589812.588779,
+    "datetime": "2025-09-11T11:23:32.588779",
+    "trigger_cash": 176.7123347303889,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757589927.8010058,
+    "datetime": "2025-09-11T11:25:27.801007",
+    "trigger_cash": 185.17249999999999,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757590208.1336548,
+    "datetime": "2025-09-11T11:30:08.133655",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
   }
 ]
