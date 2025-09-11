@@ -40,5 +40,47 @@
       "XLF",
       "BA"
     ]
+  },
+  {
+    "timestamp": 1757565504.6433427,
+    "datetime": "2025-09-11T04:38:24.643343",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757565534.6057158,
+    "datetime": "2025-09-11T04:38:54.605716",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757565554.1229813,
+    "datetime": "2025-09-11T04:39:14.122982",
+    "trigger_cash": 126.6345,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
   }
 ]
