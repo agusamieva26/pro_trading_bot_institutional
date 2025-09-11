@@ -69,13 +69,6 @@
     "original_quantity": 2.177210852,
     "entry_price": 269.11
   },
-  "BTC/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 114017.396,
-    "partial_profit_taken": false,
-    "original_quantity": 0.001783019,
-    "entry_price": 114017.0
-  },
   "UNI/USD": {
     "trailing_activated": false,
     "max_price_reached": 9.748411584,
