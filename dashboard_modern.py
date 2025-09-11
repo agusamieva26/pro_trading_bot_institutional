@@ -749,6 +749,60 @@ with tab1:
             "default"
         )
     
+    # Tercera fila: Distribución de Beneficios 40/60
+    st.markdown("### 💰 Distribución de Beneficios (Modelo 40/60)")
+    
+    # Calcular distribución de beneficios solo si hay ganancia
+    reinvest_amount = 0.0
+    protected_amount = 0.0
+    
+    if daily_change > 0:
+        reinvest_amount = daily_change * 0.40  # 40% para reinversión
+        protected_amount = daily_change * 0.60  # 60% protegido
+    else:
+        reinvest_amount = daily_change  # Si hay pérdida, todo va a recuperación
+        protected_amount = 0.0
+    
+    col9, col10, col11, col12 = st.columns(4)
+    
+    with col9:
+        create_metric_card(
+            "🔄 REINVERSIÓN (40%)",
+            f"${reinvest_amount:+,.2f}",
+            "Crecimiento de capital" if reinvest_amount > 0 else "Recuperación",
+            "normal",
+            "cash"
+        )
+    
+    with col10:
+        create_metric_card(
+            "🔒 PROTEGIDO (60%)",
+            f"${protected_amount:+,.2f}",
+            "Beneficio asegurado" if protected_amount > 0 else "Sin beneficio",
+            "normal",
+            "profit"
+        )
+    
+    with col11:
+        total_protected_daily = protected_amount
+        create_metric_card(
+            "💎 ACUMULADO PROTEGIDO",
+            f"${total_protected_daily:+,.2f}",
+            f"60% de ${daily_change:+.2f}" if daily_change > 0 else "Esperando beneficios",
+            "normal",
+            "equity"
+        )
+    
+    with col12:
+        distribution_status = "🟢 ACTIVA" if daily_change > 0 else "⏸️ EN PAUSA"
+        create_metric_card(
+            "⚖️ ESTRATEGIA 40/60",
+            distribution_status,
+            "Modelo de crecimiento compuesto",
+            "normal",
+            "default"
+        )
+
     # Sección de Meta Diaria
     st.markdown("---")
     DAILY_TARGET = 1000.0

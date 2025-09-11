@@ -58,6 +58,20 @@ def generate_daily_report():
     avg_pnl = df_today["realized_pnl"].mean()
     largest_win = df_today["realized_pnl"].max()
     largest_loss = df_today["realized_pnl"].min()
+    
+    # 5.1. Calcular distribución de beneficios 40/60 (solo si hay ganancia)
+    profit_to_reinvest = 0.0
+    profit_to_protect = 0.0
+    reinvest_pct = 40.0
+    protect_pct = 60.0
+    
+    if total_pnl > 0:
+        profit_to_reinvest = total_pnl * (reinvest_pct / 100)
+        profit_to_protect = total_pnl * (protect_pct / 100)
+    else:
+        # Si hay pérdidas, toda la cantidad va a "recuperar"
+        profit_to_reinvest = total_pnl  # Negativo
+        profit_to_protect = 0.0
 
     # 6. Crear resumen
     summary = pd.DataFrame({
@@ -69,7 +83,11 @@ def generate_daily_report():
             "Win Rate",
             "P&L Promedio",
             "Mayor Ganancia",
-            "Mayor Pérdida"
+            "Mayor Pérdida",
+            "── DISTRIBUCIÓN DE BENEFICIOS ──",
+            f"💰 Reinversión ({reinvest_pct:.0f}%)",
+            f"🔒 Beneficio Protegido ({protect_pct:.0f}%)",
+            "📊 Estrategia"
         ],
         "Valor": [
             trading_day.strftime("%Y-%m-%d"),
@@ -79,7 +97,11 @@ def generate_daily_report():
             f"{win_rate:.2%}",
             f"${avg_pnl:.2f}",
             f"${largest_win:.2f}",
-            f"${largest_loss:.2f}"
+            f"${largest_loss:.2f}",
+            "─────────────────────────────────",
+            f"${profit_to_reinvest:.2f}",
+            f"${profit_to_protect:.2f}",
+            "Crecimiento Compuesto 40/60"
         ]
     })
 
@@ -108,7 +130,10 @@ def generate_daily_report():
             f"• *Fecha:* `{trading_day}`\n"
             f"• *Trades:* `{num_trades}`\n"
             f"• *P&L:* `${total_pnl:.2f}` ({total_pnl_pct:+.2%})\n"
-            f"• *Win Rate:* `{win_rate:.1%}`"
+            f"• *Win Rate:* `{win_rate:.1%}`\n"
+            f"\n💰 *Distribución 40/60:*\n"
+            f"• *Reinversión (40%):* `${profit_to_reinvest:.2f}`\n"
+            f"• *Protegido (60%):* `${profit_to_protect:.2f}`"
         )
         send_telegram(msg)
     except Exception as e:
