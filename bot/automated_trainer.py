@@ -24,6 +24,10 @@ from bot.reporter import generate_daily_report
 # Add project root to path
 sys.path.insert(0, '.')
 
+# Configurar timezone del sistema para schedulers
+os.environ["TZ"] = "Europe/Madrid"
+time.tzset()
+
 class AutomatedTrainer:
     """Sistema de entrenamiento automático inteligente."""
     
@@ -33,6 +37,8 @@ class AutomatedTrainer:
         self.last_optimization_date = None
         self.performance_history = []
         self.emergency_training_triggered = False
+        # Private scheduler para evitar conflictos
+        self.scheduler = schedule.Scheduler()
         
     def analyze_recent_performance(self) -> dict:
         """Analiza el rendimiento reciente del bot."""
@@ -46,17 +52,27 @@ class AutomatedTrainer:
             if df.empty:
                 return {"win_rate": 55, "daily_pnl": 0, "drawdown": 0}
             
+            # Solo trades cerrados para análisis
+            df = df[df['status'].isin(['closed', 'partially_closed'])]
+            if df.empty:
+                return {"win_rate": 55, "daily_pnl": 0, "drawdown": 0}
+            
             # Analizar últimas 50 operaciones
             recent_trades = df.tail(50) if len(df) >= 50 else df
             
-            # Calcular métricas
-            win_rate = (recent_trades['pnl'] > 0).mean() * 100
-            daily_pnl = recent_trades['pnl'].sum()
+            # Calcular métricas usando la columna correcta
+            pnl_column = 'realized_pnl'  # Columna correcta en el CSV
+            win_rate = (recent_trades[pnl_column] > 0).mean() * 100
+            daily_pnl = recent_trades[pnl_column].sum()
             
-            # Calcular drawdown (aproximado)
-            cumulative_pnl = recent_trades['pnl'].cumsum()
-            peak = cumulative_pnl.expanding().max()
-            drawdown = ((peak - cumulative_pnl) / peak * 100).max()
+            # Calcular drawdown (estable)
+            equity = recent_trades[pnl_column].cumsum()
+            peak = np.maximum.accumulate(equity)
+            # Evitar división por cero
+            denom = np.where(peak == 0, 1e-9, peak)
+            dd = ((peak - equity) / denom * 100)
+            drawdown = float(np.max(dd)) if not np.isnan(dd).all() else 0.0
+            drawdown = max(0.0, min(100.0, drawdown))  # Clamp a rango válido
             
             logger.info(f"📊 Performance Analysis: Win Rate={win_rate:.1f}%, Daily P&L=${daily_pnl:.2f}, Drawdown={drawdown:.1f}%")
             
@@ -67,7 +83,7 @@ class AutomatedTrainer:
             }
             
         except Exception as e:
-            logger.error(f"❌ Error analyzing performance: {e}")
+            logger.warning(f"⚠️ Error analyzing performance (usando defaults): {e}")
             return {"win_rate": 55, "daily_pnl": 0, "drawdown": 0}
     
     def check_intelligent_triggers(self) -> dict:
@@ -186,22 +202,24 @@ class AutomatedTrainer:
                         f"🎯 Razón: {triggers['reason']}\n"
                         f"⏰ Iniciando en 5 minutos...")
             
-            # Programar entrenamiento de emergencia en 5 minutos
-            schedule.every(5).minutes.do(
+            # Limpiar emergency tasks existentes y programar nuevo
+            self.scheduler.clear('emergency')
+            self.scheduler.every(5).minutes.do(
                 lambda: self.run_emergency_training(triggers['reason'])
             ).tag('emergency')
             
         elif triggers["optuna_needed"]:
             logger.warning(f"⚡ OPTUNA TRIGGER: {triggers['reason']}")
-            # Programar optimización en 30 minutos
-            schedule.every(30).minutes.do(
+            # Limpiar emergency tasks existentes y programar optimización
+            self.scheduler.clear('emergency')
+            self.scheduler.every(30).minutes.do(
                 lambda: self.run_optuna_optimization(f"Trigger: {triggers['reason']}")
             ).tag('emergency')
     
     def run_emergency_training(self, reason):
         """Ejecuta entrenamiento de emergencia y limpia el schedule."""
         self.run_model_training(f"EMERGENCIA: {reason}")
-        schedule.clear('emergency')  # Limpiar tareas de emergencia
+        self.scheduler.clear('emergency')  # Limpiar tareas de emergencia
     
     def biweekly_training(self):
         """Entrenamiento bi-semanal programado."""
@@ -218,28 +236,28 @@ class AutomatedTrainer:
         logger.info("🤖 Configurando sistema de automatización completo...")
         
         # 1. REPORTE DIARIO + PERFORMANCE CHECK (00:00)
-        schedule.every().day.at("00:00").do(self.daily_performance_check)
+        self.scheduler.every().day.at("00:00").do(self.daily_performance_check)
         
-        # 2. ENTRENAMIENTO BI-SEMANAL (Viernes 02:00)
-        schedule.every(14).days.at("02:00").do(self.biweekly_training)
+        # 2. ENTRENAMIENTO BI-SEMANAL (Viernes 03:00) - DST-safe
+        self.scheduler.every(14).days.at("03:00").do(self.biweekly_training)
         
-        # 3. OPTIMIZACIÓN SEMANAL (Lunes 02:00) 
-        schedule.every().monday.at("02:00").do(self.weekly_optimization)
+        # 3. OPTIMIZACIÓN SEMANAL (Lunes 03:00) - DST-safe
+        self.scheduler.every().monday.at("03:00").do(self.weekly_optimization)
         
         # Log del setup
         now = datetime.now(self.madrid_tz)
         logger.info(f"✅ SISTEMA AUTOMATIZADO CONFIGURADO:")
         logger.info(f"📅 Diario 00:00: Performance check + Triggers")
-        logger.info(f"📅 Cada 14 días (Viernes 02:00): Entrenamiento bi-semanal")
-        logger.info(f"📅 Lunes 02:00: Optimización Optuna + Reentrenamiento")
+        logger.info(f"📅 Cada 14 días (Viernes 03:00): Entrenamiento bi-semanal")
+        logger.info(f"📅 Lunes 03:00: Optimización Optuna + Reentrenamiento")
         logger.info(f"⏰ Hora actual España: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
         # Telegram de confirmación
         send_telegram(f"🤖 SISTEMA AUTOMATIZADO ACTIVADO\n\n"
                      f"📊 PROGRAMACIÓN:\n"
                      f"• Diario 00:00: Análisis performance\n" 
-                     f"• Cada 14 días: Entrenamiento automático\n"
-                     f"• Lunes 02:00: Optuna + Reentrenamiento\n\n"
+                     f"• Cada 14 días (03:00): Entrenamiento automático\n"
+                     f"• Lunes 03:00: Optuna + Reentrenamiento\n\n"
                      f"🚨 TRIGGERS INTELIGENTES:\n"
                      f"• Win rate <50%: Training inmediato\n"
                      f"• Drawdown >5%: Optuna + Training\n"
@@ -253,7 +271,7 @@ class AutomatedTrainer:
         logger.info("🔄 Sistema automatizado iniciado - Esperando eventos programados...")
         
         while True:
-            schedule.run_pending()
+            self.scheduler.run_pending()
             time.sleep(60)  # Revisa cada minuto
 
 
