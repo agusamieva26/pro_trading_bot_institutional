@@ -91,7 +91,7 @@ def generate_daily_report():
         ],
         "Valor": [
             trading_day.strftime("%Y-%m-%d"),
-            num_trades,
+            f"{num_trades}",
             f"${total_pnl:.2f}",
             f"{total_pnl_pct:.2%}",
             f"{win_rate:.2%}",
