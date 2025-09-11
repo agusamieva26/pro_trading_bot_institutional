@@ -106,7 +106,7 @@
   },
   "TSLA": {
     "trailing_activated": false,
-    "max_price_reached": 349.683888,
+    "max_price_reached": 351.35,
     "partial_profit_taken": false,
     "original_quantity": 3.272214162,
     "entry_price": 349.683888
