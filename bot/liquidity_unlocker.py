@@ -9,9 +9,10 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import CryptoHistoricalDataClient, StockHistoricalDataClient
 from alpaca.data.requests import CryptoBarsRequest, StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
+from alpaca.data.enums import DataFeed
 
 from .config import settings
-from .util import logger
+from .util import logger, is_crypto_symbol, should_skip_realtime_pricing, get_cache_ttl_for_symbol
 from .execution import get_available_cash, close_position
 from .telegram import send_telegram
 
@@ -35,9 +36,9 @@ stock_client = StockHistoricalDataClient(
     secret_key=settings.alpaca_secret_key
 )
 
-# Caché de precios
+# Caché de precios mejorado con TTL dinámico
 _price_cache = {}
-_CACHE_TTL = 5  # segundos
+_LAST_KNOWN_PRICES = {}  # Fallback cache for when real-time data fails
 
 
 # ========= UTILITY FUNCTIONS (avoiding circular import) =========
@@ -53,16 +54,36 @@ def normalize_symbol(symbol: str) -> str:
 
 
 def _get_current_price(symbol: str) -> Optional[float]:
-    """Get current price using 1-minute bars."""
+    """
+    Obtiene el precio actual con manejo robusto de errores SIP y market hours.
+    - Crypto: Obtiene precio 24/7
+    - Stocks: Obtiene precio solo durante horario de mercado, usa cache fuera de horas
+    - Añade feed='iex' para evitar errores SIP
+    - Implementa fallback a último precio conocido
+    """
     now = time.time()
     cache_key = f"{symbol}_price"
+    cache_ttl = get_cache_ttl_for_symbol(symbol)
+    
+    # 1. Verificar cache con TTL dinámico
     if cache_key in _price_cache:
         price, timestamp = _price_cache[cache_key]
-        if now - timestamp < _CACHE_TTL:
+        if now - timestamp < cache_ttl:
             return price
-
+    
+    # 2. Skip real-time pricing para stocks fuera de horario
+    if should_skip_realtime_pricing(symbol):
+        # Usar último precio conocido para stocks después de horas
+        if symbol in _LAST_KNOWN_PRICES:
+            logger.debug(f"📊 {symbol}: Usando precio cached después de horas ${_LAST_KNOWN_PRICES[symbol]:.4f}")
+            return _LAST_KNOWN_PRICES[symbol]
+        else:
+            logger.warning(f"⚠️ {symbol}: No hay precio cached disponible fuera de horario")
+            return None
+    
+    # 3. Obtener precio en tiempo real
     try:
-        if "/" in symbol:  # Crypto
+        if is_crypto_symbol(symbol):  # Cripto - 24/7
             request = CryptoBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=getattr(TimeFrame, 'Minute'),
@@ -73,29 +94,47 @@ def _get_current_price(symbol: str) -> Optional[float]:
             bars_df = getattr(bars, 'df', None)
             if bars_df is None or bars_df.empty:
                 logger.warning(f"⚠️ No hay datos de precio para {symbol} (cripto)")
-                return None
+                return _LAST_KNOWN_PRICES.get(symbol)  # Fallback
             price = float(bars_df.iloc[-1]["close"])
-        else:  # Stocks
+            
+        else:  # Stocks - CON FEED IEX para evitar SIP errors
             request = StockBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=getattr(TimeFrame, 'Minute'),
-                limit=1
+                limit=1,
+                feed=DataFeed.IEX  # 🔧 FIX: Añadir feed IEX para evitar errores SIP
             )
             bars = stock_client.get_stock_bars(request)
             
             bars_df = getattr(bars, 'df', None)
             if bars_df is None or bars_df.empty:
-                logger.warning(f"⚠️ No hay datos de precio para {symbol} (probablemente mercado cerrado)")
-                return None
+                logger.warning(f"⚠️ No hay datos IEX para {symbol} (posible mercado cerrado)")
+                return _LAST_KNOWN_PRICES.get(symbol)  # Fallback
+            
             df = bars_df
             if hasattr(df.index, 'levels'):  # MultiIndex
                 df = df.reset_index()
             price = float(df.iloc[-1]["close"])
-
+        
+        # 4. Guardar en ambos caches
         _price_cache[cache_key] = (price, now)
+        _LAST_KNOWN_PRICES[symbol] = price  # Fallback cache
         return price
+        
     except Exception as e:
-        logger.error(f"❌ No se pudo obtener precio de {symbol}: {e}")
+        error_msg = str(e)
+        if "subscription does not permit querying recent SIP data" in error_msg:
+            # SIP error específico - usar fallback sin spam de logs
+            logger.warning(f"⚠️ SIP access denied para {symbol}, usando precio cached")
+        else:
+            # Otros errores
+            logger.warning(f"⚠️ Error obteniendo precio de {symbol}: {e}")
+        
+        # Intentar fallback a último precio conocido
+        if symbol in _LAST_KNOWN_PRICES:
+            logger.debug(f"🔄 Fallback: {symbol} = ${_LAST_KNOWN_PRICES[symbol]:.4f}")
+            return _LAST_KNOWN_PRICES[symbol]
+        
         return None
 
 
