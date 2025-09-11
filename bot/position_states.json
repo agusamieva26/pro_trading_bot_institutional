@@ -96,5 +96,19 @@
     "partial_profit_taken": false,
     "original_quantity": 0.022067522,
     "entry_price": 4416.094
+  },
+  "SHIB/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 1.3257e-05,
+    "partial_profit_taken": false,
+    "original_quantity": 6619179.9472792,
+    "entry_price": 1.3257e-05
+  },
+  "CRV/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 0.80125,
+    "partial_profit_taken": false,
+    "original_quantity": 12.95486635,
+    "entry_price": 0.80125
   }
 }
