@@ -614,5 +614,47 @@
       "BA",
       "XLF"
     ]
+  },
+  {
+    "timestamp": 1757593141.097646,
+    "datetime": "2025-09-11T12:19:01.097646",
+    "trigger_cash": 110.08349999999999,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
+  },
+  {
+    "timestamp": 1757593414.2300942,
+    "datetime": "2025-09-11T12:23:34.230094",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "BA",
+      "XLF"
+    ]
+  },
+  {
+    "timestamp": 1757593580.5553958,
+    "datetime": "2025-09-11T12:26:20.555396",
+    "trigger_cash": 0,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "XLF",
+      "BA"
+    ]
   }
 ]
