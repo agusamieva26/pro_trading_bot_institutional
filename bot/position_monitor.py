@@ -423,6 +423,16 @@ def monitor_closed_positions(clf):
                 symbol = normalize_symbol(getattr(pos, 'symbol', ''))
                 qty = float(getattr(pos, 'qty', 0))
                 entry_price = float(getattr(pos, 'avg_entry_price', 0))
+                
+                # 🚫 FILTRO ANTI-MICRO: Skip posiciones microscópicas
+                market_value = abs(qty * entry_price)
+                min_value_threshold = 5.0  # $5 mínimo
+                min_qty_threshold = 0.0001 if is_crypto_symbol(symbol) else 0.001
+                
+                if abs(qty) < min_qty_threshold or market_value < min_value_threshold:
+                    logger.debug(f"🚫 SKIP MICRO-POSICIÓN: {symbol} qty={abs(qty):.8f}, valor=${market_value:.2f}")
+                    continue
+                
                 current_price = _get_current_price(symbol)
 
                 if not current_price:

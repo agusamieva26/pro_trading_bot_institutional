@@ -105,9 +105,16 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
             # Crypto no soporta DAY time_in_force, usar GTC en su lugar
             tif = TimeInForce.GTC if is_crypto else TimeInForce.DAY
             
-            # ✅ ARREGLO: Validar cantidad mínima para crypto
-            if is_crypto and float(qty) < 0.000000002:
-                logger.warning(f"⚠️ Cantidad {qty} muy pequeña para {symbol}, saltando orden")
+            # 🚫 FILTRO ANTI-MICRO: Validar cantidad mínima significativa
+            min_qty_crypto = 0.0001  # Cantidad mínima para crypto (vs 0.000000002)
+            min_notional = 5.0       # Valor mínimo $5 para cualquier operación
+            
+            if is_crypto and float(qty) < min_qty_crypto:
+                logger.warning(f"🚫 MICRO-OP BLOQUEADA: {symbol} qty={qty:.8f} < {min_qty_crypto}")
+                return False
+                
+            if notional_value < min_notional:
+                logger.warning(f"🚫 MICRO-OP BLOQUEADA: {symbol} valor=${notional_value:.2f} < ${min_notional}")
                 return False
             
             order_request = MarketOrderRequest(
@@ -239,9 +246,15 @@ def close_position(symbol: str, force_close: bool = False, retry_count: int = 0)
                 return True
                 
             qty = float(str(getattr(position, 'qty', 0) or 0))
-            if abs(qty) < 0.000001:  # Position too small to close
-                logger.debug(f"ℹ️ Posición {symbol} demasiado pequeña: {qty}")
-                return True
+            
+            # 🚫 FILTRO ANTI-MICRO: No cerrar posiciones microscópicas
+            market_value = abs(float(str(getattr(position, 'market_value', 0) or 0)))
+            min_market_value = 5.0  # Mínimo $5 para que valga la pena cerrar
+            min_qty_threshold = 0.0001 if is_crypto else 0.001
+            
+            if abs(qty) < min_qty_threshold or market_value < min_market_value:
+                logger.debug(f"🚫 MICRO-POSICIÓN IGNORADA: {symbol} qty={qty:.8f}, valor=${market_value:.2f}")
+                return True  # Considerar como "cerrada exitosamente" para limpiar tracking
                 
             side = "sell" if qty > 0 else "buy"
             abs_qty = abs(qty)
