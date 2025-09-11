@@ -420,7 +420,17 @@ def monitor_closed_positions(clf):
             if position_states_changed:
                 _save_position_states(position_states)
 
-            # 💰 3.5. LIQUIDITY UNLOCK: Verificar si necesitamos liberar capital
+            # 🚨 3.5. CRISIS MODE: Cierre selectivo inteligente de cryptos
+            try:
+                from .exposure import get_total_exposure_ratio
+                exposure_ratio = get_total_exposure_ratio()
+                
+                if exposure_ratio >= 0.5:  # Crisis Mode activado
+                    _intelligent_crypto_closure(positions, exposure_ratio)
+            except Exception as e:
+                logger.error(f"❌ Error en Crisis Mode crypto closure: {e}")
+
+            # 💰 3.6. LIQUIDITY UNLOCK: Verificar si necesitamos liberar capital
             try:
                 unlock_executed = liquidity_unlocker.check_and_unlock_liquidity()
                 if unlock_executed:
@@ -669,3 +679,175 @@ def _close_position(pos, symbol: str, qty: float, exit_price: float, pnl: float,
                 
     except Exception as e:
         logger.error(f"❌ Error crítico cerrando {symbol}: {e}")
+
+
+def _intelligent_crypto_closure(positions, exposure_ratio: float):
+    """
+    🚨 CRISIS MODE: Cierre selectivo inteligente de posiciones crypto.
+    Evalúa potencial y cierra las peores primero para reducir exposición.
+    """
+    try:
+        # Filtrar solo posiciones crypto
+        crypto_positions = []
+        for pos in positions:
+            symbol = normalize_symbol(getattr(pos, 'symbol', ''))
+            if symbol_manager.is_crypto(symbol):
+                crypto_positions.append((pos, symbol))
+        
+        if not crypto_positions:
+            return
+        
+        logger.critical(f"🚨 CRISIS MODE: Exposición {exposure_ratio:.1%} ≥ 50% - evaluando {len(crypto_positions)} cryptos")
+        
+        # Evaluar cada posición crypto
+        crypto_evaluations = []
+        for pos, symbol in crypto_positions:
+            try:
+                evaluation = _evaluate_crypto_position(pos, symbol)
+                if evaluation:
+                    crypto_evaluations.append(evaluation)
+            except Exception as e:
+                logger.error(f"❌ Error evaluando {symbol}: {e}")
+        
+        if not crypto_evaluations:
+            return
+        
+        # Ordenar por score (peores primero)
+        crypto_evaluations.sort(key=lambda x: x['score'])
+        
+        # Cerrar posiciones de peor performance hasta salir de Crisis Mode
+        target_exposure = 0.45  # Reducir a 45%
+        closed_count = 0
+        
+        for evaluation in crypto_evaluations:
+            symbol = evaluation['symbol']
+            score = evaluation['score']
+            pnl_pct = evaluation['pnl_pct']
+            
+            # Verificar si aún estamos en Crisis Mode
+            from .exposure import get_total_exposure_ratio
+            current_exposure = get_total_exposure_ratio()
+            
+            if current_exposure < target_exposure:
+                logger.info(f"✅ Crisis Mode resuelto: Exposición reducida a {current_exposure:.1%}")
+                break
+            
+            # Criterio de cierre: Score bajo O pérdidas significativas
+            should_close = (
+                score < 0.3 or  # Score muy bajo
+                pnl_pct < -0.02 or  # Perdiendo >2%
+                (pnl_pct < 0.005 and score < 0.5)  # Poco profit y score medio
+            )
+            
+            if should_close:
+                logger.critical(f"⚡ CIERRE SELECTIVO: {symbol} | Score: {score:.2f}, P&L: {pnl_pct:+.2%}")
+                
+                from .execution import close_position
+                success = close_position(symbol, force_close=False)
+                
+                if success:
+                    closed_count += 1
+                    logger.info(f"✅ {symbol} cerrado exitosamente ({closed_count}/{len(crypto_evaluations)})")
+                else:
+                    logger.warning(f"⚠️ {symbol}: Fallo al cerrar")
+            else:
+                logger.info(f"🔒 MANTENIDO: {symbol} | Score: {score:.2f}, P&L: {pnl_pct:+.2%} (buen potencial)")
+        
+        if closed_count > 0:
+            logger.critical(f"🎯 Crisis Mode: {closed_count} posiciones crypto cerradas selectivamente")
+        else:
+            logger.warning(f"⚠️ Crisis Mode: Todas las cryptos tienen buen potencial - esperando")
+    
+    except Exception as e:
+        logger.error(f"❌ Error en intelligent crypto closure: {e}")
+
+
+def _evaluate_crypto_position(pos, symbol: str) -> dict:
+    """
+    Evalúa el potencial de una posición crypto basado en:
+    - P&L actual
+    - Momentum de precio
+    - Tiempo de holding
+    - Valor de la posición
+    """
+    try:
+        qty = float(getattr(pos, 'qty', 0))
+        entry_price = float(getattr(pos, 'avg_entry_price', 0))
+        market_value = abs(float(getattr(pos, 'market_value', 0)))
+        
+        # Obtener precio actual
+        current_price = _get_current_price(symbol)
+        if not current_price:
+            return None
+        
+        # Calcular P&L
+        if qty > 0:  # LONG
+            pnl = (current_price - entry_price) * qty
+            pnl_pct = (current_price - entry_price) / entry_price
+        else:  # SHORT
+            pnl = (entry_price - current_price) * abs(qty)
+            pnl_pct = (entry_price - current_price) / entry_price
+        
+        # Calcular score compuesto (0.0 = peor, 1.0 = mejor)
+        score = 0.0
+        
+        # 1. P&L Component (50% del score)
+        if pnl_pct > 0.02:  # >2% profit
+            pnl_score = 1.0
+        elif pnl_pct > 0.01:  # 1-2% profit
+            pnl_score = 0.8
+        elif pnl_pct > 0:  # Small profit
+            pnl_score = 0.6
+        elif pnl_pct > -0.01:  # Small loss
+            pnl_score = 0.4
+        elif pnl_pct > -0.02:  # Medium loss
+            pnl_score = 0.2
+        else:  # Big loss
+            pnl_score = 0.0
+        
+        score += pnl_score * 0.5
+        
+        # 2. Position Size Component (20% del score)
+        # Posiciones más grandes tienen más impacto en exposure
+        if market_value > 100:  # >$100
+            size_score = 0.3  # Más propensas a cerrar
+        elif market_value > 50:  # $50-100
+            size_score = 0.5
+        else:  # <$50
+            size_score = 0.8  # Menos propensas a cerrar
+        
+        score += size_score * 0.2
+        
+        # 3. Momentum Component (30% del score)
+        # Simple momentum basado en cambio de precio reciente
+        try:
+            momentum_score = 0.5  # Default neutral
+            
+            # Si hay mucho profit, asumir momentum positivo
+            if pnl_pct > 0.015:
+                momentum_score = 0.9
+            elif pnl_pct > 0.005:
+                momentum_score = 0.7
+            elif pnl_pct < -0.015:
+                momentum_score = 0.1
+            elif pnl_pct < -0.005:
+                momentum_score = 0.3
+            
+            score += momentum_score * 0.3
+            
+        except Exception:
+            score += 0.5 * 0.3  # Default momentum
+        
+        return {
+            'symbol': symbol,
+            'score': min(1.0, max(0.0, score)),  # Clamp entre 0-1
+            'pnl': pnl,
+            'pnl_pct': pnl_pct,
+            'market_value': market_value,
+            'current_price': current_price,
+            'entry_price': entry_price
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Error evaluando posición {symbol}: {e}")
+        return None
