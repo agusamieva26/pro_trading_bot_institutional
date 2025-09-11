@@ -70,8 +70,8 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
             exposure_ratio = get_total_exposure_ratio()
             
             # HARD LOCKDOWN: Block BUY if either condition breached
-            if exposure_ratio >= 0.5:
-                logger.critical(f"🚨 CRISIS MODE - ORDER BLOCKED: Exposure {exposure_ratio:.2f}x >= 0.5x limit")
+            if exposure_ratio >= settings.max_gross_exposure:
+                logger.critical(f"🚨 CRISIS MODE - ORDER BLOCKED: Exposure {exposure_ratio:.2f}x >= {settings.max_gross_exposure:.1f}x limit")
                 return False
                 
             if true_cash / max(equity, 1e-9) <= 0.15:

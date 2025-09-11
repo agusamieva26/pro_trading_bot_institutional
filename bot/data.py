@@ -182,8 +182,8 @@ def fetch_all_bars(symbols: list[str], start: str = None, end: str = None, min_b
                 logger.error(f"💥 Error descargando {sym}: {e}")
                 results[sym] = pd.DataFrame()
 
-            # Pequeña pausa para evitar saturación de API
-            time.sleep(0.2)
+            # Pausa mayor para evitar rate limiting de Alpaca
+            time.sleep(0.5)
 
     successful = len([v for v in results.values() if not v.empty])
     logger.info(f"✅ Descarga completada: {successful}/{len(symbols)} símbolos con datos.")

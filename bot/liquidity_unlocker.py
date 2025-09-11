@@ -22,6 +22,7 @@ from .telegram import send_telegram
 CASH_THRESHOLD_PERCENT = 0.10  # 10% del equity como umbral crítico
 TARGET_UNLOCK_PERCENT = 0.03   # 3% del equity como objetivo a liberar
 UNLOCK_COOLDOWN_SECONDS = 30   # 30 segundos en modo emergencia (ultra-agresivo)
+MAX_UNLOCKS_PER_HOUR = 10      # Máximo unlocks por hora (para estadísticas)
 UNLOCK_HISTORY_FILE = "bot/liquidity_unlock_history.json"
 POSITION_TIMES_FILE = "bot/position_entry_times.json"
 
@@ -232,11 +233,11 @@ class LiquidityUnlocker:
         
         # NUEVA LÓGICA: Cooldown en lugar de rate limit por hora
         if recent_unlocks:
-            last_unlock_time = max(recent_unlocks)
+            last_unlock_time = max([event.get('timestamp', 0) for event in recent_unlocks])
             time_since_last = current_time - last_unlock_time
             if time_since_last < UNLOCK_COOLDOWN_SECONDS:
                 logger.warning(f"⏰ Cooldown activo: {time_since_last:.0f}s < {UNLOCK_COOLDOWN_SECONDS}s")
-            return True
+                return True
         return False
     
     def _calculate_position_weakness(self, position, position_times: Dict) -> Optional[PositionWeakness]:
@@ -368,9 +369,7 @@ class LiquidityUnlocker:
         total_capital = 0.0
         
         # Get current equity for dynamic calculations
-        from .utils import get_trading_client
-        trading_client = get_trading_client()
-        account = trading_client.get_account()
+        account = self.client.get_account()
         current_equity = float(account.equity)
         dynamic_target = current_equity * 0.05  # 5% target unlock
         
@@ -402,11 +401,7 @@ class LiquidityUnlocker:
         closed_positions = []
         failed_positions = []
         
-        from .utils import get_trading_client
-        trading_client = get_trading_client()
-        from .utils import get_trading_client
-        trading_client = get_trading_client()
-        account = trading_client.get_account()
+        account = self.client.get_account()
         current_equity = float(account.equity)
         cash_threshold = current_equity * CASH_THRESHOLD_PERCENT
         logger.critical(f"💰 LIQUIDITY UNLOCK INICIADO: Cash crítico ${current_cash:.2f} < ${cash_threshold:.2f} ({CASH_THRESHOLD_PERCENT:.0%} equity)")
@@ -437,7 +432,7 @@ class LiquidityUnlocker:
             'timestamp': time.time(),
             'datetime': datetime.now().isoformat(),
             'trigger_cash': current_cash,
-            'target_amount': dynamic_target,
+            'target_amount': current_equity * TARGET_UNLOCK_PERCENT,
             'positions_closed': len(closed_positions),
             'positions_failed': len(failed_positions),
             'capital_freed': total_freed_capital,
@@ -494,7 +489,7 @@ class LiquidityUnlocker:
             available_cash, total_cash = get_available_cash()
             
             # 2. Check if unlock is needed
-            account = trading_client.get_account()
+            account = self.client.get_account()
             current_equity = float(account.equity)
             cash_threshold = current_equity * CASH_THRESHOLD_PERCENT
             
