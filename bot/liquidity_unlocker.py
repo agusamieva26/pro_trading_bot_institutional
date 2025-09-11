@@ -12,7 +12,8 @@ from alpaca.data.timeframe import TimeFrame
 from alpaca.data.enums import DataFeed
 
 from .config import settings
-from .util import logger, is_crypto_symbol, should_skip_realtime_pricing, get_cache_ttl_for_symbol
+from .util import logger, should_skip_realtime_pricing, get_cache_ttl_for_symbol
+from .symbol_manager import symbol_manager
 from .execution import get_available_cash, close_position
 from .telegram import send_telegram
 
@@ -83,7 +84,7 @@ def _get_current_price(symbol: str) -> Optional[float]:
     
     # 3. Obtener precio en tiempo real
     try:
-        if is_crypto_symbol(symbol):  # Cripto - 24/7
+        if symbol_manager.is_crypto(symbol):  # Cripto - 24/7
             request = CryptoBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=getattr(TimeFrame, 'Minute'),

@@ -13,7 +13,8 @@ from typing import Optional
 from .config import settings
 from .trade_logger import log_trade_exit
 from .telegram import alert_trade_exit, alert_risk_stop
-from .util import logger, is_crypto_symbol, should_skip_realtime_pricing, get_cache_ttl_for_symbol
+from .util import logger, should_skip_realtime_pricing, get_cache_ttl_for_symbol
+from .symbol_manager import symbol_manager
 from .data import fetch_bars
 from .features import make_features
 from .liquidity_unlocker import liquidity_unlocker
@@ -260,7 +261,7 @@ def _get_current_price(symbol: str) -> Optional[float]:
     
     # 3. Obtener precio en tiempo real
     try:
-        if is_crypto_symbol(symbol):  # Cripto - 24/7
+        if symbol_manager.is_crypto(symbol):  # Cripto - 24/7
             request = CryptoBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=getattr(TimeFrame, 'Minute'),
@@ -427,7 +428,7 @@ def monitor_closed_positions(clf):
                 # 🚫 FILTRO ANTI-MICRO: Skip posiciones microscópicas
                 market_value = abs(qty * entry_price)
                 min_value_threshold = 5.0  # $5 mínimo
-                min_qty_threshold = 0.0001 if is_crypto_symbol(symbol) else 0.001
+                min_qty_threshold = 0.0001 if symbol_manager.is_crypto(symbol) else 0.001
                 
                 if abs(qty) < min_qty_threshold or market_value < min_value_threshold:
                     logger.debug(f"🚫 SKIP MICRO-POSICIÓN: {symbol} qty={abs(qty):.8f}, valor=${market_value:.2f}")
@@ -602,7 +603,7 @@ def monitor_closed_positions(clf):
                     # 🚫 FILTRO FINAL ANTI-MICRO: No cerrar posiciones microscópicas
                     market_value = abs(qty * current_price) if current_price else abs(qty * entry_price)
                     min_value_threshold = 5.0  # $5 mínimo
-                    min_qty_threshold = 0.0001 if is_crypto_symbol(symbol) else 0.001
+                    min_qty_threshold = 0.0001 if symbol_manager.is_crypto(symbol) else 0.001
                     
                     if abs(qty) < min_qty_threshold or market_value < min_value_threshold:
                         logger.info(f"🚫 SKIP CIERRE MICRO: {symbol} qty={abs(qty):.8f}, valor=${market_value:.6f} - NO vale la pena cerrar")

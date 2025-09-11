@@ -13,7 +13,7 @@ from .features import make_features
 from .strategy import load_trading_model, hybrid_signal, reset_signal_memory
 from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
-from .execution import place_order, close_position, place_order_with_consolidation, consolidate_positions
+from .execution import place_order, close_position
 from .state import BotState
 from .exposure import get_total_exposure
 from .telegram import alert_risk_stop, alert_error
@@ -290,11 +290,10 @@ def run_once(state: BotState, clf):
                             if side == "buy" and current_qty > 0:
                                 logger.info(f"🟢 Posición larga existente en BTC/USD. Consolidando y aumentando...")
                                 # 🚀 USAR CONSOLIDACIÓN para evitar micro-posiciones
-                                place_order_with_consolidation("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto, should_consolidate=True)
+                                place_order("BTC/USD", qty, side, price, fractional=False, is_crypto=is_crypto)
                             elif side == "buy" and current_qty < 0:
                                 logger.info("🔄 Cerrando corto y abriendo largo en BTC/USD")
-                                # Consolidar primero, luego abrir nueva posición
-                                consolidate_positions("BTC/USD") 
+                                # Abrir nueva posición directamente (Alpaca ya agrega automáticamente)
                                 place_order("BTC/USD", qty, "buy", price, fractional=False, is_crypto=is_crypto)
                             elif side == "sell" and current_qty > 0:
                                 # ✅ CRYPTO: Solo cerrar posición larga, NO abrir short (ARREGLADO SALDO)
@@ -487,12 +486,10 @@ def run_once(state: BotState, clf):
                 if is_long:
                     logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (consolidando y aumentando posición)")
                     # 🚀 USAR CONSOLIDACIÓN para todos los símbolos, no solo BTC
-                    place_order_with_consolidation(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto, should_consolidate=True)
+                    place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
                 elif is_short:
                     logger.info(f"📊 LONG {symbol}: score={sig:+.3f}, qty={qty:.6f} (consolidando: cerrar short + abrir long)")
-                    # Primero consolidar y cerrar posición corta existente
-                    consolidate_positions(symbol)
-                    # Luego abrir nueva posición larga
+                    # Abrir nueva posición directamente (Alpaca maneja automáticamente posiciones opuestas)
                     place_order(symbol, qty, "buy", price, fractional=not is_crypto, is_crypto=is_crypto)
             else:  # side == "sell"
                 if is_crypto:

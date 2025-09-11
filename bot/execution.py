@@ -47,86 +47,8 @@ def get_available_cash():
         logger.error(f"❌ Error obteniendo cash disponible: {e}")
         return 0.0, 0.0
 
-def consolidate_positions(symbol: str) -> bool:
-    """Consolidate multiple positions of the same symbol/side into a single position.
-    Returns True if consolidation was performed.
-    """
-    try:
-        client = _client()
-        positions = client.get_all_positions()
-        
-        # Find all positions for this symbol
-        symbol_positions = []
-        api_symbol = symbol.replace("/", "")
-        
-        for pos in positions:
-            if getattr(pos, 'symbol', '') == api_symbol:
-                symbol_positions.append(pos)
-        
-        if len(symbol_positions) <= 1:
-            return False  # No consolidation needed
-        
-        # Calculate total quantity for consolidation
-        total_long_qty = 0.0
-        total_short_qty = 0.0
-        
-        for pos in symbol_positions:
-            qty = float(getattr(pos, 'qty', 0))
-            if qty > 0:
-                total_long_qty += qty
-            else:
-                total_short_qty += abs(qty)
-        
-        # Close all existing positions first
-        for pos in symbol_positions:
-            qty = abs(float(getattr(pos, 'qty', 0)))
-            if qty > 0:
-                side_to_close = "sell" if float(getattr(pos, 'qty', 0)) > 0 else "buy"
-                # Use market order to close immediately
-                order_request = MarketOrderRequest(
-                    symbol=api_symbol,
-                    qty=qty,
-                    side=OrderSide.SELL if side_to_close == "sell" else OrderSide.BUY,
-                    time_in_force=TimeInForce.GTC if "/" in symbol else TimeInForce.DAY
-                )
-                client.submit_order(order_request)
-                logger.info(f"🔄 Cerrado fragmento: {side_to_close.upper()} {qty:.6f} {symbol}")
-        
-        # Calculate net position to recreate
-        net_qty = total_long_qty - total_short_qty
-        
-        if abs(net_qty) > 1e-6:  # Only recreate if there's a meaningful net position
-            net_side = "buy" if net_qty > 0 else "sell"
-            net_qty = abs(net_qty)
-            
-            # Create single consolidated position
-            order_request = MarketOrderRequest(
-                symbol=api_symbol,
-                qty=net_qty,
-                side=OrderSide.BUY if net_side == "buy" else OrderSide.SELL,
-                time_in_force=TimeInForce.GTC if "/" in symbol else TimeInForce.DAY
-            )
-            client.submit_order(order_request)
-            logger.info(f"✅ CONSOLIDADO: {net_side.upper()} {net_qty:.6f} {symbol} (de {len(symbol_positions)} fragmentos)")
-            
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Error consolidando {symbol}: {e}")
-        return False
-
-def place_order_with_consolidation(symbol: str, qty: float, side: str, price: float | None = None, fractional: bool = True, is_crypto: bool = False, should_consolidate: bool = True) -> bool:
-    """Enhanced place_order that consolidates existing positions before creating new ones."""
-    
-    # First, try to consolidate existing positions if requested
-    if should_consolidate:
-        try:
-            consolidate_positions(symbol)
-        except Exception as e:
-            logger.warning(f"⚠️ Consolidación falló para {symbol}: {e}")
-    
-    # Then place the new order
-    return place_order(symbol, qty, side, price, fractional, is_crypto)
+# REMOVED: Destructive consolidation functions that close/reopen positions
+# Alpaca already aggregates positions by symbol - no manual consolidation needed
 
 def place_order(symbol: str, qty: float, side: str, price: float | None = None, fractional: bool = True, is_crypto: bool = False):
     """Places a buy or sell order for the given symbol and quantity."""
@@ -186,17 +108,22 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
             # Crypto no soporta DAY time_in_force, usar GTC en su lugar
             tif = TimeInForce.GTC if is_crypto else TimeInForce.DAY
             
-            # 🚫 FILTRO ANTI-MICRO: Validar cantidad mínima significativa
-            min_qty_crypto = 0.0001  # Cantidad mínima para crypto (vs 0.000000002)
-            min_notional = 5.0       # Valor mínimo $5 para cualquier operación
+            # 🚫 ROBUST ANTI-MICRO FILTER: Strict minimum limits to prevent fragmentation
+            min_qty_crypto = 0.001    # Minimum crypto quantity (10x stricter than before)
+            min_notional_crypto = 10.0  # Minimum $10 for crypto operations
+            min_notional_stock = 15.0   # Minimum $15 for stock operations
             
-            if is_crypto and float(qty) < min_qty_crypto:
-                logger.warning(f"🚫 MICRO-OP BLOQUEADA: {symbol} qty={qty:.8f} < {min_qty_crypto}")
-                return False
-                
-            if notional_value < min_notional:
-                logger.warning(f"🚫 MICRO-OP BLOQUEADA: {symbol} valor=${notional_value:.2f} < ${min_notional}")
-                return False
+            if is_crypto:
+                if float(qty) < min_qty_crypto:
+                    logger.warning(f"🚫 MICRO-CRYPTO BLOCKED: {symbol} qty={qty:.8f} < {min_qty_crypto}")
+                    return False
+                if notional_value < min_notional_crypto:
+                    logger.warning(f"🚫 MICRO-CRYPTO BLOCKED: {symbol} value=${notional_value:.2f} < ${min_notional_crypto}")
+                    return False
+            else:
+                if notional_value < min_notional_stock:
+                    logger.warning(f"🚫 MICRO-STOCK BLOCKED: {symbol} value=${notional_value:.2f} < ${min_notional_stock}")
+                    return False
             
             order_request = MarketOrderRequest(
                 symbol=api_symbol,
