@@ -117,5 +117,19 @@
     "partial_profit_taken": false,
     "original_quantity": 1679577.046183762,
     "entry_price": 1.061e-05
+  },
+  "AAVE/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 306.3,
+    "partial_profit_taken": false,
+    "original_quantity": 0.098735478,
+    "entry_price": 306.3
+  },
+  "AVAX/USD": {
+    "trailing_activated": false,
+    "max_price_reached": 28.77,
+    "partial_profit_taken": false,
+    "original_quantity": 0.137204484,
+    "entry_price": 28.77
   }
 }
