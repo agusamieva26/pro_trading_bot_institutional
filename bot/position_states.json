@@ -1,74 +1,4 @@
 {
-  "BA": {
-    "trailing_activated": false,
-    "max_price_reached": 229.59,
-    "partial_profit_taken": false,
-    "original_quantity": 57.267284301,
-    "entry_price": 228.2
-  },
-  "CVX": {
-    "trailing_activated": false,
-    "max_price_reached": 156.91,
-    "partial_profit_taken": false,
-    "original_quantity": 1.244472496,
-    "entry_price": 156.91
-  },
-  "GOOGL": {
-    "trailing_activated": false,
-    "max_price_reached": 239.87,
-    "partial_profit_taken": false,
-    "original_quantity": 3.778379523,
-    "entry_price": 239.77
-  },
-  "PFE": {
-    "trailing_activated": false,
-    "max_price_reached": 24.7,
-    "partial_profit_taken": false,
-    "original_quantity": 1.147070043,
-    "entry_price": 24.6
-  },
-  "PG": {
-    "trailing_activated": true,
-    "max_price_reached": 159.5,
-    "partial_profit_taken": false,
-    "original_quantity": 2.683791468,
-    "entry_price": 156.26
-  },
-  "SPY": {
-    "trailing_activated": false,
-    "max_price_reached": 652.63,
-    "partial_profit_taken": false,
-    "original_quantity": 1.00053295,
-    "entry_price": 652.63
-  },
-  "VNQ": {
-    "trailing_activated": false,
-    "max_price_reached": 91.64,
-    "partial_profit_taken": false,
-    "original_quantity": 1.071596245,
-    "entry_price": 91.64
-  },
-  "VTI": {
-    "trailing_activated": false,
-    "max_price_reached": 322.25,
-    "partial_profit_taken": false,
-    "original_quantity": 1.181982575,
-    "entry_price": 322.25
-  },
-  "XLF": {
-    "trailing_activated": false,
-    "max_price_reached": 53.25,
-    "partial_profit_taken": false,
-    "original_quantity": 103.569062208,
-    "entry_price": 53.04
-  },
-  "XLK": {
-    "trailing_activated": false,
-    "max_price_reached": 269.28,
-    "partial_profit_taken": false,
-    "original_quantity": 2.177210852,
-    "entry_price": 269.11
-  },
   "UNI/USD": {
     "trailing_activated": false,
     "max_price_reached": 9.748411584,
@@ -136,7 +66,7 @@
     "trailing_activated": false,
     "max_price_reached": 0.09836,
     "partial_profit_taken": false,
-    "original_quantity": 127.756273669,
+    "original_quantity": 0.063878137,
     "entry_price": 0.09836
   },
   "SOL/USD": {
@@ -150,14 +80,14 @@
     "trailing_activated": false,
     "max_price_reached": 4.236996898,
     "partial_profit_taken": false,
-    "original_quantity": 2.681597099,
+    "original_quantity": 0.006165261,
     "entry_price": 4.236996898
   },
   "BTC/USD": {
     "trailing_activated": false,
-    "max_price_reached": 114125.5,
+    "max_price_reached": 114046.95,
     "partial_profit_taken": false,
-    "original_quantity": 6.85e-07,
-    "entry_price": 114125.5
+    "original_quantity": 0.000114104,
+    "entry_price": 114046.95
   }
 }
