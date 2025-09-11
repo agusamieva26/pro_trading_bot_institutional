@@ -1132,5 +1132,19 @@
       "QQQ",
       "UNH"
     ]
+  },
+  {
+    "timestamp": 1757619102.210484,
+    "datetime": "2025-09-11T19:31:42.210484",
+    "trigger_cash": 13.98971098811424,
+    "target_amount": 600.0,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
   }
 ]
