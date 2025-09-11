@@ -85,10 +85,10 @@
   },
   "BTC/USD": {
     "trailing_activated": false,
-    "max_price_reached": 114046.95,
+    "max_price_reached": 114125.5,
     "partial_profit_taken": false,
-    "original_quantity": 0.000114104,
-    "entry_price": 114046.95
+    "original_quantity": 6.85e-07,
+    "entry_price": 114125.5
   },
   "QQQ": {
     "trailing_activated": false,
@@ -117,6 +117,13 @@
     "partial_profit_taken": false,
     "original_quantity": 29.281072458,
     "entry_price": 138.296638
+  },
+  "AAPL": {
+    "trailing_activated": false,
+    "max_price_reached": 228.22,
+    "partial_profit_taken": false,
+    "original_quantity": 6.51234029,
+    "entry_price": 228.22
   },
   "ADBE": {
     "trailing_activated": false,
