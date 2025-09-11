@@ -19,7 +19,7 @@ from .telegram import send_telegram
 # Configuration
 CASH_THRESHOLD = 200.0  # Trigger liquidity unlock when cash < $200
 TARGET_UNLOCK_AMOUNT = 600.0  # Target to free up ~$600 per unlock event
-MAX_UNLOCKS_PER_HOUR = 2  # Maximum positions to close per hour
+MAX_UNLOCKS_PER_HOUR = 6  # Maximum positions to close per hour (increased for emergencies)
 UNLOCK_HISTORY_FILE = "bot/liquidity_unlock_history.json"
 POSITION_TIMES_FILE = "bot/position_entry_times.json"
 
@@ -186,66 +186,76 @@ class LiquidityUnlocker:
         """
         Calculate weakness score for a position based on multiple factors.
         Higher score = weaker position = better candidate for closing.
+        Uses market_value directly to avoid SIP data restrictions.
         """
         symbol = normalize_symbol(getattr(position, 'symbol', ''))
         qty = float(getattr(position, 'qty', 0))
         entry_price = float(getattr(position, 'avg_entry_price', 0))
-        current_price = _get_current_price(symbol)
         
-        if not current_price:
-            return None
+        # 🔧 FIX: Use market_value directly instead of price lookup (avoids SIP restrictions)
+        market_value = float(getattr(position, 'market_value', 0))
+        unrealized_pl = float(getattr(position, 'unrealized_pl', 0))
+        unrealized_plpc = float(getattr(position, 'unrealized_plpc', 0))
         
-        # Calculate P&L
-        if qty > 0:  # LONG
-            pnl = (current_price - entry_price) * qty
-            pnl_pct = (current_price - entry_price) / entry_price
-        else:  # SHORT
-            pnl = (entry_price - current_price) * abs(qty)
-            pnl_pct = (entry_price - current_price) / entry_price
+        # Calculate notional value (capital that would be freed) - use market_value directly
+        notional_value = abs(market_value)
+        
+        # Use unrealized P&L data directly from position
+        pnl = unrealized_pl
+        pnl_pct = unrealized_plpc
         
         # Get position age
         age_minutes = _get_position_age_minutes(symbol, position_times)
         
-        # Calculate notional value (capital that would be freed)
-        notional_value = abs(qty) * current_price
+        # 🚨 CAPITAL-FIRST SCORING ALGORITHM - PRIORITIZE LARGE POSITIONS
+        # Skip micro-positions that won't free meaningful capital
+        MIN_CAPITAL_THRESHOLD = 50.0  # Don't close positions < $50
+        if notional_value < MIN_CAPITAL_THRESHOLD:
+            logger.debug(f"⚠️ Omitiendo micro-posición {symbol}: ${notional_value:.2f} < ${MIN_CAPITAL_THRESHOLD}")
+            return None
         
-        # 🎯 WEAKNESS SCORING ALGORITHM
         weakness_score = 0.0
         reasons = []
         
-        # 1. P&L Performance (40% of score)
-        if pnl_pct < -0.005:  # Losing > 0.5%
-            pnl_penalty = abs(pnl_pct) * 100  # Convert to positive score
-            weakness_score += pnl_penalty * 0.4
+        # 1. CAPITAL SIZE (70% of score) - MOST IMPORTANT
+        # Heavily prioritize larger positions that free more capital
+        if notional_value >= 500:
+            capital_score = min(notional_value / 50, 100)  # Up to 100 points for large positions
+            weakness_score += capital_score * 0.7
+            reasons.append(f"CAPITAL ALTO ${notional_value:.0f}")
+        elif notional_value >= 200:
+            capital_score = notional_value / 100  # Medium positions
+            weakness_score += capital_score * 0.7
+            reasons.append(f"capital medio ${notional_value:.0f}")
+        elif notional_value >= 100:
+            capital_score = notional_value / 200  # Small but acceptable
+            weakness_score += capital_score * 0.7
+            reasons.append(f"capital pequeño ${notional_value:.0f}")
+        else:
+            # Still above threshold but small
+            capital_score = 1  # Minimal score for small positions
+            weakness_score += capital_score
+            reasons.append(f"capital mínimo ${notional_value:.0f}")
+        
+        # 2. P&L Performance (20% of score) - Secondary consideration
+        if pnl_pct < -0.01:  # Losing > 1%
+            pnl_penalty = abs(pnl_pct) * 50  # Moderate penalty for losses
+            weakness_score += pnl_penalty * 0.2
             reasons.append(f"pérdida {pnl_pct:.2%}")
-        elif pnl_pct < 0.002:  # Small gains < 0.2%
-            stagnant_penalty = 10  # Base penalty for stagnation
-            weakness_score += stagnant_penalty * 0.4
+        elif pnl_pct < 0.005:  # Small gains < 0.5%
+            stagnant_penalty = 5  # Small penalty for stagnation
+            weakness_score += stagnant_penalty * 0.2
             reasons.append("ganancias mínimas")
         
-        # 2. Time Factor (30% of score)
-        if age_minutes > 45:  # Position older than 45 minutes
-            time_penalty = (age_minutes - 45) / 60  # Scale by hours over 45 min
-            weakness_score += time_penalty * 30
-            reasons.append(f"edad {age_minutes:.0f}min")
-        elif age_minutes > 30:  # Moderately old
-            time_penalty = (age_minutes - 30) / 60
-            weakness_score += time_penalty * 15
-            reasons.append(f"algo antigua {age_minutes:.0f}min")
-        
-        # 3. Capital Recovery Potential (20% of score)
-        # Larger positions score higher as they free more capital
-        if notional_value > 500:
-            capital_bonus = min(notional_value / 100, 20)  # Cap at 20 points
-            weakness_score += capital_bonus * 0.2
-            reasons.append(f"capital alto ${notional_value:.0f}")
-        
-        # 4. Asset Type Preference (10% of score)
-        # Slightly prefer closing stocks over crypto (PDT considerations)
-        is_crypto = "/" in symbol
-        if not is_crypto:  # Stocks
-            weakness_score += 2  # Small bonus for stocks
-            reasons.append("stock")
+        # 3. Time Factor (10% of score) - Minor consideration
+        if age_minutes > 60:  # Very old positions
+            time_penalty = (age_minutes - 60) / 120  # Scale by hours over 1 hour
+            weakness_score += time_penalty * 10
+            reasons.append(f"muy antigua {age_minutes:.0f}min")
+        elif age_minutes > 30:
+            time_penalty = (age_minutes - 30) / 180
+            weakness_score += time_penalty * 5
+            reasons.append(f"antigua {age_minutes:.0f}min")
         
         reason = " + ".join(reasons) if reasons else "evaluación estándar"
         
@@ -261,40 +271,65 @@ class LiquidityUnlocker:
     
     def _select_positions_to_close(self, positions, position_times: Dict) -> List[PositionWeakness]:
         """
-        Select 1-2 weakest positions to close, targeting ~$600 capital unlock.
+        Select 2-3 largest positions to close, targeting $600+ capital unlock.
+        Priority: CAPITAL SIZE first, then weakness score.
         """
-        # Score all positions
+        # Score all positions (excludes micro-positions automatically)
         scored_positions = []
         for pos in positions:
             weakness = self._calculate_position_weakness(pos, position_times)
-            if weakness:
+            if weakness:  # Will be None for micro-positions < $50
                 scored_positions.append(weakness)
         
         if not scored_positions:
-            logger.warning("⚠️ No se pudieron evaluar posiciones para liquidity unlock")
+            logger.warning("⚠️ No se encontraron posiciones válidas (todas < $50) para liquidity unlock")
             return []
         
-        # Sort by weakness score (highest = weakest = best to close)
-        scored_positions.sort(key=lambda x: x.weakness_score, reverse=True)
+        # Log all candidates with their capital amounts
+        logger.info(f"💰 EVALUANDO {len(scored_positions)} posiciones para liquidity unlock:")
+        for pos in scored_positions:
+            logger.info(f"  📊 {pos.symbol}: ${pos.notional_value:.0f} capital, {pos.pnl_pct:+.2%} P&L, score={pos.weakness_score:.1f}")
+        
+        # PRIORITY 1: Sort by CAPITAL SIZE first (largest positions first)
+        scored_positions.sort(key=lambda x: x.notional_value, reverse=True)
+        
+        # PRIORITY 2: Among large positions, prefer those with poor performance
+        large_positions = [p for p in scored_positions if p.notional_value >= 200]
+        medium_positions = [p for p in scored_positions if 100 <= p.notional_value < 200]
+        small_positions = [p for p in scored_positions if p.notional_value < 100]
+        
+        # Sort each group by weakness score
+        large_positions.sort(key=lambda x: x.weakness_score, reverse=True)
+        medium_positions.sort(key=lambda x: x.weakness_score, reverse=True)
+        small_positions.sort(key=lambda x: x.weakness_score, reverse=True)
+        
+        # Rebuild list: large positions first, then medium, then small
+        prioritized_positions = large_positions + medium_positions + small_positions
         
         # Select positions to close
         selected = []
         total_capital = 0.0
         
-        for weak_pos in scored_positions:
-            if len(selected) >= 2:  # Max 2 positions per unlock
+        for weak_pos in prioritized_positions:
+            if len(selected) >= 3:  # Max 3 positions per unlock (increased from 2)
                 break
                 
-            if total_capital >= TARGET_UNLOCK_AMOUNT:  # Target reached
+            if total_capital >= TARGET_UNLOCK_AMOUNT and len(selected) >= 2:  # Target reached with at least 2
                 break
                 
             selected.append(weak_pos)
             total_capital += weak_pos.notional_value
             
-            logger.debug(f"📊 Candidato: {weak_pos.symbol} score={weak_pos.weakness_score:.1f} "
-                        f"capital=${weak_pos.notional_value:.0f} P&L={weak_pos.pnl_pct:+.2%} "
-                        f"({weak_pos.reason})")
+            logger.critical(f"🎯 SELECCIONADO PARA CIERRE: {weak_pos.symbol} liberará ${weak_pos.notional_value:.0f} capital "
+                          f"(P&L actual: ${weak_pos.pnl:+.2f} / {weak_pos.pnl_pct:+.2%}, score: {weak_pos.weakness_score:.1f})")
         
+        logger.critical(f"💰 TOTAL CAPITAL A LIBERAR: ${total_capital:.0f} de {len(selected)} posiciones (objetivo: ${TARGET_UNLOCK_AMOUNT:.0f})")
+        
+        # Show what will be closed
+        if selected:
+            logger.critical("📋 RESUMEN DE POSICIONES A CERRAR:")
+            for i, pos in enumerate(selected, 1):
+                logger.critical(f"  {i}. {pos.symbol}: ${pos.notional_value:.0f} capital, P&L ${pos.pnl:+.2f} ({pos.pnl_pct:+.2%})")
         return selected
     
     def _execute_liquidity_unlock(self, positions_to_close: List[PositionWeakness], current_cash: float):
@@ -307,19 +342,20 @@ class LiquidityUnlocker:
         
         for weak_pos in positions_to_close:
             try:
-                logger.info(f"🎯 Cerrando {weak_pos.symbol}: Score={weak_pos.weakness_score:.1f}, "
-                           f"Capital=${weak_pos.notional_value:.0f}, P&L={weak_pos.pnl_pct:+.2%} ({weak_pos.reason})")
+                logger.critical(f"🚨 CERRANDO POSICIÓN: {weak_pos.symbol} "
+                               f"Capital=${weak_pos.notional_value:.0f} P&L=${weak_pos.pnl:+.2f} ({weak_pos.pnl_pct:+.2%}) "
+                               f"Score={weak_pos.weakness_score:.1f} ({weak_pos.reason})")
                 
                 success = close_position(weak_pos.symbol, force_close=False)
                 
                 if success:
                     total_freed_capital += weak_pos.notional_value
                     closed_positions.append(weak_pos)
-                    logger.critical(f"✅ LIQUIDITY UNLOCK: {weak_pos.symbol} cerrado - "
-                                  f"${weak_pos.notional_value:.0f} liberados (P&L: {weak_pos.pnl:+.2f})")
+                    logger.critical(f"✅ CAPITAL LIBERADO: {weak_pos.symbol} cerrado exitosamente - "
+                                  f"${weak_pos.notional_value:.0f} capital liberado (P&L final: ${weak_pos.pnl:+.2f})")
                 else:
                     failed_positions.append(weak_pos)
-                    logger.warning(f"⚠️ LIQUIDITY UNLOCK: {weak_pos.symbol} falló cierre (PDT/balance)")
+                    logger.warning(f"⚠️ FALLO AL CERRAR: {weak_pos.symbol} - ${weak_pos.notional_value:.0f} NO liberados (PDT/balance/error)")
                     
             except Exception as e:
                 failed_positions.append(weak_pos)
