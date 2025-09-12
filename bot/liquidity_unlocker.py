@@ -19,7 +19,7 @@ from .telegram import send_telegram
 
 
 # Configuration
-CASH_THRESHOLD_PERCENT = 0.10  # 10% del equity como umbral crítico
+CASH_THRESHOLD_PERCENT = 0.005  # 0.5% del equity como umbral crítico (EMERGENCY OVERRIDE)
 TARGET_UNLOCK_PERCENT = 0.15   # 15% del equity como objetivo a liberar (alineado con cash buffer)
 UNLOCK_COOLDOWN_SECONDS = 30   # 30 segundos en modo emergencia (ultra-agresivo)
 MAX_UNLOCKS_PER_HOUR = 10      # Máximo unlocks por hora (para estadísticas)
