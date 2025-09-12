@@ -89,8 +89,15 @@ def execute_profit_taking(client, symbol, current_qty, reason, target_reduction=
             api_symbol = symbol.replace("/", "")
             
             # Contar órdenes pendientes para este símbolo
-            pending_count = sum(1 for order in pending_orders 
-                              if order.symbol == api_symbol and order.side.value.lower() == "sell")
+            pending_count = 0
+            for order in pending_orders:
+                try:
+                    if (hasattr(order, 'symbol') and order.symbol == api_symbol and 
+                        hasattr(order, 'side') and hasattr(order.side, 'value') and 
+                        order.side.value.lower() == "sell"):
+                        pending_count += 1
+                except AttributeError:
+                    continue
             
             if pending_count > 0:
                 logger.warning(f"⚠️ PROFIT-TAKING OMITIDO: {symbol} ya tiene {pending_count} órdenes SELL pendientes")
