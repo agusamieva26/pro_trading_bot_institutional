@@ -76,13 +76,6 @@
     "original_quantity": 0.165125745,
     "entry_price": 223.42
   },
-  "DOT/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 4.236996898,
-    "partial_profit_taken": false,
-    "original_quantity": 2.681597099,
-    "entry_price": 4.236996898
-  },
   "UNH": {
     "trailing_activated": false,
     "max_price_reached": 348.415,
