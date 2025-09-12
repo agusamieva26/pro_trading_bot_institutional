@@ -111,23 +111,23 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
         
         # CRISIS MODE: Block all new BUY orders if critical thresholds breached
         if side.lower() == "buy":
-            # Check exposure limit (0.5x hardcoded limit)
-            max_exposure = 0.5  # 50% exposure limit
-            if projected_exposure_ratio > max_exposure:
-                logger.critical(f"🚨 ORDER BLOCKED: Exposure limit! Projected {projected_exposure_ratio:.2f}x > {max_exposure:.2f}x limit")
+            # Check exposure limit (use CONFIGURED limit)
+            if projected_exposure_ratio > settings.max_gross_exposure:
+                logger.critical(f"🚨 ORDER BLOCKED: Exposure limit! Projected {projected_exposure_ratio:.2f}x > {settings.max_gross_exposure:.2f}x limit")
                 return False
                 
-            # Check cash buffer (15% minimum)
+            # Check cash buffer (use configured minimum)
             cash_after_trade = available_cash - notional_value
-            min_cash_required = current_equity * 0.15  # 15% minimum cash buffer
+            min_cash_pct = getattr(settings, 'min_cash_buffer', 0.10)  # Default 10% if not set
+            min_cash_required = current_equity * min_cash_pct
             if cash_after_trade < min_cash_required:
-                logger.critical(f"🚨 ORDER BLOCKED: Cash buffer! After trade ${cash_after_trade:.0f} < ${min_cash_required:.0f} required (15%)")
+                logger.critical(f"🚨 ORDER BLOCKED: Cash buffer! After trade ${cash_after_trade:.0f} < ${min_cash_required:.0f} required ({min_cash_pct:.0%})")
                 return False
                 
-            # PDT check for stocks (disable day trading if equity < $25k)
+            # PDT info (but don't block - let Alpaca handle it)
             if current_equity < 25000 and "/" not in symbol:  # Crypto has /, stocks don't
-                logger.critical(f"🚨 ORDER BLOCKED: PDT restriction! Equity ${current_equity:.0f} < $25,000 for stock day trading")
-                return False
+                logger.info(f"ℹ️ PDT INFO: Equity ${current_equity:.0f} < $25,000 - Alpaca may limit day trading")
+                # Don't block here - let Alpaca API handle PDT restrictions
                 
     except Exception as e:
         logger.critical(f"❌ CRISIS MODE ERROR - BLOCKING BUY: {e}")

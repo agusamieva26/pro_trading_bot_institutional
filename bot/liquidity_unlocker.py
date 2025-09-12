@@ -20,7 +20,7 @@ from .telegram import send_telegram
 
 # Configuration
 CASH_THRESHOLD_PERCENT = 0.10  # 10% del equity como umbral crítico
-TARGET_UNLOCK_PERCENT = 0.03   # 3% del equity como objetivo a liberar
+TARGET_UNLOCK_PERCENT = 0.15   # 15% del equity como objetivo a liberar (alineado con cash buffer)
 UNLOCK_COOLDOWN_SECONDS = 30   # 30 segundos en modo emergencia (ultra-agresivo)
 MAX_UNLOCKS_PER_HOUR = 10      # Máximo unlocks por hora (para estadísticas)
 UNLOCK_HISTORY_FILE = "bot/liquidity_unlock_history.json"

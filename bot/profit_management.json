@@ -1,8 +1,8 @@
 {
-  "total_profits_protected": 307.3930302437882,
-  "total_profits_reinvested": 204.92868682919217,
+  "total_profits_protected": 701.2400604875786,
+  "total_profits_reinvested": 467.49337365838585,
   "capital_base_original": 24522.49,
-  "capital_available_trading": 24727.418686829194,
+  "capital_available_trading": 24989.983373658386,
   "daily_distributions": [
     {
       "date": "2025-09-10T00:18:59.029077+00:00",
@@ -21,9 +21,18 @@
       "new_trading_capital": 24727.418686829194,
       "total_protected_accumulated": 307.3930302437882,
       "total_reinvested_accumulated": 204.92868682919217
+    },
+    {
+      "date": "2025-09-12T00:00:48.206107+00:00",
+      "daily_profit": 656.4117170729842,
+      "amount_reinvested": 262.5646868291937,
+      "amount_protected": 393.84703024379047,
+      "new_trading_capital": 24989.983373658386,
+      "total_protected_accumulated": 701.2400604875786,
+      "total_reinvested_accumulated": 467.49337365838585
     }
   ],
-  "last_distribution_date": "2025-09-11",
+  "last_distribution_date": "2025-09-12",
   "reinvestment_rate": 0.4,
   "protection_rate": 0.6
 }

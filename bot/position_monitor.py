@@ -339,6 +339,7 @@ def monitor_closed_positions(clf):
     Ejecuta en un bucle continuo cada 10 segundos.
     """
     logger.info("🔄 Position Monitor iniciado - monitoreando posiciones cada 10 segundos...")
+    from .config import settings
     logger.info(f"⏰ TIME-BASED EXIT configurado: {settings.max_position_time_normal}min estancadas, {settings.max_position_time_force}min forzado")
     logger.info(f"🎯 TRAILING STOPS configurado: activación {settings.trailing_activation_pct:.1%}, distancia {settings.trailing_distance_pct:.1%}")
     logger.info(f"💎 PARTIAL PROFIT configurado: cierre parcial 50% @ {settings.partial_profit_pct:.1%}")
@@ -425,7 +426,8 @@ def monitor_closed_positions(clf):
                 from .exposure import get_total_exposure_ratio
                 exposure_ratio = get_total_exposure_ratio()
                 
-                if exposure_ratio >= 0.5:  # Crisis Mode activado
+                from .config import settings
+                if exposure_ratio >= settings.max_gross_exposure:  # Crisis Mode activado
                     _intelligent_crypto_closure(positions, exposure_ratio)
             except Exception as e:
                 logger.error(f"❌ Error en Crisis Mode crypto closure: {e}")
@@ -697,7 +699,8 @@ def _intelligent_crypto_closure(positions, exposure_ratio: float):
         if not crypto_positions:
             return
         
-        logger.critical(f"🚨 CRISIS MODE: Exposición {exposure_ratio:.1%} ≥ 50% - evaluando {len(crypto_positions)} cryptos")
+        from .config import settings
+        logger.critical(f"🚨 CRISIS MODE: Exposición {exposure_ratio:.1%} ≥ {settings.max_gross_exposure:.0%} - evaluando {len(crypto_positions)} cryptos")
         
         # Evaluar cada posición crypto
         crypto_evaluations = []
