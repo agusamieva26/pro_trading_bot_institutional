@@ -217,6 +217,30 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
                 time_in_force=tif
             )
             
+        # ✅ VERIFICAR CANTIDAD DISPONIBLE antes de enviar orden SELL
+        if side.lower() == "sell":
+            try:
+                client = _client()
+                position = client.get_open_position(api_symbol)
+                if position:
+                    available_qty = float(getattr(position, 'qty', 0))
+                    requested_qty = float(qty)
+                    
+                    if abs(requested_qty) > abs(available_qty):
+                        logger.warning(f"🚫 SELL BLOCKED: {symbol} requested={abs(requested_qty):.6f} > available={abs(available_qty):.6f}")
+                        return False
+                        
+                    # Si disponible es menos del 80% de lo solicitado, ajustar cantidad
+                    if abs(available_qty) < abs(requested_qty) * 0.8:
+                        adjusted_qty = available_qty * 0.95  # Use 95% of available to be safe
+                        logger.warning(f"🔧 AJUSTANDO CANTIDAD: {symbol} {requested_qty:.6f} → {adjusted_qty:.6f}")
+                        order_request.qty = abs(adjusted_qty)
+                        qty = adjusted_qty
+                        notional_value = abs(adjusted_qty) * float(price)
+                        
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo verificar cantidad disponible para {symbol}: {e}")
+
         # Submit order
         client = _client()
         order = client.submit_order(order_request)
