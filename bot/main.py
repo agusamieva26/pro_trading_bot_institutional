@@ -596,6 +596,17 @@ def main():
     )
     monitor_thread.start()
     logger.info("✅ Position Monitor activo en thread paralelo")
+    
+    # 📅 INICIAR DAILY REPORTER EN THREAD SEPARADO
+    logger.info("📅 Iniciando Daily Reporter en thread separado...")
+    from scripts.daily_reporter import run_reporter
+    reporter_thread = threading.Thread(
+        target=run_reporter,
+        daemon=True,
+        name="DailyReporter"
+    )
+    reporter_thread.start()
+    logger.info("✅ Daily Reporter activo - detectará reset de Alpaca automáticamente")
 
     while True:
         try:
