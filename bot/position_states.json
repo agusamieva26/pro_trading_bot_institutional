@@ -55,13 +55,6 @@
     "original_quantity": 0.137204484,
     "entry_price": 28.77
   },
-  "LINK/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 23.896,
-    "partial_profit_taken": false,
-    "original_quantity": 0.704470969,
-    "entry_price": 23.896
-  },
   "GRT/USD": {
     "trailing_activated": false,
     "max_price_reached": 0.09836,
@@ -76,65 +69,9 @@
     "original_quantity": 0.165125745,
     "entry_price": 223.42
   },
-  "UNH": {
-    "trailing_activated": false,
-    "max_price_reached": 348.415,
-    "partial_profit_taken": false,
-    "original_quantity": 12.172959886,
-    "entry_price": 348.2
-  },
-  "QQQ": {
-    "trailing_activated": false,
-    "max_price_reached": 582.76,
-    "partial_profit_taken": false,
-    "original_quantity": 9.014505813,
-    "entry_price": 582.76
-  },
-  "TSLA": {
-    "trailing_activated": false,
-    "max_price_reached": 351.35,
-    "partial_profit_taken": false,
-    "original_quantity": 3.272214162,
-    "entry_price": 349.683888
-  },
-  "XLV": {
-    "trailing_activated": false,
-    "max_price_reached": 138.296638,
-    "partial_profit_taken": false,
-    "original_quantity": 29.281072458,
-    "entry_price": 138.296638
-  },
-  "ADBE": {
-    "trailing_activated": false,
-    "max_price_reached": 354.91,
-    "partial_profit_taken": false,
-    "original_quantity": 4.963055812,
-    "entry_price": 352.0
-  },
-  "AAPL": {
-    "trailing_activated": false,
-    "max_price_reached": 228.22,
-    "partial_profit_taken": false,
-    "original_quantity": 6.51234029,
-    "entry_price": 228.22
-  },
-  "VEA": {
-    "trailing_activated": false,
-    "max_price_reached": 59.97,
-    "partial_profit_taken": false,
-    "original_quantity": 1.113801132,
-    "entry_price": 59.97
-  },
-  "VGK": {
-    "trailing_activated": false,
-    "max_price_reached": 79.40084,
-    "partial_profit_taken": false,
-    "original_quantity": 2.641757797,
-    "entry_price": 79.40084
-  },
   "BTC/USD": {
     "trailing_activated": false,
-    "max_price_reached": 114301.25,
+    "max_price_reached": 115644.424,
     "partial_profit_taken": false,
     "original_quantity": 0.002930304,
     "entry_price": 114301.25

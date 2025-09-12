@@ -18045,5 +18045,2063 @@
       "QQQ",
       "UNH"
     ]
+  },
+  {
+    "timestamp": 1757673816.1061819,
+    "datetime": "2025-09-12T10:43:36.106182",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0645,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673851.0030982,
+    "datetime": "2025-09-12T10:44:11.003100",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.333,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673885.3651223,
+    "datetime": "2025-09-12T10:44:45.365123",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.3645,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673919.5182798,
+    "datetime": "2025-09-12T10:45:19.518280",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.456,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673954.5001419,
+    "datetime": "2025-09-12T10:45:54.500142",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.387,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673988.9868438,
+    "datetime": "2025-09-12T10:46:28.986844",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.958,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674021.41416,
+    "datetime": "2025-09-12T10:47:01.414160",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.096,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674053.7576797,
+    "datetime": "2025-09-12T10:47:33.757680",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0615,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674085.6897576,
+    "datetime": "2025-09-12T10:48:05.689758",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0675,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674118.110961,
+    "datetime": "2025-09-12T10:48:38.110961",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0465,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674150.5057447,
+    "datetime": "2025-09-12T10:49:10.505745",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.3645,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674182.545653,
+    "datetime": "2025-09-12T10:49:42.545653",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.3134999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674217.0680394,
+    "datetime": "2025-09-12T10:50:17.068042",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.8415,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674251.6351597,
+    "datetime": "2025-09-12T10:50:51.635161",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.9044999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674285.2084537,
+    "datetime": "2025-09-12T10:51:25.208453",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.985,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674319.7380776,
+    "datetime": "2025-09-12T10:51:59.738078",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.676,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674353.8892822,
+    "datetime": "2025-09-12T10:52:33.889283",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.4705,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674387.8949816,
+    "datetime": "2025-09-12T10:53:07.894982",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.4705,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674419.456703,
+    "datetime": "2025-09-12T10:53:39.456703",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.9965,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674451.8925502,
+    "datetime": "2025-09-12T10:54:11.892550",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.0054999999998,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674484.1571903,
+    "datetime": "2025-09-12T10:54:44.157190",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.2889999999998,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674516.5563445,
+    "datetime": "2025-09-12T10:55:16.556346",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.2995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674549.0780923,
+    "datetime": "2025-09-12T10:55:49.078092",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.481,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674582.1363435,
+    "datetime": "2025-09-12T10:56:22.136344",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.652,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674615.814843,
+    "datetime": "2025-09-12T10:56:55.814843",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.7389999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674649.2001812,
+    "datetime": "2025-09-12T10:57:29.200181",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0135,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674681.3008642,
+    "datetime": "2025-09-12T10:58:01.300864",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.03,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674715.8487782,
+    "datetime": "2025-09-12T10:58:35.848779",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.9370000000004,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674749.696723,
+    "datetime": "2025-09-12T10:59:09.696723",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.6745,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674784.0193155,
+    "datetime": "2025-09-12T10:59:44.019315",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.64,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674815.627295,
+    "datetime": "2025-09-12T11:00:15.627295",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.7764999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674848.446479,
+    "datetime": "2025-09-12T11:00:48.446479",
+    "trigger_cash": 100.6995,
+    "target_amount": 3359.4014999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674880.097711,
+    "datetime": "2025-09-12T11:01:20.097711",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.77,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674912.3859813,
+    "datetime": "2025-09-12T11:01:52.385982",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.5,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674944.481248,
+    "datetime": "2025-09-12T11:02:24.481248",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.503,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757674976.1308749,
+    "datetime": "2025-09-12T11:02:56.130875",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.569,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675010.6032772,
+    "datetime": "2025-09-12T11:03:30.603277",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.5435,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675044.6384764,
+    "datetime": "2025-09-12T11:04:04.638476",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.8879999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675079.4679027,
+    "datetime": "2025-09-12T11:04:39.467903",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.0364999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675113.9059267,
+    "datetime": "2025-09-12T11:05:13.905927",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.39,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675148.6064334,
+    "datetime": "2025-09-12T11:05:48.606434",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.8725,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675182.2539458,
+    "datetime": "2025-09-12T11:06:22.253946",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.4554999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675214.3039477,
+    "datetime": "2025-09-12T11:06:54.303948",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.172,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675246.758478,
+    "datetime": "2025-09-12T11:07:26.758478",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.403,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675278.522961,
+    "datetime": "2025-09-12T11:07:58.522961",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.0965,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675310.924933,
+    "datetime": "2025-09-12T11:08:30.924933",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.7485,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675343.205658,
+    "datetime": "2025-09-12T11:09:03.205658",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.759,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675375.2926393,
+    "datetime": "2025-09-12T11:09:35.292639",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5129999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675409.3931868,
+    "datetime": "2025-09-12T11:10:09.393187",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.6389999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675443.7653997,
+    "datetime": "2025-09-12T11:10:43.765400",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.0754999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675477.4373672,
+    "datetime": "2025-09-12T11:11:17.437368",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.3705,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675512.932464,
+    "datetime": "2025-09-12T11:11:52.932464",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.775,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675547.3115847,
+    "datetime": "2025-09-12T11:12:27.311585",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.9129999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675581.351503,
+    "datetime": "2025-09-12T11:13:01.351503",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.88,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675613.7812593,
+    "datetime": "2025-09-12T11:13:33.781259",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.76,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675646.2472422,
+    "datetime": "2025-09-12T11:14:06.247242",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.1335,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675678.9625897,
+    "datetime": "2025-09-12T11:14:38.962591",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.8275,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675711.695534,
+    "datetime": "2025-09-12T11:15:11.695535",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.4945000000002,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675744.2302544,
+    "datetime": "2025-09-12T11:15:44.230255",
+    "trigger_cash": 100.6995,
+    "target_amount": 3352.98,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675776.511284,
+    "datetime": "2025-09-12T11:16:16.511284",
+    "trigger_cash": 100.6995,
+    "target_amount": 3352.6245000000004,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675810.403856,
+    "datetime": "2025-09-12T11:16:50.403856",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.1975,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675845.249881,
+    "datetime": "2025-09-12T11:17:25.249881",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.1555,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675879.0271869,
+    "datetime": "2025-09-12T11:17:59.027188",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.481,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675913.634541,
+    "datetime": "2025-09-12T11:18:33.634541",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.9669999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675947.4472086,
+    "datetime": "2025-09-12T11:19:07.447209",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.3534999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757675982.6300812,
+    "datetime": "2025-09-12T11:19:42.630082",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.3534999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676015.6174185,
+    "datetime": "2025-09-12T11:20:15.617419",
+    "trigger_cash": 100.6995,
+    "target_amount": 3352.6485000000002,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676047.2465675,
+    "datetime": "2025-09-12T11:20:47.246567",
+    "trigger_cash": 100.6995,
+    "target_amount": 3352.824,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676079.6347287,
+    "datetime": "2025-09-12T11:21:19.634729",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.0475,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676112.0583491,
+    "datetime": "2025-09-12T11:21:52.058349",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.0475,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676144.0711834,
+    "datetime": "2025-09-12T11:22:24.071183",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.8005,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676176.8640225,
+    "datetime": "2025-09-12T11:22:56.864080",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.0525,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676210.1442096,
+    "datetime": "2025-09-12T11:23:30.144210",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.667,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676244.643733,
+    "datetime": "2025-09-12T11:24:04.643733",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.7374999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676278.5949461,
+    "datetime": "2025-09-12T11:24:38.594946",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.346,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676312.8666306,
+    "datetime": "2025-09-12T11:25:12.866632",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.4675,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676347.3941505,
+    "datetime": "2025-09-12T11:25:47.394150",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.7509999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676381.1258938,
+    "datetime": "2025-09-12T11:26:21.125894",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.8304999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676414.524883,
+    "datetime": "2025-09-12T11:26:54.524884",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.31,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676446.383417,
+    "datetime": "2025-09-12T11:27:26.383417",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.4855,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676478.8763711,
+    "datetime": "2025-09-12T11:27:58.876371",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.499,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676511.4422252,
+    "datetime": "2025-09-12T11:28:31.442225",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.5725,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676543.6233099,
+    "datetime": "2025-09-12T11:29:03.623310",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.5995000000003,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676575.9593165,
+    "datetime": "2025-09-12T11:29:35.959317",
+    "trigger_cash": 100.6995,
+    "target_amount": 3353.979,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676608.2771907,
+    "datetime": "2025-09-12T11:30:08.277191",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.534,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676641.642603,
+    "datetime": "2025-09-12T11:30:41.642603",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.657,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676676.3479733,
+    "datetime": "2025-09-12T11:31:16.347973",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.7665,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676711.563272,
+    "datetime": "2025-09-12T11:31:51.563272",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.6659999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676745.135708,
+    "datetime": "2025-09-12T11:32:25.135708",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.7274999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676780.0634317,
+    "datetime": "2025-09-12T11:33:00.063432",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.4094999999998,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676813.3574462,
+    "datetime": "2025-09-12T11:33:33.357447",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.4919999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676846.6358063,
+    "datetime": "2025-09-12T11:34:06.635807",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.4754999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676878.4087415,
+    "datetime": "2025-09-12T11:34:38.408741",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.4754999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676910.8261604,
+    "datetime": "2025-09-12T11:35:10.826161",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.4845,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676943.27335,
+    "datetime": "2025-09-12T11:35:43.273350",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5505,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757676975.0068047,
+    "datetime": "2025-09-12T11:36:15.006805",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.528,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677008.4297252,
+    "datetime": "2025-09-12T11:36:48.429725",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.6344999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677040.150333,
+    "datetime": "2025-09-12T11:37:20.150333",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5205,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677071.5226448,
+    "datetime": "2025-09-12T11:37:51.522645",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.576,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677105.8005383,
+    "datetime": "2025-09-12T11:38:25.800539",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5699999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677139.468962,
+    "datetime": "2025-09-12T11:38:59.468962",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.7274999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677174.4019046,
+    "datetime": "2025-09-12T11:39:34.401906",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.8985000000002,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677208.4925103,
+    "datetime": "2025-09-12T11:40:08.492510",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.954,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677242.7008643,
+    "datetime": "2025-09-12T11:40:42.700865",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.8385,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677276.8510413,
+    "datetime": "2025-09-12T11:41:16.851042",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.7544999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677308.5915918,
+    "datetime": "2025-09-12T11:41:48.591592",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.504,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677340.8754804,
+    "datetime": "2025-09-12T11:42:20.875481",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.9149999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677373.2713065,
+    "datetime": "2025-09-12T11:42:53.271308",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.939,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677405.8073523,
+    "datetime": "2025-09-12T11:43:25.807352",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.585,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677439.0717013,
+    "datetime": "2025-09-12T11:43:59.071701",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.9,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677471.105783,
+    "datetime": "2025-09-12T11:44:31.105783",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.5074999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677503.3265374,
+    "datetime": "2025-09-12T11:45:03.326537",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.5615,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677536.233311,
+    "datetime": "2025-09-12T11:45:36.233311",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.2585,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677571.5483289,
+    "datetime": "2025-09-12T11:46:11.548329",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.1745,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677606.560141,
+    "datetime": "2025-09-12T11:46:46.560141",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.3179999999998,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677640.8868296,
+    "datetime": "2025-09-12T11:47:20.886830",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5865,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677676.2103782,
+    "datetime": "2025-09-12T11:47:56.210378",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.5969999999998,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677710.6338544,
+    "datetime": "2025-09-12T11:48:30.633854",
+    "trigger_cash": 100.6995,
+    "target_amount": 3354.6629999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677743.377485,
+    "datetime": "2025-09-12T11:49:03.377485",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.1625,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677776.0591419,
+    "datetime": "2025-09-12T11:49:36.059142",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.1834999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677809.5071325,
+    "datetime": "2025-09-12T11:50:09.507132",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.3034999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677842.5100682,
+    "datetime": "2025-09-12T11:50:42.510068",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.3064999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677875.380723,
+    "datetime": "2025-09-12T11:51:15.380723",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.2524999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677907.9223304,
+    "datetime": "2025-09-12T11:51:47.922330",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.3965000000003,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677940.5238013,
+    "datetime": "2025-09-12T11:52:20.523801",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.356,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757677973.2293367,
+    "datetime": "2025-09-12T11:52:53.229338",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.86,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678005.4754093,
+    "datetime": "2025-09-12T11:53:25.475409",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.9125,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678039.692436,
+    "datetime": "2025-09-12T11:53:59.692436",
+    "trigger_cash": 100.6995,
+    "target_amount": 3355.9754999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678075.3792057,
+    "datetime": "2025-09-12T11:54:35.379206",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.046,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678109.90067,
+    "datetime": "2025-09-12T11:55:09.900670",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.346,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678144.5721984,
+    "datetime": "2025-09-12T11:55:44.572200",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.451,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678178.6395748,
+    "datetime": "2025-09-12T11:56:18.639575",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.4419999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678212.8495834,
+    "datetime": "2025-09-12T11:56:52.849583",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.6159999999995,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678244.6221502,
+    "datetime": "2025-09-12T11:57:24.622150",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.2580000000003,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678276.8568337,
+    "datetime": "2025-09-12T11:57:56.856834",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.2415,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678309.2055168,
+    "datetime": "2025-09-12T11:58:29.205518",
+    "trigger_cash": 100.6995,
+    "target_amount": 3356.835,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678341.3639147,
+    "datetime": "2025-09-12T11:59:01.363915",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.4125,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678373.7108319,
+    "datetime": "2025-09-12T11:59:33.710832",
+    "trigger_cash": 100.6995,
+    "target_amount": 3357.933,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678405.7676854,
+    "datetime": "2025-09-12T12:00:05.767685",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.4129999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678438.3841987,
+    "datetime": "2025-09-12T12:00:38.384198",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.4275,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678470.8997405,
+    "datetime": "2025-09-12T12:01:10.899741",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.3419999999996,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678504.3569026,
+    "datetime": "2025-09-12T12:01:44.356903",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.0915,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678538.360911,
+    "datetime": "2025-09-12T12:02:18.360912",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.7665,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678571.6755645,
+    "datetime": "2025-09-12T12:02:51.675565",
+    "trigger_cash": 100.6995,
+    "target_amount": 3358.359,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678604.9670784,
+    "datetime": "2025-09-12T12:03:24.967078",
+    "trigger_cash": 100.6995,
+    "target_amount": 3361.5435,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678638.3474898,
+    "datetime": "2025-09-12T12:03:58.347490",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.7439999999997,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757678672.0119758,
+    "datetime": "2025-09-12T12:04:32.011976",
+    "trigger_cash": 100.6995,
+    "target_amount": 3360.3615,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
   }
 ]
