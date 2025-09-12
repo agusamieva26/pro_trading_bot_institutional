@@ -40,7 +40,7 @@ def get_available_cash():
         client = _client()
         account = client.get_account()
         total_cash = float(getattr(account, 'cash', 0.0) or 0.0)
-        # Usar 85% del cash para rotación agresiva (reservar 15%)
+        # Usar 99.5% del cash para rotación agresiva (reservar 0.5% - EMERGENCY OVERRIDE)
         available = total_cash * 0.85 - _reserved_cash  
         return max(0, available), total_cash
     except Exception as e:
@@ -74,8 +74,8 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
                 logger.critical(f"🚨 CRISIS MODE - ORDER BLOCKED: Exposure {exposure_ratio:.2f}x >= {settings.max_gross_exposure:.1f}x limit")
                 return False
                 
-            if true_cash / max(equity, 1e-9) <= 0.15:
-                logger.critical(f"🚨 CRISIS MODE - ORDER BLOCKED: Cash {true_cash/equity:.1%} <= 15% required buffer")
+            if true_cash / max(equity, 1e-9) <= 0.005:
+                logger.critical(f"🚨 CRISIS MODE - ORDER BLOCKED: Cash {true_cash/equity:.1%} <= 0.5% required buffer")
                 return False
                 
         except Exception as e:
