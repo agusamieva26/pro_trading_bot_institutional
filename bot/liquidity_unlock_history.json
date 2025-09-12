@@ -17918,5 +17918,47 @@
       "QQQ",
       "UNH"
     ]
+  },
+  {
+    "timestamp": 1757673522.7757988,
+    "datetime": "2025-09-12T10:38:42.775799",
+    "trigger_cash": 100.6995,
+    "target_amount": 3361.6845,
+    "positions_closed": 0,
+    "positions_failed": 2,
+    "capital_freed": 0.0,
+    "closed_symbols": [],
+    "failed_symbols": [
+      "QQQ",
+      "UNH"
+    ]
+  },
+  {
+    "timestamp": 1757673555.0938182,
+    "datetime": "2025-09-12T10:39:15.093818",
+    "trigger_cash": 100.6995,
+    "target_amount": 3361.6814999999997,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 11461.516223999999,
+    "closed_symbols": [
+      "QQQ",
+      "UNH"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1757673588.318795,
+    "datetime": "2025-09-12T10:39:48.318796",
+    "trigger_cash": 100.6995,
+    "target_amount": 3361.3665,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 11461.516223999999,
+    "closed_symbols": [
+      "QQQ",
+      "UNH"
+    ],
+    "failed_symbols": []
   }
 ]
