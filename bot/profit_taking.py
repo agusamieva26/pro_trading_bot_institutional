@@ -60,6 +60,11 @@ def should_take_profits(symbol, allocation, unrealized_pnl, entry_value):
     
     return False, ""
 
+def _get_client():
+    """Get trading client instance"""
+    from .execution import _client
+    return _client()
+
 def execute_profit_taking(client, symbol, current_qty, reason, target_reduction=0.30):
     """Ejecuta profit-taking vendiendo una parte de la posición"""
     try:
@@ -76,6 +81,23 @@ def execute_profit_taking(client, symbol, current_qty, reason, target_reduction=
         is_crypto = "/" in symbol
         
         logger.info(f"💰 PROFIT-TAKING: {symbol} vendiendo {qty_to_sell:.6f} ({target_reduction:.0%}) - {reason}")
+        
+        # 🚨 VERIFICAR QUE NO HAY ÓRDENES PENDIENTES DEL MISMO SÍMBOLO
+        try:
+            client = _get_client()
+            pending_orders = client.get_orders()
+            api_symbol = symbol.replace("/", "")
+            
+            # Contar órdenes pendientes para este símbolo
+            pending_count = sum(1 for order in pending_orders 
+                              if order.symbol == api_symbol and order.side.value.lower() == "sell")
+            
+            if pending_count > 0:
+                logger.warning(f"⚠️ PROFIT-TAKING OMITIDO: {symbol} ya tiene {pending_count} órdenes SELL pendientes")
+                return False
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Error verificando órdenes pendientes para {symbol}: {e}")
         
         # Ejecutar orden de venta
         from .data import fetch_bars
