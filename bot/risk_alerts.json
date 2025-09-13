@@ -54,5 +54,61 @@
     "symbol": "",
     "acknowledged": false,
     "resolved": false
+  },
+  {
+    "id": "Portfolio VaR Limit_1757774553",
+    "timestamp": "2025-09-13T14:42:33.590480",
+    "level": "emergency",
+    "category": "market_risk",
+    "title": "Portfolio VaR Limit Breach",
+    "message": "Portfolio VaR Limit has breached emergency threshold: 0.0823 >= 0.0500",
+    "metric_name": "portfolio_var_95",
+    "current_value": 0.08225,
+    "threshold": 0.05,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Gross Exposure Limit_1757774554",
+    "timestamp": "2025-09-13T14:42:34.383451",
+    "level": "warning",
+    "category": "concentration_risk",
+    "title": "Gross Exposure Limit Breach",
+    "message": "Gross Exposure Limit has breached warning threshold: 0.9847 >= 0.8000",
+    "metric_name": "gross_exposure_ratio",
+    "current_value": 0.9847061937600552,
+    "threshold": 0.8,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Cash Buffer Minimum_1757774554",
+    "timestamp": "2025-09-13T14:42:34.405371",
+    "level": "emergency",
+    "category": "liquidity_risk",
+    "title": "Cash Buffer Minimum Breach",
+    "message": "Cash Buffer Minimum has breached emergency threshold: 0.0153 >= 0.0100",
+    "metric_name": "cash_ratio",
+    "current_value": 0.015293779335179994,
+    "threshold": 0.01,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Position Size Limit_1757774554",
+    "timestamp": "2025-09-13T14:42:34.925854",
+    "level": "emergency",
+    "category": "concentration_risk",
+    "title": "Position Size Limit Breach",
+    "message": "Position Size Limit has breached emergency threshold: 0.9847 >= 0.2500",
+    "metric_name": "position_weight",
+    "current_value": 0.9846743315473071,
+    "threshold": 0.25,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
   }
 ]
