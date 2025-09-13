@@ -1589,47 +1589,145 @@ with tab6:
         
         st.markdown("---")
         
-        # Chat Interface
-        st.markdown("### 💬 Chat with AGUS 2.0")
+        # Enhanced Chat Interface
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 20px; border-radius: 15px; margin-bottom: 20px;'>
+            <h2 style='color: white; text-align: center; margin: 0;'>
+                🧠 Chat with AGUS 2.0 Hybrid Intelligence
+            </h2>
+            <p style='color: #f0f0f0; text-align: center; margin: 10px 0 0 0; font-size: 14px;'>
+                Advanced AI assistant powered by OpenAI • File creation • Trading analysis • Code generation
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Initialize chat history in session state
         if "agus_chat_history" not in st.session_state:
             st.session_state.agus_chat_history = []
+            # Add welcome message
+            welcome_msg = """🌟 **¡Hola! Soy AGUS 2.0, tu asistente de IA híbrido.**
+
+✨ **Puedo ayudarte con:**
+• 📊 Análisis de mercados y trading
+• 📝 Crear archivos de código (Python, JS, etc.)
+• 🔧 Debugging y solución de problemas  
+• 💡 Estrategias y recomendaciones
+• 📈 Generación de reportes
+
+🎯 **Ejemplos de comandos:**
+• "Crea archivo análisis_btc.py con código de análisis técnico"
+• "¿Qué opinas del mercado actual?"
+• "Genera estrategia de trading para ETH"
+• "Crear archivo config.json para configuración del bot"
+
+¿En qué puedo ayudarte hoy?"""
+            st.session_state.agus_chat_history.append({"role": "assistant", "content": welcome_msg})
         
-        # Chat input
-        user_input = st.chat_input("Ask AGUS anything about trading, markets, or strategies...")
+        # Chat container with better styling
+        chat_container = st.container()
         
+        # Display chat history with enhanced styling
+        with chat_container:
+            for i, message in enumerate(st.session_state.agus_chat_history[-10:]):  # Show last 10 messages
+                with st.chat_message(message["role"]):
+                    if message["role"] == "assistant":
+                        # Enhanced assistant styling
+                        st.markdown(f"""
+                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 10px; 
+                                    border-left: 4px solid #667eea; margin: 5px 0;'>
+                            {message["content"]}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        # User message styling
+                        st.markdown(f"""
+                        <div style='background-color: #e3f2fd; padding: 12px; border-radius: 10px; 
+                                    border-left: 4px solid #2196f3; margin: 5px 0;'>
+                            {message["content"]}
+                        </div>
+                        """, unsafe_allow_html=True)
+        
+        # Chat input with better prompts
+        col1, col2 = st.columns([4, 1])
+        
+        with col1:
+            user_input = st.chat_input(
+                "💬 Pregúntame sobre trading, crea archivos, o pide análisis... (Ej: 'crear archivo bot.py')"
+            )
+        
+        with col2:
+            if st.button("🗑️ Limpiar", help="Limpiar historial de chat"):
+                st.session_state.agus_chat_history = [st.session_state.agus_chat_history[0]]  # Keep welcome message
+                st.rerun()
+        
+        # Process user input
         if user_input:
             # Add user message to history
             st.session_state.agus_chat_history.append({"role": "user", "content": user_input})
             
             # Process with AGUS 2.0
             try:
-                with st.spinner("🧠 AGUS 2.0 is thinking..."):
+                # Show enhanced spinner
+                with st.spinner("🧠 AGUS 2.0 procesando tu solicitud... Esto puede incluir creación de archivos."):
                     if ai_chat is not None and hasattr(ai_chat, 'ask_ai'):
                         response = asyncio.run(ai_chat.ask_ai(user_input))
                     else:
-                        response = f"Echo: {user_input} (AGUS 2.0 not fully initialized)"
+                        response = "⚠️ AGUS 2.0 no está completamente inicializado. Reinicia el dashboard."
                 
                 # Add assistant response to history
                 st.session_state.agus_chat_history.append({"role": "assistant", "content": response})
                 
+                # Auto-scroll to latest message
+                st.rerun()
+                
             except Exception as e:
-                st.error(f"❌ Error communicating with AGUS 2.0: {e}")
+                error_msg = f"""❌ **Error en AGUS 2.0**
+
+Ocurrió un problema al procesar tu solicitud:
+```
+{str(e)}
+```
+
+💡 **Sugerencias:**
+• Reinicia el dashboard si persiste
+• Verifica tu conexión a OpenAI
+• Prueba con una consulta más simple"""
+                
+                st.error("❌ Error communicating with AGUS 2.0")
                 st.session_state.agus_chat_history.append({
                     "role": "assistant", 
-                    "content": f"Sorry, I encountered an error: {e}"
+                    "content": error_msg
                 })
+                st.rerun()
         
-        # Display chat history
-        for message in st.session_state.agus_chat_history[-10:]:  # Show last 10 messages
-            with st.chat_message(message["role"]):
-                st.write(message["content"])
+        # Quick action buttons
+        st.markdown("### 🚀 Acciones Rápidas")
+        col1, col2, col3, col4 = st.columns(4)
         
-        # Clear chat button
-        if st.button("🗑️ Clear Chat History"):
-            st.session_state.agus_chat_history = []
-            st.rerun()
+        with col1:
+            if st.button("📊 Análisis de Mercado"):
+                quick_query = "Dame un análisis completo del mercado actual de Bitcoin y Ethereum"
+                st.session_state.agus_chat_history.append({"role": "user", "content": quick_query})
+                st.rerun()
+        
+        with col2:
+            if st.button("📝 Crear Script"):
+                quick_query = "Crea archivo trading_strategy.py con una estrategia básica de trading"
+                st.session_state.agus_chat_history.append({"role": "user", "content": quick_query})
+                st.rerun()
+        
+        with col3:
+            if st.button("🔧 Diagnóstico"):
+                quick_query = "Haz un diagnóstico completo del sistema de trading y reporta cualquier problema"
+                st.session_state.agus_chat_history.append({"role": "user", "content": quick_query})
+                st.rerun()
+        
+        with col4:
+            if st.button("📈 Estrategia"):
+                quick_query = "Genera una nueva estrategia de trading personalizada basada en las condiciones actuales"
+                st.session_state.agus_chat_history.append({"role": "user", "content": quick_query})
+                st.rerun()
 
 # ===============================
 # TAB 7: 🔍 AI HEALTH - LOCALAI MONITORING

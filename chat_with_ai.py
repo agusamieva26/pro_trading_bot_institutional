@@ -13,6 +13,9 @@ import sys
 from datetime import datetime
 from loguru import logger
 import json
+import os
+import re
+from pathlib import Path
 
 # Configurar logging
 logger.remove()
@@ -74,6 +77,10 @@ class AITradingChat:
         try:
             question_lower = question.lower()
             
+            # Check for file creation requests
+            if any(word in question_lower for word in ["crear archivo", "create file", "generar código", "generate code", "escribir en", "write to", "guardar en", "save to"]):
+                return await self._handle_file_creation(question, context)
+            
             # Determine query type for optimized processing
             if any(word in question_lower for word in ["debug", "error", "fix", "repair", "reparar", "problema", "arreglar", "bug"]):
                 query_type = "debugging"
@@ -107,6 +114,101 @@ class AITradingChat:
             logger.error(f"❌ AGUS 2.0 error: {e}")
             # Fallback to legacy system
             return await self._legacy_response(question, context)
+    
+    async def _handle_file_creation(self, question: str, context: dict = None) -> str:
+        """🔧 Handle file creation requests from AGUS 2.0"""
+        try:
+            # Get AGUS 2.0 response for the file content generation
+            response = await agus_2_analyze_query(
+                query=f"Generate file content for this request: {question}. Provide the complete file content that should be written.",
+                user_id=self.user_id,
+                session_id=self.session_id
+            )
+            
+            # Extract filename from question using regex
+            filename_patterns = [
+                r'archivo\s+"([^"]+)"',
+                r'file\s+"([^"]+)"',
+                r'crear\s+(\S+\.py)',
+                r'create\s+(\S+\.\w+)',
+                r'escribir\s+en\s+(\S+\.\w+)',
+                r'write\s+to\s+(\S+\.\w+)',
+                r'guardar\s+en\s+(\S+\.\w+)',
+                r'save\s+to\s+(\S+\.\w+)',
+                r'(\w+\.\w+)'
+            ]
+            
+            filename = None
+            question_lower = question.lower()
+            
+            for pattern in filename_patterns:
+                match = re.search(pattern, question_lower)
+                if match:
+                    filename = match.group(1)
+                    break
+            
+            # If no filename found, ask AGUS to suggest one
+            if not filename:
+                filename_query = f"Suggest an appropriate filename with extension for: {question}"
+                filename_response = await agus_2_analyze_query(
+                    query=filename_query,
+                    user_id=self.user_id,
+                    session_id=self.session_id
+                )
+                # Extract filename from response (simple approach)
+                suggested_names = re.findall(r'(\w+\.\w+)', filename_response)
+                filename = suggested_names[0] if suggested_names else "agus_generated_file.txt"
+            
+            # Ensure directory exists
+            file_path = Path(filename)
+            if file_path.parent != Path('.'):
+                os.makedirs(file_path.parent, exist_ok=True)
+            
+            # Extract code content from response (remove markdown if present)
+            content = response
+            
+            # Remove markdown code blocks if present
+            code_block_pattern = r'```(?:\w+)?\n?(.*?)\n?```'
+            code_matches = re.findall(code_block_pattern, response, re.DOTALL)
+            if code_matches:
+                content = code_matches[0].strip()
+            
+            # Write file
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            success_message = f"""🎉 **ARCHIVO CREADO EXITOSAMENTE POR AGUS 2.0**
+
+📁 **Archivo**: `{filename}`
+📏 **Tamaño**: {len(content)} caracteres
+⏰ **Creado**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+✨ **Contenido generado por AGUS 2.0:**
+```
+{content[:200]}{'...' if len(content) > 200 else ''}
+```
+
+✅ El archivo ha sido guardado y está listo para usar.
+
+---
+*AGUS 2.0 puede crear, modificar y gestionar archivos de código, configuraciones, documentos y más.*"""
+            
+            return success_message
+            
+        except Exception as e:
+            return f"""❌ **Error creando archivo**
+
+AGUS 2.0 encontró un problema al crear el archivo:
+```
+{str(e)}
+```
+
+💡 **Sugerencias**:
+• Verifica que el nombre del archivo sea válido
+• Asegúrate de tener permisos de escritura
+• Prueba con un nombre más simple como: `mi_archivo.txt`
+
+🔄 **Prueba con**: "crear archivo ejemplo.py con una función simple" """
     
     async def _legacy_response(self, question: str, context: dict = None) -> str:
         """📱 Legacy response system (backward compatibility)"""
