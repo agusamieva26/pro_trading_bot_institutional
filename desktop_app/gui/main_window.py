@@ -13,6 +13,7 @@ import sys
 import os
 import subprocess
 import psutil
+from .modern_chat_interface import ModernChatInterface
 
 # Bot imports
 try:
@@ -203,33 +204,19 @@ class TradingBotGUI:
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
     def create_chat_panel(self, parent):
-        """Create AGUS chat interface"""
-        chat_frame = ttk.LabelFrame(parent, text="🤖 AGUS AI ASSISTANT", padding="10")
+        """Create modern AGUS chat interface"""
+        chat_frame = ttk.LabelFrame(parent, text="🤖 AGUS AI ASSISTANT - Modern Interface", padding="5")
         chat_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 0))
         chat_frame.columnconfigure(0, weight=1)
         chat_frame.rowconfigure(0, weight=1)
         
-        # Chat display
-        self.chat_display = scrolledtext.ScrolledText(chat_frame, height=8, state='disabled',
-                                                     bg='#2d2d2d', fg='white', font=('Consolas', 10))
-        self.chat_display.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        
-        # Input frame
-        input_frame = ttk.Frame(chat_frame)
-        input_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
-        input_frame.columnconfigure(0, weight=1)
-        
-        # Chat input
-        self.chat_input = ttk.Entry(input_frame, font=('Arial', 11))
-        self.chat_input.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
-        self.chat_input.bind('<Return>', self.send_chat_message)
-        
-        # Send button
-        send_btn = ttk.Button(input_frame, text="💬 SEND", command=self.send_chat_message)
-        send_btn.grid(row=0, column=1)
-        
-        # Initial message
-        self.add_chat_message("AGUS", "🚀 AGUS AI Assistant ready! Ask me anything about your trading bot.")
+        # Create modern chat interface
+        try:
+            self.modern_chat = ModernChatInterface(chat_frame)
+        except Exception as e:
+            # Fallback to basic interface
+            print(f"Modern chat interface failed: {e}")
+            self.create_basic_chat_fallback(chat_frame)
 
     def start_bot(self):
         """Start the trading bot"""
@@ -311,18 +298,42 @@ class TradingBotGUI:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to apply settings: {e}")
 
-    def send_chat_message(self, event=None):
-        """Send message to AGUS AI"""
-        message = self.chat_input.get().strip()
-        if not message:
-            return
-            
-        self.chat_input.delete(0, tk.END)
-        self.add_chat_message("USER", message)
+    def create_basic_chat_fallback(self, parent):
+        """Create basic chat interface as fallback"""
+        # Chat display
+        self.chat_display = scrolledtext.ScrolledText(parent, height=8, state='disabled',
+                                                     bg='#2d2d2d', fg='white', font=('Consolas', 10))
+        self.chat_display.pack(fill='both', expand=True, pady=(0, 10))
         
-        # Process with AGUS in separate thread
-        thread = threading.Thread(target=self.process_agus_message, args=(message,), daemon=True)
-        thread.start()
+        # Input frame
+        input_frame = ttk.Frame(parent)
+        input_frame.pack(fill='x')
+        
+        # Chat input
+        self.chat_input = ttk.Entry(input_frame, font=('Arial', 11))
+        self.chat_input.pack(side='left', fill='x', expand=True, padx=(0, 10))
+        self.chat_input.bind('<Return>', self.send_chat_message)
+        
+        # Send button
+        send_btn = ttk.Button(input_frame, text="💬 SEND", command=self.send_chat_message)
+        send_btn.pack(side='right')
+        
+        # Initial message
+        self.add_chat_message("AGUS", "🚀 AGUS AI Assistant ready! Ask me anything about your trading bot.")
+    
+    def send_chat_message(self, event=None):
+        """Send message to AGUS AI (fallback method)"""
+        if hasattr(self, 'chat_input'):
+            message = self.chat_input.get().strip()
+            if not message:
+                return
+                
+            self.chat_input.delete(0, tk.END)
+            self.add_chat_message("USER", message)
+            
+            # Process with AGUS in separate thread
+            thread = threading.Thread(target=self.process_agus_message, args=(message,), daemon=True)
+            thread.start()
 
     def process_agus_message(self, message):
         """Process message with AGUS AI"""
@@ -343,15 +354,16 @@ class TradingBotGUI:
             self.root.after(0, lambda: self.add_chat_message("AGUS", error_msg))
 
     def add_chat_message(self, sender, message):
-        """Add message to chat display"""
-        self.chat_display.configure(state='normal')
-        
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        formatted_msg = f"[{timestamp}] {sender}: {message}\n\n"
-        
-        self.chat_display.insert(tk.END, formatted_msg)
-        self.chat_display.configure(state='disabled')
-        self.chat_display.see(tk.END)
+        """Add message to chat display (fallback method)"""
+        if hasattr(self, 'chat_display'):
+            self.chat_display.configure(state='normal')
+            
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            formatted_msg = f"[{timestamp}] {sender}: {message}\n\n"
+            
+            self.chat_display.insert(tk.END, formatted_msg)
+            self.chat_display.configure(state='disabled')
+            self.chat_display.see(tk.END)
 
     def update_status(self, status_text, color):
         """Update bot status display"""
