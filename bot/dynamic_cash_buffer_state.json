@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T11:12:37.747557",
+  "last_update": "2025-09-13T11:30:25.434802",
   "volatility_history": [
     {
       "timestamp": "2025-09-13T11:00:49.825468",
@@ -91,6 +91,190 @@
     },
     {
       "timestamp": "2025-09-13T11:12:37.455806",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:19.802484",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:22.643950",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:25.439844",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:28.515163",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:31.476266",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:34.382024",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:37.244042",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:45.789354",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:49.538791",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:16:52.946744",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:17:06.034175",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:20:46.994857",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:20:49.869321",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:20:52.659006",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:20:55.561948",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:20:58.457517",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:01.798814",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:08.463638",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:11.468554",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:15.207149",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:18.924615",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:22.176536",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:21:35.073615",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:17.419186",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:20.160584",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:22.960728",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:26.329527",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:29.348093",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:32.656215",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:39.167647",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:42.638083",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:45.452190",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:48.452433",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:25:51.417283",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:26:05.524074",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:29:51.509707",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:29:54.347002",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:29:57.400977",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:03.565102",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:06.457090",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:10.374064",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:13.343230",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:16.562936",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:19.446515",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:22.254848",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T11:30:25.149608",
       "value": 0.01839670816051316
     }
   ],
@@ -229,6 +413,282 @@
     },
     {
       "timestamp": "2025-09-13T11:12:37.554629",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:19.896655",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:22.748257",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:25.535256",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:28.606035",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:31.573439",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:34.479923",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:37.340400",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:45.880773",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:49.638776",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:16:53.045437",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:17:06.126244",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:20:47.089343",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:20:49.969406",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:20:52.752809",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:20:55.652351",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:20:58.549185",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:01.893777",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:08.564400",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:11.561211",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:15.309131",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:19.019730",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:22.269437",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:21:35.167800",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:17.516911",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:20.254295",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:23.053798",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:26.421362",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:29.443873",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:32.753223",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:39.264894",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:42.734944",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:45.551050",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:48.546867",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:25:51.511102",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:26:05.618833",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:29:51.607037",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:29:54.442277",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:29:57.496242",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:03.659791",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:06.549474",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:10.469149",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:13.442923",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:16.659559",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:19.539653",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:22.347365",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T11:30:25.242381",
       "daily_pnl": 0.0,
       "weekly_pnl": 0.0,
       "normalized": 0.0
@@ -687,6 +1147,880 @@
           "performance": -0.0,
           "positions": 0.015,
           "liquidity": -0.009090028741670229
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:20.087473",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:22.941549",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:25.746901",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:28.796204",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:31.768765",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:34.680994",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:37.527598",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:46.075012",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.4,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.012,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:49.829003",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.4,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.012,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:16:53.236217",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.4,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.012,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:17:06.313099",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:20:47.288253",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:20:50.167530",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:20:52.944741",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:20:55.842255",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:20:58.745947",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:02.095287",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:08.765590",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:11.754660",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:15.537879",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:19.223257",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:22.474500",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:21:35.363845",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:17.722286",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:20.451595",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:23.246360",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:26.614566",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:29.643602",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:32.945908",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:39.457861",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:42.921244",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:45.739892",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:48.736818",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:25:51.699854",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:26:05.812482",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:29:51.805419",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:29:54.630304",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:29:57.693701",
+      "buffer": 0.03647173665284106,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 0.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": 0.01
+        },
+        "final_buffer": 0.03647173665284106
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:03.856748",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:06.754158",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:10.662429",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:13.642444",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:16.850005",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:19.732842",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:22.543504",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T11:30:25.434724",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
         },
         "final_buffer": 0.02
       }

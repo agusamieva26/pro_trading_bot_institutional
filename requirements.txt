@@ -35,3 +35,12 @@ beautifulsoup4
 requests
 torch
 transformers
+aiohttp
+joblib
+psutil
+scikit-learn
+aiohttp
+beautifulsoup4
+html5lib
+lxml
+trafilatura

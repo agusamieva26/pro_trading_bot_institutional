@@ -22,6 +22,7 @@ class Settings(BaseModel):
     telegram_enabled: bool = Field(default_factory=lambda: os.getenv("TELEGRAM_ENABLED","true").lower() in ("1","true","yes"))
     telegram_bot_token: str = Field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN",""))
     telegram_chat_id: str = Field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID",""))
+    openai_api_key: str = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY",""))  # 🤖 IA REAL INTEGRATION
     bar_timeframe: str = Field(default_factory=lambda: os.getenv("BAR_TIMEFRAME","1Min"))  # ⚡ SCALPING OPTIMIZADO
     initial_equity: float = 30000.0  # Valor fijo
     risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.013")))  # AGRESIVO: 1.3% (rotación rápida)

@@ -30,6 +30,8 @@ from .portfolio_rebalancer import portfolio_rebalancer
 from .dynamic_config import dynamic_config_manager
 from .model_selection import advanced_model_selector
 from .advanced_features import advanced_feature_generator
+from .ai_system_simple import get_ai_adjusted_signal, get_ai_system_status
+from .ai_news_simple import get_ai_sentiment_adjustment  # 🤖 AI HÍBRIDA REAL
 from .util import logger
 import datetime as dt
 import pytz
@@ -438,8 +440,69 @@ def run_once(state: BotState, clf):
     # 🕐 MEJORA MULTI-TIMEFRAME ULTRA-RÁPIDA: 6 workers para velocidad máxima
     mtf_enhanced_signals = enhance_signals_with_multi_tf(base_signals, clf)
     
-    # 📊 INTEGRACIÓN DE SENTIMENT: Ajustar por Fear & Greed Index
-    sentiment_enhanced_signals = sentiment_integrator.enhance_signals_with_sentiment(mtf_enhanced_signals)
+    # 🧠 AI SYSTEM REAL: Sistema simplificado que REALMENTE funciona
+    ai_enhanced_signals = []
+    ai_integration_enabled = True  # Flag para activar/desactivar AI system
+    
+    if ai_integration_enabled:
+        try:
+            # 🤖 SISTEMA AI REAL - Log de inicio
+            logger.info("🧠 INICIANDO ANÁLISIS AI REAL...")
+            ai_status = get_ai_system_status()
+            logger.info(f"🤖 AI Status: OpenAI={ai_status['openai_available']}, "
+                       f"Cache={len(ai_status['cache_symbols'])}, Sources={ai_status['news_sources']}")
+            
+            # Procesar cada señal con ajuste AI REAL
+            ai_adjustments_made = 0
+            for signal in mtf_enhanced_signals:
+                symbol = signal.get('symbol', '')
+                original_score = signal.get('score', 0.0)
+                
+                # Solo ajustar señales significativas 
+                if symbol and abs(original_score) > 0.05:
+                    try:
+                        # 🧠 LLAMADA REAL AL SISTEMA AI
+                        adjusted_score, ai_recommendation = get_ai_adjusted_signal(symbol, original_score)
+                        
+                        # Verificar si hubo ajuste significativo
+                        if abs(adjusted_score - original_score) > 0.01:
+                            ai_adjustments_made += 1
+                            adjustment_pct = ((adjusted_score / original_score) - 1) * 100 if original_score != 0 else 0
+                            
+                            # LOG VISIBLE del ajuste
+                            logger.info(f"🧠 AI AJUSTE {symbol}: {original_score:.3f} → {adjusted_score:.3f} "
+                                       f"({adjustment_pct:+.1f}%) | {ai_recommendation[:50]}")
+                            
+                            # Actualizar señal
+                            signal['ai_original_score'] = original_score
+                            signal['score'] = adjusted_score
+                            signal['ai_recommendation'] = ai_recommendation
+                            signal['ai_adjusted'] = True
+                        else:
+                            # Sin ajuste significativo
+                            signal['ai_recommendation'] = ai_recommendation
+                            signal['ai_adjusted'] = False
+                            
+                    except Exception as ai_error:
+                        logger.error(f"❌ Error AI para {symbol}: {ai_error}")
+                        signal['ai_recommendation'] = f"AI Error: {str(ai_error)[:30]}"
+                        signal['ai_adjusted'] = False
+                
+                ai_enhanced_signals.append(signal)
+            
+            # 🧠 RESUMEN AI VISIBLE EN LOGS
+            logger.info(f"🧠 AI COMPLETADO: {ai_adjustments_made}/{len(mtf_enhanced_signals)} señales ajustadas")
+                
+        except Exception as ai_error:
+            logger.warning(f"🤖 AI integration warning: {ai_error}")
+            # Fallback: usar señales originales
+            ai_enhanced_signals = mtf_enhanced_signals
+    else:
+        # AI deshabilitado: usar señales clásicas
+        ai_enhanced_signals = mtf_enhanced_signals
+    
+    # 📊 INTEGRACIÓN DE SENTIMENT CLÁSICA: Ajustar por Fear & Greed Index (como backup)
+    sentiment_enhanced_signals = sentiment_integrator.enhance_signals_with_sentiment(ai_enhanced_signals)
     
     # 🔄 REBALANCEO DE PORTFOLIO: Ajustar por diversificación
     portfolio_analysis = portfolio_rebalancer.analyze_current_portfolio(
@@ -510,6 +573,19 @@ def run_once(state: BotState, clf):
                 sig = combined_signal
         except Exception as e:
             logger.debug(f"⚠️ Error en predicción ML para {symbol}: {e}")
+        
+        # 🧠 IA HÍBRIDA REAL: Aplicar ajuste de sentiment con noticias y OpenAI
+        try:
+            ai_adjustment = get_ai_sentiment_adjustment(symbol, sig)
+            if ai_adjustment != 0.0:
+                original_sig = sig
+                sig = sig + ai_adjustment
+                sig = max(-1.0, min(1.0, sig))  # Mantener en rango válido
+                logger.info(f"🤖 AI Analysis: {symbol} sentiment {ai_adjustment:+.3f} applied (signal: {original_sig:+.3f} → {sig:+.3f})")
+            else:
+                logger.debug(f"🤖 AI Neutral: {symbol} no sentiment adjustment needed")
+        except Exception as e:
+            logger.warning(f"⚠️ AI Error para {symbol}: {e}")
         
         # Usar sizing avanzado
         shares = advanced_sizing["shares"]
