@@ -1,11 +1,11 @@
 {
-  "last_update": "2025-09-13T17:54:16.455513",
+  "last_update": "2025-09-13T17:55:29.168016",
   "risk_budget": {},
   "active_alerts_count": 4,
   "compliance_status": {
     "overall_status": "compliant",
     "violations": [],
     "warnings": [],
-    "last_check": "2025-09-13T17:54:16.455493"
+    "last_check": "2025-09-13T17:55:29.168002"
   }
 }
