@@ -5,7 +5,7 @@ integrations = ["python_openai:1.0.0", "web_scraper:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["bash", "cargo", "gcc", "glibcLocales", "libiconv", "libxcrypt", "ocl-icd", "opencl-headers", "pkg-config", "rustc", "unzip", "xcodebuild", "xsimd", "zlib"]
+packages = ["bash", "cargo", "gcc", "glibcLocales", "libiconv", "libxcrypt", "ocl-icd", "opencl-headers", "pkg-config", "rustc", "unzip", "xcodebuild", "xsimd", "zlib", "go"]
 
 [workflows]
 runButton = "Project"

@@ -267,27 +267,27 @@ class IntelligentRoutingEngine:
         """Initialize routing decision rules"""
         return {
             QueryComplexity.TRIVIAL: {
-                "preferred": [AIProvider.FALLBACK_FREE, AIProvider.LOCAL_AI],
-                "max_cost": 0.001,
-                "max_time": 2.0
-            },
-            QueryComplexity.SIMPLE: {
-                "preferred": [AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
-                "max_cost": 0.01,
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
+                "max_cost": 0.01,  # Increased to allow OpenAI usage
                 "max_time": 5.0
             },
+            QueryComplexity.SIMPLE: {
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
+                "max_cost": 0.02,
+                "max_time": 8.0
+            },
             QueryComplexity.MODERATE: {
-                "preferred": [AIProvider.LOCAL_AI, AIProvider.AGUS_CLOUD],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
                 "max_cost": 0.05,
                 "max_time": 10.0
             },
             QueryComplexity.COMPLEX: {
-                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.HYBRID_FUSION],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.HYBRID_FUSION, AIProvider.LOCAL_AI],
                 "max_cost": 0.20,
                 "max_time": 30.0
             },
             QueryComplexity.CRITICAL: {
-                "preferred": [AIProvider.HYBRID_FUSION, AIProvider.AGUS_CLOUD],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.HYBRID_FUSION, AIProvider.LOCAL_AI],
                 "max_cost": 1.00,
                 "max_time": 60.0
             }
