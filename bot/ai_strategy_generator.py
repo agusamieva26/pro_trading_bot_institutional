@@ -29,13 +29,43 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 from loguru import logger
-from sklearn.metrics import sharpe_score, accuracy_score
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score, ParameterGrid
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import warnings
 warnings.filterwarnings("ignore")
+
+def calculate_sharpe_ratio(returns: np.ndarray, risk_free_rate: float = 0.0) -> float:
+    """
+    Calculate Sharpe ratio with numerical guards
+    
+    Args:
+        returns: Array of returns
+        risk_free_rate: Risk-free rate (default 0.0)
+    
+    Returns:
+        Sharpe ratio, with proper handling of edge cases
+    """
+    if len(returns) == 0:
+        return 0.0
+    
+    excess_returns = returns - risk_free_rate
+    mean_excess = np.mean(excess_returns)
+    std_excess = np.std(excess_returns, ddof=1)
+    
+    # Handle edge cases
+    if std_excess == 0 or np.isnan(std_excess) or np.isinf(std_excess):
+        return 0.0 if mean_excess <= 0 else np.inf
+    
+    sharpe = mean_excess / std_excess
+    
+    # Return 0 for invalid results
+    if np.isnan(sharpe) or np.isinf(sharpe):
+        return 0.0
+    
+    return float(sharpe)
 
 # Internal imports
 try:

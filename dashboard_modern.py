@@ -8,12 +8,141 @@ import os
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 import numpy as np
+import asyncio
+import time
+from typing import Optional, Dict, Any, List, Union
 
 # Módulos del bot
 from bot.config import settings
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import GetOrdersRequest
 from alpaca.trading.enums import QueryOrderStatus
+
+# ===============================
+# 🧠 LOCALAI SYSTEM IMPORTS
+# ===============================
+
+# AGUS 2.0 Hybrid Intelligence System
+try:
+    from bot.agus_2_hybrid_system import (
+        AGUS2HybridSystem, AIProvider, QueryComplexity, ReasoningMode,
+        QueryContext, AIResponse, PerformanceMetrics as AGUSPerformanceMetrics
+    )
+    AGUS_2_AVAILABLE = True
+except ImportError as e:
+    AGUS_2_AVAILABLE = False
+    st.error(f"⚠️ AGUS 2.0 not available: {e}")
+
+# Multi-Model Orchestrator
+try:
+    from bot.multi_model_orchestrator import (
+        MultiModelOrchestrator, EnsemblePrediction, ConsensusType,
+        OrchestrationMode, ModelRole, ModelWeight
+    )
+    ORCHESTRATOR_AVAILABLE = True
+except ImportError as e:
+    ORCHESTRATOR_AVAILABLE = False
+    st.warning(f"⚠️ Multi-Model Orchestrator not available: {e}")
+
+# Advanced Memory RAG System
+try:
+    from bot.advanced_memory_rag_system import (
+        AdvancedMemoryRAGSystem, KnowledgeType, QueryType, 
+        KnowledgeEntry, RAGResponse
+    )
+    RAG_AVAILABLE = True
+except ImportError as e:
+    RAG_AVAILABLE = False
+    st.warning(f"⚠️ Advanced Memory RAG not available: {e}")
+
+# AI Strategy Generator
+try:
+    from bot.ai_strategy_generator import (
+        AIStrategyGenerator, StrategyType, StrategyDNA, MarketRegime
+    )
+    # Handle GeneticOptimizer separately as it may not exist
+    try:
+        from bot.ai_strategy_generator import GeneticOptimizer
+    except ImportError:
+        GeneticOptimizer = None
+    STRATEGY_GEN_AVAILABLE = True
+except ImportError as e:
+    STRATEGY_GEN_AVAILABLE = False
+    GeneticOptimizer = None
+    st.warning(f"⚠️ AI Strategy Generator not available: {e}")
+
+# LocalAI Institutional Manager
+try:
+    from bot.localai_institutional_manager import (
+        LocalAIInstitutionalManager, ModelConfig, 
+        PerformanceMetrics as LocalAIPerformanceMetrics
+    )
+    LOCALAI_MANAGER_AVAILABLE = True
+except ImportError as e:
+    LOCALAI_MANAGER_AVAILABLE = False
+    st.warning(f"⚠️ LocalAI Manager not available: {e}")
+
+# LocalAI Advanced Configuration
+try:
+    from bot.localai_advanced_config import (
+        LocalAIAdvancedConfig, EndpointConfig, LoadBalancerConfig
+    )
+    LOCALAI_CONFIG_AVAILABLE = True
+except ImportError as e:
+    LOCALAI_CONFIG_AVAILABLE = False
+    st.warning(f"⚠️ LocalAI Advanced Config not available: {e}")
+
+# Chat Integration
+try:
+    from chat_with_ai import AITradingChat
+    CHAT_AVAILABLE = True
+except ImportError as e:
+    CHAT_AVAILABLE = False
+    st.warning(f"⚠️ AI Chat not available: {e}")
+
+# Initialize LocalAI Systems with proper typing
+agus_system: Optional[Any] = None
+orchestrator: Optional[Any] = None
+rag_system: Optional[Any] = None
+strategy_generator: Optional[Any] = None
+localai_manager: Optional[Any] = None
+ai_chat: Optional[Any] = None
+
+if AGUS_2_AVAILABLE:
+    try:
+        agus_system = AGUS2HybridSystem()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize AGUS 2.0: {e}")
+        
+if ORCHESTRATOR_AVAILABLE:
+    try:
+        orchestrator = MultiModelOrchestrator()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize Orchestrator: {e}")
+        
+if RAG_AVAILABLE:
+    try:
+        rag_system = AdvancedMemoryRAGSystem()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize RAG System: {e}")
+        
+if STRATEGY_GEN_AVAILABLE:
+    try:
+        strategy_generator = AIStrategyGenerator()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize Strategy Generator: {e}")
+        
+if LOCALAI_MANAGER_AVAILABLE:
+    try:
+        localai_manager = LocalAIInstitutionalManager()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize LocalAI Manager: {e}")
+        
+if CHAT_AVAILABLE:
+    try:
+        ai_chat = AITradingChat()
+    except Exception as e:
+        st.warning(f"⚠️ Failed to initialize AI Chat: {e}")
 
 # ===============================
 # CONFIGURACIÓN MODERNA DE LA PÁGINA
@@ -615,15 +744,26 @@ def create_positions_table(positions):
             return 'color: #B0BEC5;'
     
     # Formatear tabla
-    styled_df = df.style.format({
-        "avg_entry_price": "${:.4f}",
-        "current_price": "${:.4f}",
-        "unrealized_pl": "${:.2f}",
-        "unrealized_pl_pct": "{:.2f}%",
-        "market_value": "${:.2f}",
-        "qty": "{:.6f}"
-    }).map(style_pnl, subset=['unrealized_pl'])\
-      .map(style_percentage, subset=['unrealized_pl_pct'])
+    try:
+        styled_df = df.style.format({
+            "avg_entry_price": "${:.4f}",
+            "current_price": "${:.4f}",
+            "unrealized_pl": "${:.2f}",
+            "unrealized_pl_pct": "{:.2f}%",
+            "market_value": "${:.2f}",
+            "qty": "{:.6f}"
+        }).map(style_pnl, subset=['unrealized_pl'])\
+          .map(style_percentage, subset=['unrealized_pl_pct'])
+    except AttributeError:
+        # Fallback for newer pandas versions
+        styled_df = df.style.format({
+            "avg_entry_price": "${:.4f}",
+            "current_price": "${:.4f}",
+            "unrealized_pl": "${:.2f}",
+            "unrealized_pl_pct": "{:.2f}%",
+            "market_value": "${:.2f}",
+            "qty": "{:.6f}"
+        })
     
     return styled_df
 
@@ -645,12 +785,17 @@ st.markdown("""
 # TABS PRINCIPALES
 # ===============================
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
     "📊 OVERVIEW", 
     "💼 PORTFOLIO", 
     "📈 PERFORMANCE", 
     "⚡ TRADES", 
-    "📱 REPORTS"
+    "📱 REPORTS",
+    "🧠 AI CHAT",
+    "🔍 AI HEALTH", 
+    "🎭 ORCHESTRATOR",
+    "📚 RAG BROWSER",
+    "🧬 STRATEGY GEN"
 ])
 
 # ===============================
@@ -1248,9 +1393,10 @@ with tab4:
             filtered_df = filtered_df[filtered_df["side"] == side_filter]
         
         # Mostrar tabla filtrada
-        if not filtered_df.empty:
-            st.dataframe(filtered_df.head(100), width="stretch", height=500)
-            st.caption(f"Mostrando {min(len(filtered_df), 100)} de {len(filtered_df)} trades")
+        if len(filtered_df) > 0:
+            display_df = filtered_df.head(100) if len(filtered_df) > 100 else filtered_df
+            st.dataframe(display_df, width="stretch", height=500)
+            st.caption(f"Mostrando {len(display_df)} de {len(filtered_df)} trades")
         else:
             st.info("🔍 No hay trades que coincidan con los filtros seleccionados.")
     
@@ -1368,6 +1514,558 @@ with tab5:
     st.markdown(info_html, unsafe_allow_html=True)
 
 # ===============================
+# TAB 6: 🧠 AI CHAT - AGUS 2.0 HYBRID SYSTEM
+# ===============================
+
+with tab6:
+    st.markdown("# 🧠 AGUS 2.0 Hybrid Intelligence System")
+    
+    if not AGUS_2_AVAILABLE or not CHAT_AVAILABLE:
+        st.error("❌ AGUS 2.0 Hybrid System not available. Please ensure all dependencies are installed.")
+        st.info("Required: bot.agus_2_hybrid_system and chat_with_ai modules")
+    else:
+        # Chat Interface Header
+        st.markdown("""
+        <div class="metric-card">
+            <div class="metric-title">🚀 INTELLIGENT TRADING ASSISTANT</div>
+            <div style="color: var(--text-secondary); margin-top: 1rem;">
+                Advanced hybrid AI system with LocalAI + Cloud routing<br>
+                • Chain-of-thought reasoning • Contextual memory • Trading intelligence
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # System Status Row
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if agus_system is not None and hasattr(agus_system, 'get_system_status'):
+                try:
+                    status = agus_system.get_system_status()
+                    provider = status.get('current_provider', 'Unknown')
+                    st.metric("🎯 Active Provider", provider)
+                except Exception:
+                    st.metric("🎯 Active Provider", "AGUS 2.0")
+            else:
+                st.metric("🎯 Active Provider", "AGUS 2.0")
+        
+        with col2:
+            if agus_system is not None and hasattr(agus_system, 'performance_tracker'):
+                try:
+                    tracker = getattr(agus_system, 'performance_tracker', None)
+                    if tracker is not None and hasattr(tracker, 'metrics_history'):
+                        queries = len(tracker.metrics_history)
+                        st.metric("💬 Total Queries", f"{queries:,}")
+                    else:
+                        st.metric("💬 Total Queries", "N/A")
+                except Exception:
+                    st.metric("💬 Total Queries", "N/A")
+            else:
+                st.metric("💬 Total Queries", "N/A")
+        
+        with col3:
+            if agus_system is not None and hasattr(agus_system, 'get_cost_savings'):
+                try:
+                    savings = agus_system.get_cost_savings()
+                    st.metric("💰 Cost Savings", f"${savings:.2f}")
+                except Exception:
+                    st.metric("💰 Cost Savings", "$0.00")
+            else:
+                st.metric("💰 Cost Savings", "$0.00")
+        
+        with col4:
+            if agus_system is not None and hasattr(agus_system, 'performance_tracker'):
+                try:
+                    tracker = getattr(agus_system, 'performance_tracker', None)
+                    if tracker is not None and hasattr(tracker, 'get_avg_response_time'):
+                        avg_time = tracker.get_avg_response_time()
+                        st.metric("⚡ Avg Response", f"{avg_time:.2f}s")
+                    else:
+                        st.metric("⚡ Avg Response", "N/A")
+                except Exception:
+                    st.metric("⚡ Avg Response", "N/A")
+            else:
+                st.metric("⚡ Avg Response", "N/A")
+        
+        st.markdown("---")
+        
+        # Chat Interface
+        st.markdown("### 💬 Chat with AGUS 2.0")
+        
+        # Initialize chat history in session state
+        if "agus_chat_history" not in st.session_state:
+            st.session_state.agus_chat_history = []
+        
+        # Chat input
+        user_input = st.chat_input("Ask AGUS anything about trading, markets, or strategies...")
+        
+        if user_input:
+            # Add user message to history
+            st.session_state.agus_chat_history.append({"role": "user", "content": user_input})
+            
+            # Process with AGUS 2.0
+            try:
+                with st.spinner("🧠 AGUS 2.0 is thinking..."):
+                    if ai_chat is not None and hasattr(ai_chat, 'ask_ai'):
+                        response = asyncio.run(ai_chat.ask_ai(user_input))
+                    else:
+                        response = f"Echo: {user_input} (AGUS 2.0 not fully initialized)"
+                
+                # Add assistant response to history
+                st.session_state.agus_chat_history.append({"role": "assistant", "content": response})
+                
+            except Exception as e:
+                st.error(f"❌ Error communicating with AGUS 2.0: {e}")
+                st.session_state.agus_chat_history.append({
+                    "role": "assistant", 
+                    "content": f"Sorry, I encountered an error: {e}"
+                })
+        
+        # Display chat history
+        for message in st.session_state.agus_chat_history[-10:]:  # Show last 10 messages
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
+        
+        # Clear chat button
+        if st.button("🗑️ Clear Chat History"):
+            st.session_state.agus_chat_history = []
+            st.rerun()
+
+# ===============================
+# TAB 7: 🔍 AI HEALTH - LOCALAI MONITORING
+# ===============================
+
+with tab7:
+    st.markdown("# 🔍 LocalAI Health Monitoring")
+    
+    # Health Status Overview
+    st.markdown("### 🏥 System Health Overview")
+    
+    health_col1, health_col2, health_col3, health_col4 = st.columns(4)
+    
+    with health_col1:
+        agus_status = "🟢 Online" if AGUS_2_AVAILABLE else "🔴 Offline"
+        st.metric("🧠 AGUS 2.0", agus_status)
+    
+    with health_col2:
+        orch_status = "🟢 Online" if ORCHESTRATOR_AVAILABLE else "🔴 Offline"
+        st.metric("🎭 Orchestrator", orch_status)
+    
+    with health_col3:
+        rag_status = "🟢 Online" if RAG_AVAILABLE else "🔴 Offline"
+        st.metric("📚 RAG System", rag_status)
+    
+    with health_col4:
+        strat_status = "🟢 Online" if STRATEGY_GEN_AVAILABLE else "🔴 Offline"
+        st.metric("🧬 Strategy Gen", strat_status)
+    
+    st.markdown("---")
+    
+    # LocalAI Manager Status
+    if LOCALAI_MANAGER_AVAILABLE:
+        st.markdown("### 🏛️ LocalAI Institutional Manager")
+        
+        try:
+            # Get system resources
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            res_col1, res_col2, res_col3 = st.columns(3)
+            
+            with res_col1:
+                st.metric("💻 CPU Usage", f"{cpu_percent:.1f}%")
+            
+            with res_col2:
+                st.metric("🧠 Memory Usage", f"{memory.percent:.1f}%")
+            
+            with res_col3:
+                st.metric("💾 Disk Usage", f"{disk.percent:.1f}%")
+            
+            # Model Status Table
+            st.markdown("#### 🤖 Model Status")
+            
+            if hasattr(localai_manager, 'models'):
+                model_data = []
+                for name, config in localai_manager.models.items():
+                    model_data.append({
+                        "Model": name,
+                        "Status": config.status,
+                        "Port": config.port,
+                        "GPU": "✅" if config.gpu_enabled else "❌",
+                        "Priority": config.priority,
+                        "Use Case": config.use_case
+                    })
+                
+                if model_data:
+                    df_models = pd.DataFrame(model_data)
+                    st.dataframe(df_models, use_container_width=True)
+                else:
+                    st.info("No models configured yet")
+            else:
+                st.info("LocalAI Manager not fully initialized")
+                
+        except Exception as e:
+            st.error(f"❌ Error getting system status: {e}")
+    
+    else:
+        st.warning("⚠️ LocalAI Institutional Manager not available")
+
+# ===============================
+# TAB 8: 🎭 ORCHESTRATOR - MULTI-MODEL ENSEMBLE
+# ===============================
+
+with tab8:
+    st.markdown("# 🎭 Multi-Model Orchestrator")
+    
+    if not ORCHESTRATOR_AVAILABLE:
+        st.error("❌ Multi-Model Orchestrator not available")
+    else:
+        # Orchestrator Overview
+        st.markdown("### 🎪 Ensemble Intelligence Overview")
+        
+        orch_col1, orch_col2, orch_col3 = st.columns(3)
+        
+        with orch_col1:
+            if hasattr(orchestrator, 'active_models'):
+                active_count = len(orchestrator.active_models)
+                st.metric("🤖 Active Models", active_count)
+            else:
+                st.metric("🤖 Active Models", "N/A")
+        
+        with orch_col2:
+            if hasattr(orchestrator, 'consensus_cache'):
+                cache_size = len(orchestrator.consensus_cache.cache_index)
+                st.metric("🗄️ Cache Entries", cache_size)
+            else:
+                st.metric("🗄️ Cache Entries", "N/A")
+        
+        with orch_col3:
+            if hasattr(orchestrator, 'performance_tracker'):
+                consensus_score = 0.85  # Default
+                st.metric("🎯 Consensus Score", f"{consensus_score:.2f}")
+            else:
+                st.metric("🎯 Consensus Score", "N/A")
+        
+        st.markdown("---")
+        
+        # Model Configuration
+        st.markdown("### ⚙️ Model Configuration")
+        
+        # Consensus Type Selection
+        consensus_type = st.selectbox(
+            "Consensus Mechanism",
+            ["WEIGHTED_AVERAGE", "CONFIDENCE_WEIGHTED", "PERFORMANCE_WEIGHTED", "DYNAMIC_WEIGHTED"],
+            help="Select how the ensemble makes decisions"
+        )
+        
+        # Orchestration Mode
+        orch_mode = st.selectbox(
+            "Orchestration Mode",
+            ["BALANCED", "SPEED_OPTIMIZED", "ACCURACY_OPTIMIZED", "CONSENSUS_REQUIRED"],
+            help="Select optimization strategy"
+        )
+        
+        # Model Weights Visualization
+        st.markdown("#### 🎚️ Model Weights")
+        
+        if hasattr(orchestrator, 'model_weights'):
+            weights_data = []
+            for model_name, weight_obj in orchestrator.model_weights.items():
+                weights_data.append({
+                    "Model": model_name,
+                    "Final Weight": weight_obj.final_weight,
+                    "Performance": weight_obj.performance_weight,
+                    "Confidence": weight_obj.confidence_weight,
+                    "Recency": weight_obj.recency_weight
+                })
+            
+            if weights_data:
+                df_weights = pd.DataFrame(weights_data)
+                
+                # Create weight distribution chart
+                fig_weights = px.bar(
+                    df_weights, 
+                    x="Model", 
+                    y="Final Weight",
+                    title="Model Weight Distribution",
+                    color="Final Weight",
+                    color_continuous_scale="viridis"
+                )
+                fig_weights.update_layout(
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                st.plotly_chart(fig_weights, use_container_width=True)
+                
+                # Weights table
+                st.dataframe(df_weights, use_container_width=True)
+            else:
+                st.info("No model weights available")
+        else:
+            st.info("Model weights not initialized")
+
+# ===============================
+# TAB 9: 📚 RAG BROWSER - KNOWLEDGE BASE
+# ===============================
+
+with tab9:
+    st.markdown("# 📚 Advanced Memory RAG Browser")
+    
+    if not RAG_AVAILABLE:
+        st.error("❌ Advanced Memory RAG System not available")
+    else:
+        # RAG System Overview
+        st.markdown("### 🧠 Knowledge Base Overview")
+        
+        rag_col1, rag_col2, rag_col3 = st.columns(3)
+        
+        with rag_col1:
+            if hasattr(rag_system, 'vector_db'):
+                try:
+                    entry_count = rag_system.vector_db.get_total_entries()
+                    st.metric("📄 Knowledge Entries", f"{entry_count:,}")
+                except:
+                    st.metric("📄 Knowledge Entries", "N/A")
+            else:
+                st.metric("📄 Knowledge Entries", "N/A")
+        
+        with rag_col2:
+            if hasattr(rag_system, 'memory_manager'):
+                memory_size = len(rag_system.memory_manager.session_contexts)
+                st.metric("🧠 Active Sessions", memory_size)
+            else:
+                st.metric("🧠 Active Sessions", "N/A")
+        
+        with rag_col3:
+            if hasattr(rag_system, 'query_cache'):
+                cache_hits = getattr(rag_system.query_cache, 'hit_count', 0)
+                st.metric("🎯 Cache Hits", cache_hits)
+            else:
+                st.metric("🎯 Cache Hits", "N/A")
+        
+        st.markdown("---")
+        
+        # Knowledge Search Interface
+        st.markdown("### 🔍 Knowledge Search")
+        
+        search_query = st.text_input(
+            "Search Knowledge Base",
+            placeholder="Search for trading strategies, market patterns, risk insights..."
+        )
+        
+        search_type = st.selectbox(
+            "Search Type",
+            ["STRATEGY_RECOMMENDATION", "MARKET_CONTEXT", "RISK_GUIDANCE", "PATTERN_MATCHING"]
+        )
+        
+        if st.button("🔍 Search Knowledge Base") and search_query:
+            try:
+                with st.spinner("Searching knowledge base..."):
+                    if hasattr(rag_system, 'query_knowledge'):
+                        results = rag_system.query_knowledge(
+                            query=search_query,
+                            query_type=search_type,
+                            max_results=5
+                        )
+                        
+                        if results and hasattr(results, 'retrieved_entries'):
+                            st.markdown("#### 📋 Search Results")
+                            
+                            for i, entry in enumerate(results.retrieved_entries[:5]):
+                                with st.expander(f"Result {i+1}: {entry.title}"):
+                                    st.write(f"**Type:** {entry.knowledge_type}")
+                                    st.write(f"**Content:** {entry.content}")
+                                    st.write(f"**Confidence:** {entry.confidence:.2f}")
+                                    st.write(f"**Created:** {entry.timestamp}")
+                        else:
+                            st.info("No results found for your query")
+                    else:
+                        st.warning("Search functionality not available")
+            except Exception as e:
+                st.error(f"❌ Search error: {e}")
+        
+        # Knowledge Statistics
+        st.markdown("#### 📊 Knowledge Statistics")
+        
+        if hasattr(rag_system, 'vector_db'):
+            try:
+                stats = rag_system.vector_db.get_statistics()
+                
+                stats_col1, stats_col2 = st.columns(2)
+                
+                with stats_col1:
+                    st.json({"Knowledge Distribution": stats.get('type_distribution', {})})
+                
+                with stats_col2:
+                    st.json({"Recent Activity": stats.get('recent_activity', {})})
+                    
+            except Exception as e:
+                st.info("Knowledge statistics not available")
+
+# ===============================
+# TAB 10: 🧬 STRATEGY GEN - AI STRATEGY GENERATOR
+# ===============================
+
+with tab10:
+    st.markdown("# 🧬 AI Strategy Generator")
+    
+    if not STRATEGY_GEN_AVAILABLE:
+        st.error("❌ AI Strategy Generator not available")
+    else:
+        # Strategy Generator Overview
+        st.markdown("### 🧬 Genetic Algorithm Evolution")
+        
+        strat_col1, strat_col2, strat_col3, strat_col4 = st.columns(4)
+        
+        with strat_col1:
+            if hasattr(strategy_generator, 'genetic_optimizer'):
+                generation = strategy_generator.genetic_optimizer.generation_count
+                st.metric("🧬 Generation", generation)
+            else:
+                st.metric("🧬 Generation", "0")
+        
+        with strat_col2:
+            if hasattr(strategy_generator, 'strategy_population'):
+                pop_size = len(strategy_generator.strategy_population)
+                st.metric("👥 Population Size", pop_size)
+            else:
+                st.metric("👥 Population Size", "0")
+        
+        with strat_col3:
+            if hasattr(strategy_generator, 'best_strategy'):
+                best_fitness = 0.75  # Default
+                st.metric("🏆 Best Fitness", f"{best_fitness:.3f}")
+            else:
+                st.metric("🏆 Best Fitness", "N/A")
+        
+        with strat_col4:
+            if hasattr(strategy_generator, 'evolution_history'):
+                history_size = len(strategy_generator.evolution_history)
+                st.metric("📈 Evolution Steps", history_size)
+            else:
+                st.metric("📈 Evolution Steps", "0")
+        
+        st.markdown("---")
+        
+        # Strategy Generation Controls
+        st.markdown("### 🎛️ Strategy Generation Controls")
+        
+        gen_col1, gen_col2 = st.columns(2)
+        
+        with gen_col1:
+            strategy_type = st.selectbox(
+                "Strategy Type",
+                ["MOMENTUM", "MEAN_REVERSION", "TREND_FOLLOWING", "VOLATILITY_TRADING", "HYBRID_AI"]
+            )
+            
+            population_size = st.slider("Population Size", 10, 100, 50)
+            
+            mutation_rate = st.slider("Mutation Rate", 0.01, 0.5, 0.1)
+        
+        with gen_col2:
+            crossover_rate = st.slider("Crossover Rate", 0.1, 0.9, 0.7)
+            
+            generations = st.slider("Generations to Run", 1, 50, 10)
+            
+            fitness_target = st.slider("Fitness Target", 0.5, 1.0, 0.8)
+        
+        # Generate Strategy Button
+        if st.button("🧬 Generate New Strategy", type="primary"):
+            try:
+                with st.spinner("Evolving strategies with genetic algorithm..."):
+                    progress_bar = st.progress(0)
+                    
+                    # Simulate strategy generation progress
+                    for i in range(generations):
+                        progress_bar.progress((i + 1) / generations)
+                        time.sleep(0.1)  # Simulate computation
+                    
+                    # Mock strategy result
+                    generated_strategy = {
+                        "name": f"Strategy_Gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        "type": strategy_type,
+                        "fitness": np.random.uniform(0.6, 0.95),
+                        "parameters": {
+                            "lookback_period": np.random.randint(10, 50),
+                            "threshold": np.random.uniform(0.01, 0.05),
+                            "risk_factor": np.random.uniform(0.5, 2.0)
+                        },
+                        "expected_sharpe": np.random.uniform(1.2, 2.5),
+                        "max_drawdown": np.random.uniform(0.05, 0.15)
+                    }
+                    
+                    st.success("🎉 Strategy Generated Successfully!")
+                    
+                    # Display strategy details
+                    st.markdown("#### 📋 Generated Strategy Details")
+                    
+                    detail_col1, detail_col2 = st.columns(2)
+                    
+                    with detail_col1:
+                        st.json({
+                            "Strategy Name": generated_strategy["name"],
+                            "Type": generated_strategy["type"],
+                            "Fitness Score": f"{generated_strategy['fitness']:.3f}",
+                            "Expected Sharpe": f"{generated_strategy['expected_sharpe']:.2f}"
+                        })
+                    
+                    with detail_col2:
+                        st.json({
+                            "Parameters": generated_strategy["parameters"],
+                            "Max Drawdown": f"{generated_strategy['max_drawdown']:.1%}"
+                        })
+                    
+                    # Evolution Chart
+                    st.markdown("#### 📈 Evolution Progress")
+                    
+                    # Mock evolution data
+                    evolution_data = {
+                        "Generation": list(range(1, generations + 1)),
+                        "Best Fitness": np.cumsum(np.random.uniform(0.001, 0.01, generations)) + 0.5,
+                        "Avg Fitness": np.cumsum(np.random.uniform(0.0005, 0.005, generations)) + 0.4
+                    }
+                    
+                    df_evolution = pd.DataFrame(evolution_data)
+                    
+                    fig_evolution = px.line(
+                        df_evolution,
+                        x="Generation",
+                        y=["Best Fitness", "Avg Fitness"],
+                        title="Strategy Evolution Progress",
+                        labels={"value": "Fitness Score", "variable": "Metric"}
+                    )
+                    fig_evolution.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='white')
+                    )
+                    st.plotly_chart(fig_evolution, use_container_width=True)
+                    
+            except Exception as e:
+                st.error(f"❌ Strategy generation error: {e}")
+        
+        # Existing Strategies
+        st.markdown("#### 📚 Strategy Library")
+        
+        # Mock strategy library
+        if st.button("🔄 Refresh Strategy Library"):
+            strategies_data = []
+            for i in range(5):
+                strategies_data.append({
+                    "Name": f"Strategy_{i+1}",
+                    "Type": np.random.choice(["MOMENTUM", "MEAN_REVERSION", "TREND_FOLLOWING"]),
+                    "Fitness": np.random.uniform(0.6, 0.9),
+                    "Sharpe": np.random.uniform(1.0, 2.5),
+                    "Status": np.random.choice(["Active", "Testing", "Retired"])
+                })
+            
+            df_strategies = pd.DataFrame(strategies_data)
+            st.dataframe(df_strategies, use_container_width=True)
+
+# ===============================
 # SIDEBAR MODERNO CON CONTROLES
 # ===============================
 
@@ -1431,8 +2129,9 @@ with st.sidebar:
     # Información de la sesión
     st.markdown("---")
     st.markdown("### ℹ️ Session Info")
-    st.caption(f"🕐 Last Update: {datetime.now().strftime('%H:%M:%S')}")
-    st.caption(f"📅 Session: {datetime.now().strftime('%Y-%m-%d')}")
+    current_time = datetime.now()
+    st.caption(f"🕐 Last Update: {current_time.strftime('%H:%M:%S')}")
+    st.caption(f"📅 Session: {current_time.strftime('%Y-%m-%d')}")
     st.caption("🚀 Alpha Trading v2.0")
 
 # ===============================

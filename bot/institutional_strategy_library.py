@@ -169,12 +169,14 @@ class PerformanceRecord:
     
     # Performance data
     performance_metrics: StrategyPerformance
-    validation_results: Optional[ValidationResult] = None
     
-    # Context
+    # Context (required parameters)
     evaluation_period: Tuple[datetime, datetime]
     market_regime: MarketRegime
     symbols_traded: List[str]
+    
+    # Optional parameters with defaults
+    validation_results: Optional[ValidationResult] = None
     
     # Environment
     market_conditions: Dict[str, Any] = field(default_factory=dict)
