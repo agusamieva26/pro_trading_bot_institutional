@@ -81,6 +81,14 @@ class AITradingChat:
     async def _agus_2_enhanced_response(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """🧠 Respuesta técnica directa usando AGUS con capacidades completas del Editor"""
         try:
+            # Try AGUS Enhanced with Editor capabilities first
+            try:
+                from bot.agus_integration_enhanced import agus_enhanced_integration
+                if agus_enhanced_integration.integration_active:
+                    return await agus_enhanced_integration.process_agus_enhanced_query(question, user_id=self.user_id)
+            except ImportError:
+                logger.info("🔄 Using standard AGUS (Enhanced integration not available)")
+            
             # AGUS ahora maneja todo automáticamente - simplemente pasar la pregunta
             # Las nuevas funciones de AGUS detectan automáticamente la intención y ejecutan las acciones
             if agus_2_analyze_query is None:

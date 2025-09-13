@@ -120,7 +120,7 @@ class IntegratedRiskSystem:
             self.legacy_fallback = True
     
     def get_comprehensive_risk_assessment(self, symbol: str, signal_strength: float, 
-                                        equity: float, price: float, atr: float = None) -> IntegratedRiskAssessment:
+                                        equity: float, price: float, atr: Optional[float] = None) -> IntegratedRiskAssessment:
         """
         Get comprehensive risk assessment for a trading decision.
         This is the main interface for all trading operations.

@@ -569,7 +569,7 @@ class DynamicRiskManager:
                     spy_aligned = spy_returns.tail(min_length)
                     symbol_aligned = symbol_returns.tail(min_length)
                     
-                    correlation = float(spy_aligned.corr(symbol_aligned))
+                    correlation = float(spy_aligned.corr(symbol_aligned, method='pearson'))
                     if not np.isnan(correlation):
                         correlations[symbol] = correlation
                         
