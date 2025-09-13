@@ -16,6 +16,7 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import Optional, Dict, Any
 
 # Configurar logging
 logger.remove()
@@ -34,6 +35,11 @@ try:
     logger.info("🧠 AGUS Hybrid Intelligence System loaded successfully")
 except ImportError as e:
     AGUS_2_AVAILABLE = False
+    agus_2_analyze_query = None
+    agus_2_trading_analysis = None
+    agus_2_debug_system = None
+    get_agus_2_status = None
+    agus_2_system = None
     logger.warning(f"⚠️ AGUS not available: {e}")
 
 class AITradingChat:
@@ -51,7 +57,7 @@ class AITradingChat:
         else:
             logger.info("🤖 AGUS (tu IA personal) lista para conversar!")
         
-    async def ask_ai(self, question: str, context: dict = None) -> str:
+    async def ask_ai(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """
         🧠 Hace una pregunta a la IA personal con AGUS capabilities
         """
@@ -72,11 +78,14 @@ class AITradingChat:
         except Exception as e:
             return f"❌ Error comunicándome con la IA: {e}"
     
-    async def _agus_2_enhanced_response(self, question: str, context: dict = None) -> str:
+    async def _agus_2_enhanced_response(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """🧠 Respuesta técnica directa usando AGUS con capacidades completas del Editor"""
         try:
             # AGUS ahora maneja todo automáticamente - simplemente pasar la pregunta
             # Las nuevas funciones de AGUS detectan automáticamente la intención y ejecutan las acciones
+            if agus_2_analyze_query is None:
+                raise Exception("AGUS functions not available")
+            
             response = await agus_2_analyze_query(
                 query=question,
                 user_id=self.user_id,
@@ -294,10 +303,13 @@ self.parent.after(100, lambda: self.chat_display.see('end'))
         except:
             return 0
     
-    async def _handle_file_creation(self, question: str, context: dict = None) -> str:
+    async def _handle_file_creation(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """🔧 Handle file creation requests from AGUS"""
         try:
             # Get AGUS response for the file content generation
+            if agus_2_analyze_query is None:
+                raise Exception("AGUS functions not available")
+            
             response = await agus_2_analyze_query(
                 query=f"Generate file content for this request: {question}. Provide the complete file content that should be written.",
                 user_id=self.user_id,
@@ -328,15 +340,18 @@ self.parent.after(100, lambda: self.chat_display.see('end'))
             
             # If no filename found, ask AGUS to suggest one
             if not filename:
-                filename_query = f"Suggest an appropriate filename with extension for: {question}"
-                filename_response = await agus_2_analyze_query(
-                    query=filename_query,
-                    user_id=self.user_id,
-                    session_id=self.session_id
-                )
-                # Extract filename from response (simple approach)
-                suggested_names = re.findall(r'(\w+\.\w+)', filename_response)
-                filename = suggested_names[0] if suggested_names else "agus_generated_file.txt"
+                if agus_2_analyze_query is None:
+                    filename = "agus_generated_file.txt"
+                else:
+                    filename_query = f"Suggest an appropriate filename with extension for: {question}"
+                    filename_response = await agus_2_analyze_query(
+                        query=filename_query,
+                        user_id=self.user_id,
+                        session_id=self.session_id
+                    )
+                    # Extract filename from response (simple approach)
+                    suggested_names = re.findall(r'(\w+\.\w+)', filename_response)
+                    filename = suggested_names[0] if suggested_names else "agus_generated_file.txt"
             
             # Ensure directory exists
             file_path = Path(filename)
@@ -389,7 +404,7 @@ AGUS encontró un problema al crear el archivo:
 
 🔄 **Prueba con**: "crear archivo ejemplo.py con una función simple" """
     
-    async def _legacy_response(self, question: str, context: dict = None) -> str:
+    async def _legacy_response(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """📱 Legacy response system (backward compatibility)"""
         try:
             from bot.free_ai_assistant import free_ai_assistant
@@ -434,7 +449,7 @@ RESPONDE como la IA integrada del sistema, no como IA genérica.
         except Exception as e:
             return f"❌ Error comunicándome con la IA: {e}"
     
-    async def _market_analysis_response(self, question: str, context: dict) -> str:
+    async def _market_analysis_response(self, question: str, context: Optional[Dict[str, Any]]) -> str:
         """Respuesta sobre análisis de mercado"""
         try:
             # Obtener datos del mercado si están disponibles
@@ -466,7 +481,7 @@ Basado en los patrones que estoy viendo, hay oportunidades interesantes en crypt
         except Exception as e:
             return f"📊 Análisis de mercado: Error accediendo a datos - {e}"
     
-    async def _trading_advice_response(self, question: str, context: dict) -> str:
+    async def _trading_advice_response(self, question: str, context: Optional[Dict[str, Any]]) -> str:
         """Respuesta sobre consejos de trading"""
         
         response = f"""🎯 **CONSEJO DE AGUS**
@@ -495,7 +510,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
         
         return response
     
-    async def _bot_status_response(self, question: str, context: dict) -> str:
+    async def _bot_status_response(self, question: str, context: Optional[Dict[str, Any]]) -> str:
         """Respuesta sobre estado del bot"""
         try:
             response = f"""🤖 **AGUS - ESTADO DEL BOT**
@@ -543,7 +558,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
         except Exception as e:
             return f"🤖 Estado del bot: {e}"
     
-    async def _debugging_response(self, question: str, context: dict) -> str:
+    async def _debugging_response(self, question: str, context: Optional[Dict[str, Any]]) -> str:
         """🛠️ Respuesta sobre debugging y reparación de código"""
         try:
             from bot.ai_debugger import run_system_debug, quick_fix_cash_buffer
@@ -601,7 +616,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
         except Exception as e:
             return f"🛠️ Error en debugging: {e}"
 
-    async def _general_response(self, question: str, context: dict) -> str:
+    async def _general_response(self, question: str, context: Optional[Dict[str, Any]]) -> str:
         """Respuesta general"""
         
         responses = {
@@ -631,7 +646,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 """
         }
         
-        return responses.get("default")
+        return responses.get("default", "🤖 **AGUS RESPONDE**\\n\\nHola! Soy tu IA personal de trading. ¿En qué puedo ayudarte?")
     
     def print_welcome(self):
         """Muestra bienvenida del chat"""
@@ -696,6 +711,9 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
             # Estado del sistema AGUS 2.0
             if question_lower in ['agus status', 'agus2 status', 'status agus']:
                 print("\n🧠 **AGUS 2.0 SYSTEM STATUS**")
+                if get_agus_2_status is None:
+                    print("⚠️ AGUS functions not available")
+                    return True
                 status = get_agus_2_status()
                 
                 print(f"""
@@ -732,6 +750,9 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
                 print(f"📊 Analizando: {', '.join(symbols)}")
                 print("⚡ Iniciando análisis híbrido con advanced reasoning...")
                 
+                if agus_2_trading_analysis is None:
+                    print("⚠️ AGUS trading analysis not available")
+                    return True
                 analysis = await agus_2_trading_analysis(symbols)
                 
                 if 'executive_summary' in analysis:
@@ -760,6 +781,9 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
                     "session_id": self.session_id
                 }
                 
+                if agus_2_debug_system is None:
+                    print("⚠️ AGUS debug system not available")
+                    return True
                 debug_result = await agus_2_debug_system(error_context)
                 
                 if 'debug_analysis' in debug_result:
@@ -780,6 +804,9 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
             # Métricas de rendimiento
             elif question_lower in ['agus performance', 'performance agus', 'agus metrics']:
                 print("\n📈 **AGUS 2.0 PERFORMANCE METRICS**")
+                if get_agus_2_status is None:
+                    print("⚠️ AGUS functions not available")
+                    return True
                 status = get_agus_2_status()
                 performance = status.get('performance', {})
                 

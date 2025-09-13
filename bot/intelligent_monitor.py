@@ -21,10 +21,11 @@ from loguru import logger
 
 # AGUS Integration
 try:
-    from .agus_2_hybrid_system import AGUS2HybridIntelligenceSystem
+    from .agus_2_hybrid_system import AGUS2HybridSystem
     AGUS_AVAILABLE = True
 except ImportError:
     AGUS_AVAILABLE = False
+    AGUS2HybridSystem = None
     logger.warning("🚨 AGUS not available - monitoring in basic mode")
 
 class AlertLevel(Enum):
@@ -75,9 +76,9 @@ class IntelligentMonitor:
         
         # AGUS Integration
         self.agus = None
-        if AGUS_AVAILABLE:
+        if AGUS_AVAILABLE and AGUS2HybridSystem is not None:
             try:
-                self.agus = AGUS2HybridIntelligenceSystem()
+                self.agus = AGUS2HybridSystem()
                 logger.info("🧠 AGUS Intelligence integrated into monitoring system")
             except Exception as e:
                 logger.error(f"🚨 Failed to initialize AGUS: {e}")
@@ -295,7 +296,7 @@ class IntelligentMonitor:
             issues.append("no_recent_trades")
         
         # Check if signals are being generated
-        if hasattr(self.bot, 'get_signal_count'):
+        if self.bot is not None and hasattr(self.bot, 'get_signal_count'):
             recent_signals = self.bot.get_signal_count()
             if recent_signals == 0:
                 issues.append("no_signals_generated")
@@ -346,8 +347,8 @@ class IntelligentMonitor:
                 Respond as technical expert with actionable solutions.
                 """
                 
-                response = self.agus.process_message(context)
-                alert.agus_response = response
+                response = await self.agus.process_query(context, user_id="monitor", session_id="alert_analysis")
+                alert.agus_response = response.content
                 
                 logger.info(f"🧠 AGUS analyzed alert: {alert.component}")
                 
@@ -550,7 +551,7 @@ class IntelligentMonitor:
     
     def _get_current_equity(self) -> float:
         """Obtiene equity actual del bot"""
-        if hasattr(self.bot, 'get_equity'):
+        if self.bot is not None and hasattr(self.bot, 'get_equity'):
             return self.bot.get_equity()
         
         # Fallback: try to read from status file
@@ -605,7 +606,7 @@ class IntelligentMonitor:
             logger.error(f"❌ Failed to close risky positions: {e}")
             # Fallback: try individual position closure
             try:
-                if hasattr(self.bot, 'close_all_positions'):
+                if self.bot is not None and hasattr(self.bot, 'close_all_positions'):
                     self.bot.close_all_positions()
                     logger.info("✅ Fallback: Positions closed via bot instance")
             except Exception as fallback_error:

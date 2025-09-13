@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T20:12:56.912090",
+  "last_update": "2025-09-13T20:52:11.367217",
   "volatility_history": [
     {
       "timestamp": "2025-09-13T11:00:49.825468",
@@ -399,6 +399,30 @@
     },
     {
       "timestamp": "2025-09-13T20:12:56.614359",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:37:08.034874",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:41:20.148545",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:41:25.421864",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:41:39.030346",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:47:02.986549",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T20:52:11.079604",
       "value": 0.01839670816051316
     }
   ],
@@ -999,6 +1023,42 @@
     },
     {
       "timestamp": "2025-09-13T20:12:56.710296",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:37:08.125769",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:41:20.247709",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:41:25.518492",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:41:39.124027",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:47:03.080130",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T20:52:11.175650",
       "daily_pnl": 0.0,
       "weekly_pnl": 0.0,
       "normalized": 0.0
@@ -2920,6 +2980,120 @@
           "performance": -0.0,
           "positions": 0.0165,
           "liquidity": -0.009867617318259855
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:37:08.318943",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9932983738911896,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.009865967477823792
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:41:20.747621",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9932983738911896,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.009865967477823792
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:41:25.713767",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9868683177148732,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.009737366354297464
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:41:39.321339",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9811836499081925,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.00962367299816385
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:47:03.271479",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9811836499081925,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.00962367299816385
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T20:52:11.367074",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 0.9811836499081925,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
+          "liquidity": -0.00962367299816385
         },
         "final_buffer": 0.02
       }

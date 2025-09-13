@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T20:13:59.838839",
+  "last_update": "2025-09-13T20:52:10.759013",
   "risk_budget": {},
   "active_alerts_count": 4,
   "compliance_status": {
@@ -7,12 +7,12 @@
     "violations": [
       {
         "rule": "Single Position Concentration",
-        "current_value": 0.500594842668257,
+        "current_value": 0.5006111113898531,
         "limit": 0.3,
         "severity": "medium"
       }
     ],
     "warnings": [],
-    "last_check": "2025-09-13T20:13:59.838822"
+    "last_check": "2025-09-13T20:52:10.758993"
   }
 }
