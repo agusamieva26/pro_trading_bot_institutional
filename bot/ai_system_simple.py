@@ -246,7 +246,7 @@ class SimplifiedAIEngine:
             try:
                 sentiment_score, confidence = self._agus_sentiment_analysis(all_text, symbol)
                 if confidence > 0.5:
-                    logger.debug(f"🤖 OpenAI sentiment {symbol}: {sentiment_score:.3f}")
+                    logger.debug(f"🤖 AGUS sentiment {symbol}: {sentiment_score:.3f}")
                     return sentiment_score, confidence
             except Exception as e:
                 logger.debug(f"Error OpenAI sentiment: {e}")

@@ -1,5 +1,5 @@
 """
-🤖 AI HÍBRIDA REAL - Sistema de análisis de noticias con OpenAI
+🤖 AI HÍBRIDA REAL - Sistema de análisis de noticias con AGUS
 Sistema simple pero 100% funcional que REALMENTE opera
 """
 
@@ -185,6 +185,9 @@ Responde SOLO con un número entre -0.2 y +0.2 que represente el ajuste de senti
 Respuesta (solo número):"""
 
             # Llamada a OpenAI
+            if not self.openai_client:
+                return self._analyze_basic_sentiment(news_items)
+                
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
@@ -196,15 +199,18 @@ Respuesta (solo número):"""
             )
             
             # Extraer y validar respuesta
-            content = response.choices[0].message.content.strip()
+            content = response.choices[0].message.content
+            if content is None:
+                return self._analyze_basic_sentiment(news_items)
+            content = content.strip()
             adjustment = float(content)
             adjustment = max(-0.2, min(0.2, adjustment))  # Asegurar rango
             
-            logger.debug(f"🤖 OpenAI: {symbol} raw={content} -> ajuste={adjustment:.3f}")
+            logger.debug(f"🤖 AGUS: {symbol} raw={content} -> ajuste={adjustment:.3f}")
             return adjustment
             
-        except ValueError:
-            logger.warning(f"⚠️ OpenAI respuesta inválida para {symbol}: {content}")
+        except ValueError as e:
+            logger.warning(f"⚠️ OpenAI respuesta inválida para {symbol}: {e}")
             return self._analyze_basic_sentiment(news_items)
         except Exception as e:
             logger.warning(f"⚠️ Error OpenAI para {symbol}: {e}")

@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
+from functools import total_ordering
 from loguru import logger
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -48,6 +49,7 @@ class AIProvider(Enum):
     HYBRID_FUSION = "hybrid_fusion"
     FALLBACK_FREE = "fallback_free"
 
+@total_ordering
 class QueryComplexity(Enum):
     """Query complexity levels for routing decisions"""
     TRIVIAL = 1      # Simple lookups, basic questions
@@ -55,6 +57,11 @@ class QueryComplexity(Enum):
     MODERATE = 3     # Multi-step reasoning
     COMPLEX = 4      # Advanced analysis, predictions
     CRITICAL = 5     # Mission-critical decisions
+    
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
 
 class ReasoningMode(Enum):
     """Reasoning modes for different types of queries"""
@@ -286,7 +293,7 @@ class IntelligentRoutingEngine:
             }
         }
     
-    def analyze_query_complexity(self, query: str, context: Dict = None) -> QueryComplexity:
+    def analyze_query_complexity(self, query: str, context: Optional[Dict] = None) -> QueryComplexity:
         """Analyze query to determine complexity level"""
         query_lower = query.lower()
         
@@ -786,7 +793,8 @@ class AdvancedReasoningEngine:
                 temperature=0.7
             )
             
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            return content if content is not None else "No response content"
             
         except Exception as e:
             logger.error(f"OpenAI request failed: {e}")
@@ -809,7 +817,7 @@ class AdvancedReasoningEngine:
                 async with session.post(
                     "http://localhost:8080/v1/chat/completions",
                     json=payload,
-                    timeout=30
+                    timeout=aiohttp.ClientTimeout(total=30)
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -849,7 +857,7 @@ Ask me anything about trading, markets, or system optimization!"""
                 return "📊 Real-time market analysis capability activated. Please specify which assets you'd like me to analyze."
             
             else:
-                return f"🤖 AGUS 2.0: I understand you're asking about '{query[:100]}...'. While my advanced reasoning is temporarily using fallback mode, I can still help with basic analysis and guidance. For complex analysis, please ensure OpenAI or LocalAI is configured."
+                return f"🤖 AGUS 2.0: I understand you're asking about '{query[:100]}...'. While my advanced reasoning is temporarily using fallback mode, I can still help with basic analysis and guidance. For complex analysis, please ensure AGUS Cloud or LocalAI is configured."
                 
         except Exception as e:
             return f"⚠️ Fallback processing error: {e}"
