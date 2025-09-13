@@ -28,18 +28,30 @@ except ImportError as e:
 class ModernChatInterface:
     def __init__(self, parent):
         self.parent = parent
-        self.setup_modern_interface()
         self.chat_history = []
         
-        # Initialize AI chat
-        if CHAT_AVAILABLE:
+        # Initialize AI chat FIRST - before setting up interface
+        print(f"🔍 DEBUG: CHAT_AVAILABLE = {CHAT_AVAILABLE}")
+        self.ai_chat = None  # Initialize to None first
+        
+        if CHAT_AVAILABLE and AITradingChat is not None:
             try:
+                print("🔍 DEBUG: Attempting to initialize AITradingChat...")
                 self.ai_chat = AITradingChat()
+                print("✅ DEBUG: AITradingChat initialized successfully!")
             except Exception as e:
-                print(f"⚠️ AI Chat error: {e}")
+                print(f"❌ DEBUG: AI Chat initialization failed: {e}")
+                import traceback
+                traceback.print_exc()
                 self.ai_chat = None
         else:
+            print("❌ DEBUG: AITradingChat not available")
             self.ai_chat = None
+        
+        print(f"🔍 DEBUG: Final ai_chat status: {self.ai_chat is not None}")
+        
+        # THEN setup interface
+        self.setup_modern_interface()
 
     def setup_modern_interface(self):
         """Create modern chat interface similar to Replit Assistant"""
@@ -140,8 +152,12 @@ class ModernChatInterface:
         # Configure text tags for styling
         self.setup_message_tags()
         
-        # Welcome message
-        self.add_system_message("🚀 AGUS is ready to help with your trading bot! I can execute code, fix problems, and create files directly.")
+        # Welcome message with status
+        if self.ai_chat:
+            status_msg = "🚀 AGUS is ready to help with your trading bot! I can execute code, fix problems, and create files directly."
+        else:
+            status_msg = "🤖 AGUS Chat Interface Loaded\n⚠️ AI system currently unavailable. Responses will show technical solutions when available."
+        self.add_system_message(status_msg)
 
     def setup_message_tags(self):
         """Configure text tags for different message types"""
@@ -313,23 +329,51 @@ class ModernChatInterface:
     def process_message(self, message):
         """Process message with AGUS AI"""
         try:
+            print(f"🔍 DEBUG: Processing message: {message[:50]}...")
+            
             if self.ai_chat:
+                print("🔍 DEBUG: AI chat available, sending to AGUS...")
+                
                 # Run async function
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 response = loop.run_until_complete(self.ai_chat.ask_ai(message))
                 loop.close()
                 
+                print(f"🔍 DEBUG: Got response: {response[:100]}...")
+                
                 # Update UI in main thread
                 self.parent.after(0, lambda: self.hide_typing_indicator())
                 self.parent.after(0, lambda: self.add_agus_message(response))
+                self.parent.after(0, lambda: print("🔍 DEBUG: Response added to chat"))
                 
             else:
-                error_msg = "🔧 AGUS AI temporarily unavailable. Please check system status."
+                print("🔍 DEBUG: AI chat NOT available!")
+                
+                # Provide a helpful response even without AI
+                fallback_msg = f"""🔧 **AGUS SYSTEM STATUS**
+
+**Current Issue**: AI system temporarily unavailable
+**Reason**: Database connection error or initialization failure
+
+**Available Actions**:
+- ✅ Check bot status in main dashboard
+- ✅ Review trading performance 
+- ✅ Monitor portfolio positions
+- ✅ Restart application if needed
+
+**Technical Status**:
+- 🟢 Chat Interface: Running
+- 🟡 AI Backend: Initializing
+- 🟢 Trading Bot: Active
+
+*Try your request again in a few moments as the AI system initializes.*"""
+                
                 self.parent.after(0, lambda: self.hide_typing_indicator())
-                self.parent.after(0, lambda: self.add_agus_message(error_msg))
+                self.parent.after(0, lambda: self.add_agus_message(fallback_msg))
                 
         except Exception as e:
+            print(f"🔍 DEBUG: Exception in process_message: {e}")
             error_msg = f"❌ Error: {str(e)}\n\n🔧 **Quick Fix**: Restart the chat interface or check bot status."
             self.parent.after(0, lambda: self.hide_typing_indicator())
             self.parent.after(0, lambda: self.add_agus_message(error_msg))

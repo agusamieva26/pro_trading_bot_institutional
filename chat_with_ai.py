@@ -93,7 +93,6 @@ class AITradingChat:
             else:
                 query_type = "general"
             
-            # Create trading-specific context for AGUS
             # Check for code review requests first
             if self._is_code_review_request(question):
                 return await self._execute_automatic_code_review(question)
@@ -142,11 +141,12 @@ You ARE the trading bot's AI. You know the codebase. Execute immediately.
             cleaned_response = self._clean_advisory_response(response)
             
             response_with_context = f"""🔧 **AGUS**
+🧠 AGUS 2.0 HYBRID INTELLIGENCE
 
 {cleaned_response}
 
 ---
-⚡ *Code executed - problem solved*"""
+⚡ *Problem analyzed and solution provided*"""
             
             return response_with_context
             
