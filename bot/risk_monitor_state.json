@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T23:28:27.942358",
+  "last_update": "2025-09-13T23:29:38.373868",
   "risk_budget": {},
   "active_alerts_count": 4,
   "compliance_status": {
@@ -13,6 +13,6 @@
       }
     ],
     "warnings": [],
-    "last_check": "2025-09-13T23:28:27.942316"
+    "last_check": "2025-09-13T23:29:38.373840"
   }
 }
