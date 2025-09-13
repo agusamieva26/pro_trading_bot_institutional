@@ -166,5 +166,19 @@
     "symbol": "",
     "acknowledged": false,
     "resolved": false
+  },
+  {
+    "id": "Maximum Drawdown Limit_1757792886",
+    "timestamp": "2025-09-13T19:48:06.701102",
+    "level": "warning",
+    "category": "market_risk",
+    "title": "Maximum Drawdown Limit Breach",
+    "message": "Maximum Drawdown Limit has breached warning threshold: 0.0504 >= 0.0500",
+    "metric_name": "current_drawdown",
+    "current_value": 0.05039526436974793,
+    "threshold": 0.05,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
   }
 ]
