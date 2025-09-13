@@ -88,7 +88,7 @@ class TradingBotGUI:
     def create_control_panel(self, parent):
         """Create bot control panel"""
         control_frame = ttk.LabelFrame(parent, text="🎛️ BOT CONTROL", padding="10")
-        control_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
+        control_frame.grid(row=1, column=0, sticky="wens", padx=(0, 10))
         
         # Bot status
         self.status_var = tk.StringVar(value="🔴 STOPPED")
@@ -102,16 +102,16 @@ class TradingBotGUI:
         # Control buttons
         self.start_btn = ttk.Button(control_frame, text="🚀 START BOT", 
                                    command=self.start_bot, style='Modern.TButton')
-        self.start_btn.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        self.start_btn.grid(row=1, column=0, columnspan=2, sticky="we", pady=5)
         
         self.stop_btn = ttk.Button(control_frame, text="🛑 STOP BOT", 
                                   command=self.stop_bot, style='Modern.TButton')
-        self.stop_btn.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        self.stop_btn.grid(row=2, column=0, columnspan=2, sticky="we", pady=5)
         self.stop_btn.configure(state='disabled')
         
         # Separator
         separator = ttk.Separator(control_frame, orient='horizontal')
-        separator.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        separator.grid(row=3, column=0, columnspan=2, sticky="we", pady=10)
         
         # Risk settings
         risk_label = ttk.Label(control_frame, text="⚠️ RISK SETTINGS")
@@ -141,18 +141,18 @@ class TradingBotGUI:
         # Apply settings button
         apply_btn = ttk.Button(control_frame, text="✅ APPLY SETTINGS", 
                               command=self.apply_settings)
-        apply_btn.grid(row=8, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        apply_btn.grid(row=8, column=0, columnspan=2, sticky="we", pady=10)
 
     def create_monitoring_panel(self, parent):
         """Create real-time monitoring panel"""
         monitor_frame = ttk.LabelFrame(parent, text="📊 PORTFOLIO MONITOR", padding="10")
-        monitor_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
+        monitor_frame.grid(row=1, column=1, sticky="wens")
         monitor_frame.columnconfigure(0, weight=1)
         monitor_frame.rowconfigure(1, weight=1)
         
         # Portfolio summary
         summary_frame = ttk.Frame(monitor_frame)
-        summary_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        summary_frame.grid(row=0, column=0, sticky="we", pady=(0, 10))
         summary_frame.columnconfigure(0, weight=1)
         summary_frame.columnconfigure(1, weight=1)
         summary_frame.columnconfigure(2, weight=1)
@@ -183,7 +183,7 @@ class TradingBotGUI:
         
         # Positions tree
         tree_frame = ttk.Frame(monitor_frame)
-        tree_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        tree_frame.grid(row=1, column=0, sticky="wens")
         tree_frame.columnconfigure(0, weight=1)
         tree_frame.rowconfigure(0, weight=1)
         
@@ -200,13 +200,13 @@ class TradingBotGUI:
         scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.positions_tree.yview)
         self.positions_tree.configure(yscrollcommand=scrollbar.set)
         
-        self.positions_tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.positions_tree.grid(row=0, column=0, sticky="wens")
+        scrollbar.grid(row=0, column=1, sticky="ns")
 
     def create_chat_panel(self, parent):
         """Create modern AGUS chat interface"""
         chat_frame = ttk.LabelFrame(parent, text="🤖 AGUS AI ASSISTANT - Modern Interface", padding="5")
-        chat_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 0))
+        chat_frame.grid(row=2, column=0, columnspan=2, sticky="wens", pady=(10, 0))
         chat_frame.columnconfigure(0, weight=1)
         chat_frame.rowconfigure(0, weight=1)
         

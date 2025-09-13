@@ -20,8 +20,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 try:
     from chat_with_ai import AITradingChat
     CHAT_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(f"⚠️ AITradingChat unavailable: {e}")
     CHAT_AVAILABLE = False
+    AITradingChat = None
 
 class ModernChatInterface:
     def __init__(self, parent):
