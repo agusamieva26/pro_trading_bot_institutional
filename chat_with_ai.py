@@ -21,7 +21,7 @@ class AITradingChat:
     
     def __init__(self):
         self.session_history = []
-        logger.info("🤖 IA Personal lista para conversar!")
+        logger.info("🤖 AGUS (tu IA personal) lista para conversar!")
         
     async def ask_ai(self, question: str, context: dict = None) -> str:
         """
@@ -62,7 +62,7 @@ class AITradingChat:
             # Obtener datos del mercado si están disponibles
             from bot.config import settings
             
-            response = f"""🧠 **ANÁLISIS IA PERSONAL**
+            response = f"""🧠 **ANÁLISIS DE AGUS**
 
 📊 **Tu pregunta:** {question}
 
@@ -91,11 +91,11 @@ Basado en los patrones que estoy viendo, hay oportunidades interesantes en crypt
     async def _trading_advice_response(self, question: str, context: dict) -> str:
         """Respuesta sobre consejos de trading"""
         
-        response = f"""🎯 **CONSEJO IA TRADING**
+        response = f"""🎯 **CONSEJO DE AGUS**
 
 ❓ **Tu pregunta:** {question}
 
-🧠 **Mi análisis IA personal:**
+🧠 **Mi análisis (AGUS):**
 
 **Estado actual:**
 • Límite ampliado a -$3,000 para recuperación épica ✅
@@ -109,7 +109,7 @@ Basado en los patrones que estoy viendo, hay oportunidades interesantes en crypt
 3. **Patience**: Dejar que el ML + IA trabajen juntos
 4. **Capital protection**: System protege con trailing stops
 
-**Mi consejo IA:** 
+**Mi consejo (AGUS):** 
 El bot está optimizado para recuperación. Los modelos ML + mi análisis gratuito están trabajando juntos para encontrar las mejores oportunidades. Confía en el sistema - está diseñado para esa recuperación épica que buscas.
 
 💬 **Pregúntame algo específico como:** "¿debería comprar más BTC?" o "¿cuál es la mejor estrategia ahora?"
@@ -120,7 +120,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
     async def _bot_status_response(self, question: str, context: dict) -> str:
         """Respuesta sobre estado del bot"""
         try:
-            response = f"""🤖 **ESTADO DEL BOT IA**
+            response = f"""🤖 **AGUS - ESTADO DEL BOT**
 
 ❓ **Tu pregunta:** {question}
 
@@ -156,7 +156,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 • Log Analysis: Real-time problem identification
 • System Optimization: Performance monitoring
 
-**Mi diagnóstico IA:** Todo funcionando con **auto-reparación activada**. El bot está en modo recuperación épica con monitoreo inteligente.
+**Mi diagnóstico (AGUS):** Todo funcionando con **auto-reparación activada**. El bot está en modo recuperación épica con monitoreo inteligente.
 
 💬 **Pregúntame:** "¿hay errores?" o "repara el código" o "debug completo"
 """
@@ -185,7 +185,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
             
             # Respuesta general de debugging
             else:
-                return f"""🛠️ **IA DEBUGGER PERSONAL**
+                return f"""🛠️ **AGUS - TU DEBUGGER PERSONAL**
 
 ❓ **Tu pregunta:** {question}
 
@@ -218,7 +218,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 
 💡 **Ejemplo reciente**: Detecté que el bot está bloqueando órdenes por cash buffer insuficiente. ¿Quieres que lo arregle automáticamente?
 
-🤖 **Tu código está bajo monitoreo inteligente constante.**
+🤖 **AGUS está monitoreando tu código 24/7.**
 """
         except Exception as e:
             return f"🛠️ Error en debugging: {e}"
@@ -227,13 +227,13 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
         """Respuesta general"""
         
         responses = {
-            "default": f"""🤖 **TU IA PERSONAL RESPONDE**
+            "default": f"""🤖 **AGUS RESPONDE**
 
 ❓ **Tu pregunta:** {question}
 
 💭 **Mi respuesta IA:**
 
-Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí para ayudarte con:
+¡Hola! Soy AGUS, tu IA personal de trading. Soy completamente gratuita y estoy aquí para ayudarte con:
 
 🎯 **Análisis de mercado**: Pregúntame sobre cualquier crypto o stock
 📊 **Estrategias**: Consejos personalizados para tu situación  
@@ -249,7 +249,7 @@ Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí p
 • "Repara el bot automáticamente"
 • "Debug completo del sistema"
 
-💡 **Nuevo**: ¡Ahora puedo reparar tu código automáticamente! Pregúntame sobre errores o debugging.
+💡 **Nuevo**: ¡Soy AGUS y puedo reparar tu código automáticamente! Pregúntame sobre errores o debugging.
 """
         }
         
@@ -259,7 +259,7 @@ Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí p
         """Muestra bienvenida del chat"""
         welcome = """
 ╔══════════════════════════════════════════════════════════════════════╗
-║                  🤖 CHAT CON TU IA PERSONAL DE TRADING                ║
+║                     🤖 CHAT CON AGUS - TU IA PERSONAL                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
 ║  💬 Ya puedes hablar conmigo - ¡Pregunta lo que quieras!            ║
@@ -296,7 +296,7 @@ Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí p
                     
                 # Comandos especiales
                 if question.lower() in ['salir', 'quit', 'exit', 'bye']:
-                    print("🤖 ¡Hasta luego! Tu IA Personal siempre estará aquí para ayudarte.")
+                    print("🤖 ¡Hasta luego! AGUS siempre estará aquí para ayudarte.")
                     break
                     
                 elif question.lower() in ['help', 'ayuda']:
@@ -330,7 +330,7 @@ Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí p
                 })
                 
             except KeyboardInterrupt:
-                print("\n\n🤖 Chat interrumpido. ¡Hasta pronto!")
+                print("\n\n🤖 AGUS: Chat interrumpido. ¡Hasta pronto!")
                 break
             except Exception as e:
                 print(f"\n❌ Error en el chat: {e}")
@@ -346,7 +346,7 @@ def quick_ask(question: str):
     async def _ask():
         chat = AITradingChat()
         response = await chat.ask_ai(question)
-        print(f"\n🤖 IA Personal: {response}\n")
+        print(f"\n🤖 AGUS: {response}\n")
     
     asyncio.run(_ask())
 

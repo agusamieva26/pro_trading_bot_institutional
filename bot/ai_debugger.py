@@ -45,7 +45,7 @@ class AIDebugger:
             "bot/config.py",
             "chat_with_ai.py"
         ]
-        logger.info("🛠️ IA DEBUGGER activado - Detección automática de errores")
+        logger.info("🛠️ AGUS DEBUGGER activado - Detección automática de errores")
     
     def _load_error_patterns(self) -> Dict:
         """Carga patrones de errores conocidos"""
@@ -467,7 +467,7 @@ class AIDebugger:
 2. Verificar logs para confirmar resolución
 3. Monitorear rendimiento post-fix
 
-🤖 **Tu IA Debugger está trabajando 24/7 para mantener el sistema optimizado**
+🤖 **AGUS está trabajando 24/7 para mantener tu sistema optimizado**
 """
         
         return report
