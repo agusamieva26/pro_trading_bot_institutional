@@ -3,7 +3,7 @@
   "emergency_triggered": false,
   "recovery_mode": false,
   "peak_timestamp": "2025-09-13T13:48:04.079413",
-  "last_update": "2025-09-13T14:05:01.473996",
+  "last_update": "2025-09-13T14:06:31.997290",
   "current_drawdown": 6.195366296980095e-05,
   "protection_level": "normal"
 }
