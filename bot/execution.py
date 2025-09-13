@@ -116,13 +116,39 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
                 logger.critical(f"🚨 ORDER BLOCKED: Exposure limit! Projected {projected_exposure_ratio:.2f}x > {settings.max_gross_exposure:.2f}x limit")
                 return False
                 
-            # Check cash buffer (IA FIX: Reducido para permitir trading más agresivo) 
-            cash_after_trade = available_cash - notional_value
-            min_cash_pct = getattr(settings, 'min_cash_buffer', 0.05)  # IA FIX: Reducido de 10% a 5% para recuperación épica
-            min_cash_required = current_equity * min_cash_pct
-            if cash_after_trade < min_cash_required:
-                logger.critical(f"🚨 ORDER BLOCKED: Cash buffer! After trade ${cash_after_trade:.0f} < ${min_cash_required:.0f} required ({min_cash_pct:.0%})")
-                return False
+            # 💰 DYNAMIC CASH BUFFER: Usar sistema inteligente adaptativo
+            from .dynamic_cash_buffer import get_dynamic_cash_buffer
+            
+            try:
+                dynamic_buffer_pct, buffer_mode, buffer_info = get_dynamic_cash_buffer()
+                # FIX DOUBLE-BUFFERING: Usar true_cash en lugar de available_cash (ya reducido)
+                true_cash = float(getattr(account, 'cash', 0.0) or 0.0)
+                cash_after_trade = true_cash - notional_value
+                min_cash_required = current_equity * dynamic_buffer_pct
+                
+                if cash_after_trade < min_cash_required:
+                    # Log detallado para diagnóstico
+                    logger.critical(f"🚨 ORDER BLOCKED: Dynamic Cash Buffer!")
+                    logger.critical(f"   💰 Buffer requerido: {dynamic_buffer_pct:.1%} ({buffer_mode}) = ${min_cash_required:.0f}")
+                    logger.critical(f"   📊 Cash después: ${cash_after_trade:.0f} < ${min_cash_required:.0f}")
+                    logger.critical(f"   🎯 Factores: Vol={buffer_info.get('volatility', 0):.2f}, Perf={buffer_info.get('performance', 0):.2f}")
+                    return False
+                else:
+                    # Log positivo cuando funciona el buffer dinámico
+                    if buffer_mode != "NORMAL" or dynamic_buffer_pct != settings.min_cash_buffer:
+                        logger.info(f"💰 DYNAMIC BUFFER OK: {dynamic_buffer_pct:.1%} ({buffer_mode}) - Cash tras orden: ${cash_after_trade:.0f}")
+                        
+            except Exception as e:
+                # Fallback al buffer estático en caso de error
+                logger.error(f"❌ Error en dynamic cash buffer, usando fallback: {e}")
+                # FIX DOUBLE-BUFFERING: Usar true_cash también en fallback
+                true_cash = float(getattr(account, 'cash', 0.0) or 0.0)
+                cash_after_trade = true_cash - notional_value
+                min_cash_pct = settings.min_cash_buffer  # 5% configurado
+                min_cash_required = current_equity * min_cash_pct
+                if cash_after_trade < min_cash_required:
+                    logger.critical(f"🚨 ORDER BLOCKED: Fallback cash buffer! ${cash_after_trade:.0f} < ${min_cash_required:.0f} ({min_cash_pct:.0%})")
+                    return False
                 
             # PDT info (but don't block - let Alpaca handle it)
             if current_equity < 25000 and "/" not in symbol:  # Crypto has /, stocks don't
