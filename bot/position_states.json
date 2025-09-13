@@ -21,10 +21,10 @@
     "entry_price": 4416.094
   },
   "SHIB/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 1.3257e-05,
-    "partial_profit_taken": false,
-    "original_quantity": 6619179.9472792,
+    "trailing_activated": true,
+    "max_price_reached": 1.3925e-05,
+    "partial_profit_taken": true,
+    "original_quantity": 23729693.771614946,
     "entry_price": 1.3257e-05
   },
   "CRV/USD": {
@@ -35,10 +35,10 @@
     "entry_price": 0.80125
   },
   "PEPE/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 1.069e-05,
-    "partial_profit_taken": false,
-    "original_quantity": 1679577.046183762,
+    "trailing_activated": true,
+    "max_price_reached": 1.154e-05,
+    "partial_profit_taken": true,
+    "original_quantity": 206836040.11735794,
     "entry_price": 1.061e-05
   },
   "AAVE/USD": {
@@ -56,8 +56,8 @@
     "entry_price": 28.77
   },
   "GRT/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 0.1000015,
+    "trailing_activated": true,
+    "max_price_reached": 0.100715,
     "partial_profit_taken": false,
     "original_quantity": 127.756273669,
     "entry_price": 0.09836
