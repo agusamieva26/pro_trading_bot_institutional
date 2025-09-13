@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-💬 CHAT CON TU IA PERSONAL DE TRADING
-Interfaz conversacional para hablar directamente con tu IA
-Pregunta cualquier cosa sobre trading, mercados, estrategias, etc.
+💬 CHAT CON TU IA PERSONAL DE TRADING - AGUS 2.0 POWERED
+Interfaz conversacional avanzada con AGUS 2.0 Hybrid Intelligence System
+- LocalAI + Cloud hybrid routing
+- Advanced reasoning capabilities  
+- Contextual memory integration
+- Trading intelligence layer
+- Performance optimization
 """
 import asyncio
 import sys
@@ -14,19 +18,98 @@ import json
 logger.remove()
 logger.add(sys.stdout, format="<green>{time:HH:mm:ss}</green> | {message}", level="INFO")
 
+# AGUS 2.0 Integration
+try:
+    from bot.agus_2_hybrid_system import (
+        agus_2_analyze_query, 
+        agus_2_trading_analysis,
+        agus_2_debug_system,
+        get_agus_2_status,
+        agus_2_system
+    )
+    AGUS_2_AVAILABLE = True
+    logger.info("🧠 AGUS 2.0 Hybrid Intelligence System loaded successfully")
+except ImportError as e:
+    AGUS_2_AVAILABLE = False
+    logger.warning(f"⚠️ AGUS 2.0 not available: {e}")
+
 class AITradingChat:
     """
-    💬 Chat inteligente con tu IA personal
+    💬 Chat inteligente con AGUS 2.0 Hybrid Intelligence
     """
     
     def __init__(self):
         self.session_history = []
-        logger.info("🤖 AGUS (tu IA personal) lista para conversar!")
+        self.user_id = "default_user"
+        self.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        if AGUS_2_AVAILABLE:
+            logger.info("🧠 AGUS 2.0 Hybrid Intelligence System - Ready for advanced conversations!")
+        else:
+            logger.info("🤖 AGUS (tu IA personal) lista para conversar!")
         
     async def ask_ai(self, question: str, context: dict = None) -> str:
         """
-        🧠 Hace una pregunta a la IA personal
+        🧠 Hace una pregunta a la IA personal con AGUS 2.0 capabilities
         """
+        try:
+            # Store question in session history
+            self.session_history.append({
+                "timestamp": datetime.now(),
+                "question": question,
+                "context": context
+            })
+            
+            # Use AGUS 2.0 if available for enhanced intelligence
+            if AGUS_2_AVAILABLE:
+                return await self._agus_2_enhanced_response(question, context)
+            else:
+                return await self._legacy_response(question, context)
+                
+        except Exception as e:
+            return f"❌ Error comunicándome con la IA: {e}"
+    
+    async def _agus_2_enhanced_response(self, question: str, context: dict = None) -> str:
+        """🧠 Enhanced response using AGUS 2.0 Hybrid Intelligence"""
+        try:
+            question_lower = question.lower()
+            
+            # Determine query type for optimized processing
+            if any(word in question_lower for word in ["debug", "error", "fix", "repair", "reparar", "problema", "arreglar", "bug"]):
+                query_type = "debugging"
+            elif any(word in question_lower for word in ["analizar", "analysis", "mercado", "market", "btc", "eth", "crypto", "precio", "price"]):
+                query_type = "trading"
+            elif any(word in question_lower for word in ["trading", "comprar", "vender", "buy", "sell", "estrategia", "strategy"]):
+                query_type = "trading"
+            elif any(word in question_lower for word in ["bot", "estado", "status", "configuracion", "settings"]):
+                query_type = "system"
+            else:
+                query_type = "general"
+            
+            # Use AGUS 2.0 for intelligent analysis
+            response = await agus_2_analyze_query(
+                query=question,
+                user_id=self.user_id,
+                session_id=self.session_id
+            )
+            
+            # Add session context
+            response_with_context = f"""🧠 **AGUS 2.0 HYBRID INTELLIGENCE**
+
+{response}
+
+---
+*Session: {self.session_id} | Query Type: {query_type} | Context: {len(self.session_history)} messages*"""
+            
+            return response_with_context
+            
+        except Exception as e:
+            logger.error(f"❌ AGUS 2.0 error: {e}")
+            # Fallback to legacy system
+            return await self._legacy_response(question, context)
+    
+    async def _legacy_response(self, question: str, context: dict = None) -> str:
+        """📱 Legacy response system (backward compatibility)"""
         try:
             from bot.free_ai_assistant import free_ai_assistant
             
@@ -257,7 +340,34 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
     
     def print_welcome(self):
         """Muestra bienvenida del chat"""
-        welcome = """
+        if AGUS_2_AVAILABLE:
+            welcome = """
+╔══════════════════════════════════════════════════════════════════════╗
+║              🧠 AGUS 2.0 HYBRID INTELLIGENCE SYSTEM                   ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║  🚀 Advanced LocalAI+Cloud hybrid system with institutional-grade   ║
+║      capabilities. Intelligent routing & contextual memory.         ║
+║                                                                      ║
+║  🧠 Ejemplos de preguntas:                                          ║
+║     • "¿Qué tal va el mercado?"                                     ║
+║     • "¿Debería comprar más BTC?"                                   ║
+║     • "Analiza ETH para mí"                                         ║
+║     • "¿Cómo va mi recuperación épica?"                             ║
+║     • "Debug del sistema completo"                                  ║
+║                                                                      ║
+║  ⚡ Comandos especiales AGUS 2.0:                                   ║
+║     • 'agus status' - Estado completo del sistema híbrido           ║
+║     • 'market analysis [symbols]' - Análisis híbrido de mercado     ║
+║     • 'debug system' - Diagnóstico avanzado con auto-fix            ║
+║     • 'agus performance' - Métricas de rendimiento                   ║
+║     • 'help' - Ayuda completa del sistema                           ║
+║     • 'salir' - Terminar chat                                       ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+"""
+        else:
+            welcome = """
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                     🤖 CHAT CON AGUS - TU IA PERSONAL                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
@@ -280,31 +390,207 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 """
         print(welcome)
     
+    async def handle_agus_2_commands(self, question: str) -> bool:
+        """🧠 Maneja comandos especiales de AGUS 2.0"""
+        if not AGUS_2_AVAILABLE:
+            return False
+            
+        question_lower = question.lower()
+        
+        try:
+            # Estado del sistema AGUS 2.0
+            if question_lower in ['agus status', 'agus2 status', 'status agus']:
+                print("\n🧠 **AGUS 2.0 SYSTEM STATUS**")
+                status = get_agus_2_status()
+                
+                print(f"""
+📊 **Sistema:** {status['system_version']}
+🚦 **Estado:** {status['status']}
+⏱️ **Uptime:** {status['uptime_seconds']:.0f}s ({status['uptime_seconds']/3600:.1f}h)
+👥 **Sesiones activas:** {status['active_sessions']}
+
+🤖 **Proveedores AI:**
+• LocalAI: {'✅ Disponible' if status['providers']['localai'] > 0.5 else '❌ No disponible'}
+• OpenAI: {'✅ Disponible' if status['providers']['openai'] > 0.5 else '❌ No disponible'} 
+• Fallback: ✅ Siempre disponible
+
+📈 **Rendimiento:** {len(status.get('performance', {}).get('providers', {}))} proveedores monitoreados
+🧠 **Memoria:** {status['memory_stats']['conversations_stored']} conversaciones almacenadas
+
+💾 **Base de datos:** {status['memory_stats']['db_path']}
+""")
+                return True
+            
+            # Análisis de mercado híbrido
+            elif question_lower.startswith('market analysis') or question_lower.startswith('analyze market'):
+                symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD']  # Default symbols
+                words = question.split()
+                
+                # Extract symbols from command
+                if len(words) > 2:
+                    symbols_text = ' '.join(words[2:])
+                    custom_symbols = [s.strip().upper() for s in symbols_text.replace(',', ' ').split() if s.strip()]
+                    if custom_symbols:
+                        symbols = custom_symbols
+                
+                print(f"\n🧠 **AGUS 2.0 HYBRID MARKET ANALYSIS**")
+                print(f"📊 Analizando: {', '.join(symbols)}")
+                print("⚡ Iniciando análisis híbrido con advanced reasoning...")
+                
+                analysis = await agus_2_trading_analysis(symbols)
+                
+                if 'executive_summary' in analysis:
+                    print(f"\n{analysis['executive_summary']}")
+                    
+                    if 'detailed_analysis' in analysis:
+                        details = analysis['detailed_analysis']
+                        if 'sentiment' in details and 'sentiment_analysis' in details['sentiment']:
+                            sentiment_data = details['sentiment']['sentiment_analysis']
+                            print(f"\n📊 **Confidence:** {analysis.get('confidence', 0.8):.1%}")
+                else:
+                    print(f"\n⚠️ Análisis incompleto: {analysis.get('error', 'Unknown error')}")
+                    
+                return True
+            
+            # Debug del sistema  
+            elif question_lower in ['debug system', 'system debug', 'debug agus', 'agus debug']:
+                print("\n🛠️ **AGUS 2.0 SYSTEM DEBUGGING**")
+                print("🔍 Iniciando diagnóstico avanzado con self-reflection reasoning...")
+                
+                error_context = {
+                    "timestamp": datetime.now().isoformat(),
+                    "request_type": "manual_debug",
+                    "system_state": "operational",
+                    "user_id": self.user_id,
+                    "session_id": self.session_id
+                }
+                
+                debug_result = await agus_2_debug_system(error_context)
+                
+                if 'debug_analysis' in debug_result:
+                    print(f"\n{debug_result['debug_analysis']}")
+                    print(f"\n🎯 **Confidence:** {debug_result.get('confidence', 0.8):.1%}")
+                    
+                    if debug_result.get('auto_fix_available'):
+                        print("\n🔧 **AUTO-FIX DISPONIBLE** - Reparación automática posible")
+                        
+                    reasoning_steps = debug_result.get('reasoning_steps', [])
+                    if reasoning_steps and len(reasoning_steps) > 1:
+                        print(f"\n🧠 **Reasoning Steps:** {len(reasoning_steps)} pasos de análisis completados")
+                else:
+                    print(f"\n⚠️ Debug incompleto: {debug_result.get('error', 'Unknown error')}")
+                    
+                return True
+            
+            # Métricas de rendimiento
+            elif question_lower in ['agus performance', 'performance agus', 'agus metrics']:
+                print("\n📈 **AGUS 2.0 PERFORMANCE METRICS**")
+                status = get_agus_2_status()
+                performance = status.get('performance', {})
+                
+                if 'providers' in performance:
+                    print("\n🤖 **Provider Performance:**")
+                    for provider, metrics in performance['providers'].items():
+                        print(f"""
+**{provider.upper()}:**
+• Tiempo promedio: {metrics.get('avg_response_time', 0):.2f}s
+• Costo total: ${metrics.get('total_cost', 0):.4f}
+• Calidad promedio: {metrics.get('avg_quality', 0):.2f}
+• Total consultas: {metrics.get('total_queries', 0)}""")
+                else:
+                    print("📊 Métricas de rendimiento no disponibles aún")
+                    
+                return True
+            
+            # Ayuda específica de AGUS 2.0
+            elif question_lower in ['agus help', 'help agus']:
+                print("""🧠 **AGUS 2.0 HYBRID INTELLIGENCE - AYUDA COMPLETA**
+
+🎯 **CAPACIDADES PRINCIPALES:**
+• Advanced reasoning con chain-of-thought, self-reflection, ensemble
+• Routing inteligente entre LocalAI ↔ Cloud basado en complejidad
+• Memoria contextual persistente con SQLite
+• Trading intelligence con sentiment fusion en tiempo real
+• Auto-debugging con capacidades de reparación automática
+• Optimización de rendimiento y monitoreo de costos
+
+📋 **COMANDOS ESPECIALES AGUS 2.0:**
+• 'agus status' - Estado completo del sistema híbrido
+• 'market analysis BTC ETH SOL' - Análisis híbrido con reasoning avanzado
+• 'debug system' - Diagnóstico con self-reflection y auto-fix
+• 'agus performance' - Métricas detalladas de rendimiento
+• 'agus help' - Esta ayuda completa
+
+🤖 **TIPOS DE CONSULTA OPTIMIZADOS:**
+• Trading: Estrategias, análisis, predicciones (usa ensemble reasoning)
+• Sistema: Debugging, optimización, monitoreo (usa self-reflection)  
+• General: Cualquier pregunta (routing automático inteligente)
+
+🧠 **MODOS DE REASONING DISPONIBLES:**
+• Direct: Respuestas rápidas y directas
+• Chain-of-Thought: Análisis paso a paso detallado
+• Self-Reflection: Validación y refinamiento automático
+• Ensemble: Múltiples enfoques combinados
+• Tree-of-Thoughts: Análisis con ramas alternativas
+
+💡 **TIPS AVANZADOS:**
+- Más contexto en tu pregunta = routing más inteligente
+- AGUS 2.0 recuerda toda la conversación automáticamente
+- El sistema aprende de tus patrones y preferencias
+- Preguntas complejas activan reasoning avanzado automáticamente
+- Debugging crítico usa self-reflection para máxima precisión""")
+                return True
+                
+        except Exception as e:
+            print(f"❌ Error procesando comando AGUS 2.0: {e}")
+            return True  # Handled, even if error
+        
+        return False  # Not an AGUS 2.0 command
+
     async def run_chat(self):
         """
-        🚀 Inicia el chat interactivo
+        🚀 Inicia el chat interactivo con capacidades AGUS 2.0
         """
         self.print_welcome()
         
         while True:
             try:
                 # Obtener pregunta del usuario
-                question = input("\n💬 Tu pregunta: ").strip()
+                if AGUS_2_AVAILABLE:
+                    question = input("\n🧠 Tu pregunta (AGUS 2.0): ").strip()
+                else:
+                    question = input("\n💬 Tu pregunta: ").strip()
                 
                 if not question:
                     continue
                     
-                # Comandos especiales
+                # Comandos de salida
                 if question.lower() in ['salir', 'quit', 'exit', 'bye']:
-                    print("🤖 ¡Hasta luego! AGUS siempre estará aquí para ayudarte.")
+                    if AGUS_2_AVAILABLE:
+                        print("🧠 AGUS 2.0: Session terminada. ¡Gracias por usar Hybrid Intelligence! 📈")
+                    else:
+                        print("🤖 ¡Hasta luego! AGUS siempre estará aquí para ayudarte.")
                     break
                     
+                # Comandos de ayuda
                 elif question.lower() in ['help', 'ayuda']:
-                    self.print_welcome()
+                    if AGUS_2_AVAILABLE and question.lower() != 'agus help':
+                        await self.handle_agus_2_commands('agus help')
+                    else:
+                        self.print_welcome()
                     continue
                     
+                # Comando de status legacy
                 elif question.lower() == 'status':
-                    question = "¿cuál es el estado completo del bot?"
+                    if AGUS_2_AVAILABLE:
+                        await self.handle_agus_2_commands('agus status')
+                        continue
+                    else:
+                        question = "¿cuál es el estado completo del bot?"
+                
+                # Comandos especiales AGUS 2.0
+                if AGUS_2_AVAILABLE and await self.handle_agus_2_commands(question):
+                    continue
                 
                 # Agregar a historial
                 self.session_history.append({
@@ -314,7 +600,11 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
                 })
                 
                 # Obtener respuesta de la IA
-                print("\n🤖 Pensando...")
+                if AGUS_2_AVAILABLE:
+                    print("\n🧠 AGUS 2.0 Hybrid Intelligence procesando...")
+                else:
+                    print("\n🤖 Pensando...")
+                    
                 response = await self.ask_ai(question)
                 
                 # Mostrar respuesta

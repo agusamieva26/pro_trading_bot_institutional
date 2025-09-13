@@ -569,9 +569,9 @@ class DynamicRiskManager:
                     spy_aligned = spy_returns.tail(min_length)
                     symbol_aligned = symbol_returns.tail(min_length)
                     
-                    correlation = spy_aligned.corr(symbol_aligned)
+                    correlation = float(spy_aligned.corr(symbol_aligned))
                     if not np.isnan(correlation):
-                        correlations[symbol] = float(correlation)
+                        correlations[symbol] = correlation
                         
                 except Exception as e:
                     logger.debug(f"Error calculating correlation for {symbol}: {e}")
