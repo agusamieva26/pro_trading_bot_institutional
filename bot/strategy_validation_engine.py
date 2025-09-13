@@ -28,16 +28,24 @@ warnings.filterwarnings("ignore")
 
 # Statistical libraries
 from scipy import stats
-# Conditional sklearn imports to avoid dill circular import issues
-try:
-    from sklearn.model_selection import TimeSeriesSplit
-    from sklearn.metrics import accuracy_score, precision_score, recall_score
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    # Mock classes for when sklearn is not available
-    class TimeSeriesSplit:
-        pass
+# Lazy sklearn imports to completely avoid dill circular import issues
+SKLEARN_AVAILABLE = False
+def _lazy_import_sklearn():
+    global SKLEARN_AVAILABLE
+    if SKLEARN_AVAILABLE is not False:
+        return SKLEARN_AVAILABLE
+    try:
+        import sklearn.model_selection
+        import sklearn.metrics
+        SKLEARN_AVAILABLE = True
+        return True
+    except ImportError:
+        SKLEARN_AVAILABLE = None  # Failed permanently
+        return False
+
+# Mock classes always available
+class TimeSeriesSplit:
+    pass
 import seaborn as sns
 import matplotlib.pyplot as plt
 

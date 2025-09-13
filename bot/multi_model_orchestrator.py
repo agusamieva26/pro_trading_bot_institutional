@@ -28,31 +28,35 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict, deque
 import psutil
-# Conditional sklearn imports to avoid dill circular import issues
-try:
-    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-    from sklearn.ensemble import VotingClassifier, VotingRegressor
-    from sklearn.preprocessing import StandardScaler
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    # Mock classes for when sklearn is not available
-    class VotingClassifier:
-        pass
-    class VotingRegressor:
-        pass
-    class StandardScaler:
-        pass
+# Lazy sklearn imports to completely avoid dill circular import issues
+SKLEARN_AVAILABLE = False
+def _lazy_import_sklearn():
+    global SKLEARN_AVAILABLE
+    if SKLEARN_AVAILABLE is not False:
+        return SKLEARN_AVAILABLE
+    try:
+        import sklearn.metrics
+        import sklearn.ensemble
+        import sklearn.preprocessing
+        SKLEARN_AVAILABLE = True
+        return True
+    except ImportError:
+        SKLEARN_AVAILABLE = None  # Failed permanently
+        return False
+
+# Mock classes always available
+class VotingClassifier:
+    pass
+class VotingRegressor:
+    pass
+class StandardScaler:
+    pass
 import warnings
 warnings.filterwarnings("ignore")
 
-# Conditional imports to avoid dill circular import issues
-try:
-    import pickle
-    PICKLE_AVAILABLE = True
-except ImportError:
-    PICKLE_AVAILABLE = False
-    logger.warning("⚠️ pickle not available - caching functionality disabled")
+# Always use pickle - it's built-in Python
+import pickle
+PICKLE_AVAILABLE = True
 
 # Import existing LocalAI components
 from .localai_institutional_manager import LocalAIInstitutionalManager, ModelConfig, PerformanceMetrics

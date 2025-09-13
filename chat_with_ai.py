@@ -73,7 +73,7 @@ class AITradingChat:
             return f"❌ Error comunicándome con la IA: {e}"
     
     async def _agus_2_enhanced_response(self, question: str, context: dict = None) -> str:
-        """🧠 Enhanced response using AGUS Hybrid Intelligence"""
+        """🔧 Direct technical response using AGUS"""
         try:
             question_lower = question.lower()
             
@@ -95,28 +95,29 @@ class AITradingChat:
             
             # Create trading-specific context for AGUS
             enhanced_prompt = f"""
-CONTEXT: You are AGUS, the advanced AI system integrated into a sophisticated institutional-grade trading bot. This system includes:
+You are AGUS - technical AI integrated into institutional trading system. Respond DIRECTLY and TECHNICALLY like a skilled engineer.
 
-🏛️ SYSTEM CAPABILITIES:
-- Real-time crypto trading (BTC, ETH, SHIB, UNI, PEPE, etc.)
-- Advanced risk management with multiple protection layers
-- Multi-timeframe technical analysis (5m, 15m, 1H, 4H)
-- AI-powered signal generation and validation
-- Arbitrage detection across exchanges
-- Portfolio optimization and rebalancing
-- Machine learning with Random Forest models
-- Fibonacci analysis and sentiment integration
+SYSTEM STATE:
+- Portfolio: $18k equity, 16 cryptos active
+- ML Models: Random Forest, multi-timeframe analysis  
+- Risk Management: Multi-layer protection active
+- Trading Status: Real-time execution enabled
 
-📊 CURRENT STATUS:
-- Portfolio equity: ~$18,000 with active risk management
-- Trading 16 cryptocurrencies in real-time
-- AGUS Hybrid Intelligence fully operational
-- OpenAI GPT model active (not LocalAI fallback)
-- Multiple specialized AI components running
+USER REQUEST: {question}
 
-USER QUERY: {question}
+CRITICAL - RESPONSE STYLE:
+✅ BE DIRECT - No fluff, get straight to the point
+✅ BE TECHNICAL - Use precise technical language
+✅ SOLVE IMMEDIATELY - Don't just give advice, take action
+✅ BE SPECIFIC - Provide exact steps, code, or commands
+✅ BE CONCISE - Short, focused responses
 
-RESPOND AS: The integrated AGUS system that understands the full trading context, market data, and system capabilities. Provide intelligent, trading-focused responses that demonstrate your deep integration with this sophisticated system.
+If it's a code problem → FIX IT
+If it's a technical question → ANSWER PRECISELY  
+If it's a file request → CREATE/MODIFY IT
+If it's a system issue → DIAGNOSE AND RESOLVE
+
+Respond as the technical expert who gets things done NOW.
 """
             
             # Use AGUS for intelligent analysis with enhanced context
@@ -127,12 +128,12 @@ RESPOND AS: The integrated AGUS system that understands the full trading context
             )
             
             # Add session context
-            response_with_context = f"""🧠 **AGUS HYBRID INTELLIGENCE**
+            response_with_context = f"""🔧 **AGUS** 
 
 {response}
 
 ---
-*Session: {self.session_id} | Query Type: {query_type} | Context: {len(self.session_history)} messages*"""
+⚡ *Technical response - direct & actionable*"""
             
             return response_with_context
             
