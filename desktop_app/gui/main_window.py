@@ -363,7 +363,12 @@ class TradingBotGUI:
             
             self.chat_display.insert(tk.END, formatted_msg)
             self.chat_display.configure(state='disabled')
+            
+            # Force scroll to bottom with multiple attempts
             self.chat_display.see(tk.END)
+            self.chat_display.update()
+            self.root.after(50, lambda: self.chat_display.see(tk.END))
+            self.root.after(100, lambda: self.chat_display.see(tk.END))
 
     def update_status(self, status_text, color):
         """Update bot status display"""

@@ -126,6 +126,15 @@ class ModernChatInterface:
         self.chat_display.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
         
+        # Auto-scroll when scrollbar position changes
+        def on_scrollbar_set(*args):
+            scrollbar.set(*args)
+            # Auto scroll to bottom if new content added
+            if float(args[1]) == 1.0:
+                self.chat_display.see('end')
+        
+        self.chat_display.configure(yscrollcommand=on_scrollbar_set)
+        
         # Configure text tags for styling
         self.setup_message_tags()
         
@@ -351,7 +360,10 @@ class ModernChatInterface:
         self.chat_display.insert('end', f'{message}\n', 'user_message')
         
         self.chat_display.configure(state='disabled')
+        
+        # Ensure scroll to bottom
         self.chat_display.see('end')
+        self.chat_display.update()
 
     def add_agus_message(self, message):
         """Add AGUS message with code highlighting"""
@@ -364,7 +376,12 @@ class ModernChatInterface:
         self.parse_and_insert_message(message)
         
         self.chat_display.configure(state='disabled')
+        
+        # Force scroll to bottom with multiple calls
         self.chat_display.see('end')
+        self.chat_display.update()
+        self.parent.after(100, lambda: self.chat_display.see('end'))
+        self.parent.after(200, lambda: self.chat_display.see('end'))
 
     def parse_and_insert_message(self, message):
         """Parse message and apply appropriate styling"""
@@ -378,6 +395,9 @@ class ModernChatInterface:
             elif i % 3 == 2:  # Code content
                 if part.strip():
                     self.chat_display.insert('end', f'\n{part}\n', 'code_block')
+        
+        # Add extra newline for spacing
+        self.chat_display.insert('end', '\n')
 
     def add_system_message(self, message):
         """Add system message"""
