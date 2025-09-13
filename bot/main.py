@@ -284,23 +284,27 @@ def run_once(state: BotState, clf):
         available_cash = float(getattr(account, 'cash', 0))
         logger.info(f"📊 Equity actualizado: ${total_equity:,.2f}, Cash: ${available_cash:,.2f}")
 
-    # 🧠 INTEGRACIÓN IA PERSONAL - Análisis cada 30min
+    # 🧠 INTEGRACIÓN IA GRATUITA - Análisis inteligente sin costos
     ai_analysis = {}
     try:
-        from bot.news_integration import get_ai_market_analysis
-        ai_analysis = await get_ai_market_analysis(settings.symbols[:10])  # Analizar top 10 símbolos
+        from bot.free_ai_assistant import get_free_ai_analysis_sync
         
-        if ai_analysis.get("ai_available") and ai_analysis.get("analysis"):
-            analysis = ai_analysis["analysis"]
-            logger.info(f"🧠 IA Personal activa - {len(analysis.get('signals', []))} señales generadas")
+        # Preparar datos de mercado para IA (se llenarán durante el análisis de símbolos)
+        market_data_for_ai = {}
+        
+        # Por ahora ejecutamos sin datos - se mejorará cuando tengamos los datos de mercado
+        ai_analysis = get_free_ai_analysis_sync(settings.symbols[:5], market_data_for_ai)
+        
+        if ai_analysis.get("ai_available"):
+            signals = ai_analysis.get("signals", [])
+            logger.info(f"🤖 IA GRATUITA integrada - lista para análisis")
             
-            # Log del sentiment general
-            sentiment = analysis.get("sentiment", {})
-            sentiment_score = sentiment.get("overall_sentiment", 0.0)
-            logger.info(f"📰 Sentiment noticias: {sentiment_score:+.2f} ({sentiment.get('confidence', 0):.1%} confianza)")
+            if signals:
+                strong_signals = [s for s in signals if s.confidence > 0.7]
+                logger.info(f"🎯 {len(signals)} señales generadas, {len(strong_signals)} fuertes")
             
     except Exception as e:
-        logger.debug(f"IA Personal no disponible: {e}")
+        logger.debug(f"IA Gratuita: {e}")
 
     # --- 6. BTC/USD DIVERSIFICADO (máximo 40% para balance) ---
     btc_max_allocation = 0.40  # Máximo 40% del equity total

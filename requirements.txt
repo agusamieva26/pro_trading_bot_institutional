@@ -31,3 +31,7 @@ openpyxl
 schedule
 openai
 trafilatura
+beautifulsoup4
+requests
+torch
+transformers
