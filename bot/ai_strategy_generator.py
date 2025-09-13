@@ -85,22 +85,56 @@ def calculate_sharpe_ratio(returns: np.ndarray, risk_free_rate: float = 0.0) -> 
     
     return float(sharpe)
 
-# Internal imports
+# Internal imports with conditional loading to avoid dill issues
+# Core imports that should always work
+try:
+    from .config import settings
+    from .data import fetch_bars, fetch_all_bars
+    from .util import logger
+    from .features import make_features
+    CORE_IMPORTS_AVAILABLE = True
+except ImportError as e:
+    safe_logger.warning(f"⚠️ Core imports failed: {e}")
+    CORE_IMPORTS_AVAILABLE = False
+
+# Advanced system imports (can fail due to dill/sklearn issues)
 try:
     from .advanced_memory_rag_system import (
         AdvancedMemoryRAGSystem, KnowledgeType, QueryType, KnowledgeEntry, RAGResponse
     )
+    MEMORY_RAG_AVAILABLE = True
+except ImportError:
+    MEMORY_RAG_AVAILABLE = False
+
+# Backtesting imports
+try:
     from .backtesting_engine import BacktestingEngine, Trade, Position
     from .backtest_metrics import backtest_metrics
+    BACKTESTING_AVAILABLE = True
+except ImportError:
+    BACKTESTING_AVAILABLE = False
+
+# ML/AI orchestrator imports
+try:
     from .multi_model_orchestrator import MultiModelOrchestrator, EnsemblePrediction, ConsensusType
+    ML_ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    ML_ORCHESTRATOR_AVAILABLE = False
+
+# Strategy and model imports
+try:
     from .strategy import hybrid_signal, load_trading_model, FEATURES
-    from .features import make_features
-    from .config import settings
-    from .data import fetch_bars, fetch_all_bars
-    from .util import logger
+    STRATEGY_AVAILABLE = True
+except ImportError:
+    STRATEGY_AVAILABLE = False
+
+# Historical data manager (most likely to cause dill issues)
+try:
     from .historical_data_manager import historical_data_manager
-except ImportError as e:
-    safe_logger.warning(f"Some advanced integrations not available: {e}")
+    HISTORICAL_DATA_AVAILABLE = True
+except ImportError:
+    HISTORICAL_DATA_AVAILABLE = False
+    # Don't log this as it's expected when dill has import issues
 
 class StrategyType(Enum):
     """Types of trading strategies that can be generated"""
