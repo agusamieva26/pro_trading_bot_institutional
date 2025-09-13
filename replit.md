@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 - **Execution Engine**: Handles order placement with fractional share support, minimum notional validation, and slippage protection. Includes intelligent crypto shorting by dynamically acquiring tokens only when needed.
 - **State Management**: Persistent JSON-based tracking of equity, daily P&L, and position monitoring.
 - **Automation**: Fully automated bi-weekly training, weekly Optuna optimization, and daily performance reporting. Smart triggers (e.g., win rate <50%, drawdown >5%) initiate emergency training/optimization.
+- **🤖 24/7 Intelligent Monitoring System**: Advanced AGUS-powered monitoring with automatic error detection, auto-diagnosis, and auto-correction. Monitors system health every 30 seconds, detects critical losses (>$1000 or >5%), and automatically triggers recovery protocols including service restarts, memory cleanup, and emergency position management.
 
 ## Data Pipeline
 - **Market Data**: Integrates with Alpaca Markets API for real-time and historical stock and cryptocurrency data.
@@ -33,6 +34,7 @@ Preferred communication style: Simple, everyday language.
 - **Live Dashboard**: Streamlit-based real-time monitoring of portfolio metrics and position tracking.
 - **Automated Reporting**: Generates daily Excel reports detailing P&L analysis, trade specifics, and performance metrics.
 - **Alert System**: Telegram integration for immediate trade notifications and risk alerts.
+- **🧠 AGUS Intelligent Monitoring**: 24/7 autonomous monitoring system that automatically detects critical errors, performs root cause analysis, and executes corrective actions. Features include auto-recovery (service restart, memory cleanup, signal reset), emergency loss response protocols, and intelligent alert analysis with automated fixes based on AGUS recommendations.
 
 ## Configuration Management
 - **Environment-based**: Pydantic settings with `.env` file support for API keys and parameters.
