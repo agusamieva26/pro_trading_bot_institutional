@@ -6,6 +6,20 @@ from .config import settings
 from .util import logger
 from .trade_logger import log_trade_entry
 
+# Import symbol configuration system
+try:
+    from .symbol_configs import get_symbol_config, get_symbol_tp_sl, SymbolConfig
+    from .risk import get_symbol_max_position_size, get_symbol_risk_multiplier
+    SYMBOL_CONFIGS_AVAILABLE = True
+    logger.info("✅ Symbol configuration system loaded successfully")
+except ImportError as e:
+    SYMBOL_CONFIGS_AVAILABLE = False
+    get_symbol_config = None
+    get_symbol_tp_sl = None
+    get_symbol_max_position_size = None
+    get_symbol_risk_multiplier = None
+    logger.warning(f"⚠️ Symbol configurations not available: {e}")
+
 # Global variable to track reserved cash
 _reserved_cash = 0.0
 
@@ -164,6 +178,73 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
         # Block ALL BUY orders on any error to prevent bleeding
         if side.lower() == "buy":
             return False
+    
+    # 💎 SYMBOL-SPECIFIC POSITION SIZE LIMITS
+    if side.lower() == "buy" and SYMBOL_CONFIGS_AVAILABLE:
+        try:
+            # Get current account info for position size calculations
+            client = _client()
+            account = client.get_account()
+            current_equity = float(getattr(account, "equity", 0) or 0)
+            
+            if current_equity > 0:
+                # Get symbol-specific maximum position size
+                max_position_pct = get_symbol_max_position_size(symbol, default_max=0.20)  # 20% fallback
+                max_position_value = current_equity * max_position_pct
+                
+                # Get current position value for this symbol (if any)
+                current_position_value = 0.0
+                try:
+                    api_symbol_for_check = symbol.replace("/", "")
+                    position = client.get_open_position(api_symbol_for_check)
+                    if position:
+                        current_position_value = abs(float(getattr(position, 'market_value', 0) or 0))
+                except:
+                    current_position_value = 0.0  # No position found
+                
+                # Calculate proposed total position value
+                proposed_notional = float(qty) * float(price)
+                total_position_value = current_position_value + proposed_notional
+                
+                # Check if this would exceed symbol-specific limits
+                if total_position_value > max_position_value:
+                    # Get symbol config for logging
+                    symbol_config = get_symbol_config(symbol)
+                    volatility_tier = getattr(symbol_config, 'volatility_tier', 'unknown')
+                    
+                    # Check if we can scale down the order
+                    remaining_capacity = max(0, max_position_value - current_position_value)
+                    
+                    if remaining_capacity < proposed_notional * 0.1:  # Less than 10% of intended order
+                        logger.critical(f"🚫 SYMBOL LIMIT EXCEEDED: {symbol} ({volatility_tier})")
+                        logger.critical(f"   📊 Current: ${current_position_value:.0f} + Proposed: ${proposed_notional:.0f} = ${total_position_value:.0f}")
+                        logger.critical(f"   🎯 Max allowed: ${max_position_value:.0f} ({max_position_pct:.1%})")
+                        logger.critical(f"   ⚠️ Remaining capacity: ${remaining_capacity:.0f} - TOO SMALL, BLOCKED")
+                        return False
+                    else:
+                        # Scale down order to fit within symbol limits
+                        scaled_notional = remaining_capacity * 0.95  # Use 95% of remaining capacity
+                        scaled_qty = scaled_notional / float(price)
+                        
+                        logger.warning(f"📏 SYMBOL SCALING: {symbol} ({volatility_tier})")
+                        logger.warning(f"   🔧 Order scaled: ${proposed_notional:.0f} → ${scaled_notional:.0f} (limit: {max_position_pct:.1%})")
+                        logger.warning(f"   📊 Total position will be: ${current_position_value + scaled_notional:.0f} / ${max_position_value:.0f}")
+                        
+                        # Update values for the scaled order
+                        notional_value = scaled_notional
+                        qty = scaled_qty
+                else:
+                    # Order is within limits - log the successful check
+                    symbol_config = get_symbol_config(symbol)
+                    volatility_tier = getattr(symbol_config, 'volatility_tier', 'unknown')
+                    utilization_pct = total_position_value / max_position_value
+                    
+                    logger.info(f"💎 SYMBOL CONFIG OK: {symbol} ({volatility_tier})")
+                    logger.info(f"   📊 Position: ${total_position_value:.0f} / ${max_position_value:.0f} ({utilization_pct:.1%} of {max_position_pct:.1%} limit)")
+                    
+        except Exception as e:
+            logger.error(f"❌ Error checking symbol-specific limits for {symbol}: {e}")
+            # Continue with order but log the error - don't block on config errors
     
     try:
         # Convert symbol for API (remove slash for crypto)
