@@ -32,6 +32,7 @@ from .model_selection import advanced_model_selector
 from .advanced_features import advanced_feature_generator
 from .ai_system_simple import get_ai_adjusted_signal, get_ai_system_status
 from .ai_news_simple import get_ai_sentiment_adjustment  # 🤖 AI HÍBRIDA REAL
+from .intelligent_monitor import IntelligentMonitor  # 🤖 SISTEMA DE MONITOREO INTELIGENTE 24/7
 from .util import logger
 import datetime as dt
 import pytz
@@ -900,6 +901,17 @@ def main():
     )
     reporter_thread.start()
     logger.info("✅ Daily Reporter activo - detectará reset de Alpaca automáticamente")
+    
+    # 🤖 INICIAR INTELLIGENT MONITOR EN THREAD SEPARADO
+    logger.info("🤖 Iniciando Intelligent Monitor 24/7 con AGUS...")
+    intelligent_monitor = IntelligentMonitor(bot_instance={'state': state, 'clf': clf})
+    monitor_intelligence_thread = threading.Thread(
+        target=intelligent_monitor.start_monitoring,
+        daemon=True,
+        name="IntelligentMonitor"
+    )
+    monitor_intelligence_thread.start()
+    logger.info("✅ Intelligent Monitor 24/7 activo con AGUS - auto-diagnosis y auto-correction habilitados")
 
     while True:
         try:
