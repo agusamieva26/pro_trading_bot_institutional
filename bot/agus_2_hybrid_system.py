@@ -784,7 +784,7 @@ class AdvancedReasoningEngine:
             client = OpenAI(api_key=api_key)
             
             response = client.chat.completions.create(
-                model="gpt-4",  # Use GPT-4 for reliability
+                model="gpt-4o-mini",  # Use GPT-4o-mini for reliability and availability
                 messages=[
                     {"role": "system", "content": "You are AGUS 2.0, an advanced AI trading assistant with institutional-grade capabilities."},
                     {"role": "user", "content": prompt}

@@ -28,18 +28,45 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-# Vector embeddings and search
-import sentence_transformers
-from sentence_transformers import SentenceTransformer, util
-import faiss
-import chromadb
-from chromadb.config import Settings
+# Vector embeddings and search (conditional imports to avoid dill issues)
+try:
+    import sentence_transformers
+    from sentence_transformers import SentenceTransformer, util
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None
+    logger.warning("sentence_transformers not available")
+
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
+    logger.warning("faiss not available")
+
+try:
+    import chromadb
+    from chromadb.config import Settings
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    CHROMADB_AVAILABLE = False
+    chromadb = None
+    Settings = None
+    logger.warning("chromadb not available")
+
+try:
+    import tiktoken
+    TIKTOKEN_AVAILABLE = True
+except ImportError:
+    TIKTOKEN_AVAILABLE = False
+    tiktoken = None
+    logger.warning("tiktoken not available")
 
 # Advanced ML and processing
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-import tiktoken
 
 # Integration imports
 try:
@@ -174,6 +201,10 @@ class AdvancedEmbeddingEngine:
     
     def _load_models(self):
         """Load embedding models"""
+        if not SENTENCE_TRANSFORMERS_AVAILABLE or SentenceTransformer is None:
+            logger.warning("⚠️ sentence_transformers not available - embedding functionality disabled")
+            return
+            
         try:
             # Load primary sentence transformer
             self.models[EmbeddingModel.SENTENCE_TRANSFORMER] = SentenceTransformer(
@@ -191,10 +222,11 @@ class AdvancedEmbeddingEngine:
             logger.error(f"❌ Error loading embedding models: {e}")
             # Fallback to basic model
             try:
-                self.models[EmbeddingModel.SENTENCE_TRANSFORMER] = SentenceTransformer(
-                    "sentence-transformers/all-MiniLM-L6-v2"
-                )
-                logger.info("✅ Loaded fallback sentence transformer")
+                if SentenceTransformer is not None:
+                    self.models[EmbeddingModel.SENTENCE_TRANSFORMER] = SentenceTransformer(
+                        "sentence-transformers/all-MiniLM-L6-v2"
+                    )
+                    logger.info("✅ Loaded fallback sentence transformer")
             except Exception as fe:
                 logger.error(f"❌ Failed to load any embedding model: {fe}")
     
@@ -223,6 +255,14 @@ class AdvancedEmbeddingEngine:
     def generate_embedding(self, text: str, knowledge_type: KnowledgeType, 
                           model: EmbeddingModel = EmbeddingModel.SENTENCE_TRANSFORMER) -> np.ndarray:
         """Generate embedding for text content"""
+        # Fallback if sentence_transformers not available
+        if not SENTENCE_TRANSFORMERS_AVAILABLE:
+            # Return a simple hash-based embedding as fallback
+            text_hash = hashlib.md5(text.encode()).hexdigest()
+            # Convert hex to numeric array (384 dims to match sentence transformer)
+            embedding = np.array([int(text_hash[i:i+2], 16) / 255.0 for i in range(0, min(len(text_hash), 96), 2)] + [0.0] * (384 - 48))
+            return embedding[:384]
+        
         # Check cache first
         cache_key = hashlib.md5(f"{text}:{knowledge_type.value}:{model.value}".encode()).hexdigest()
         
@@ -322,13 +362,17 @@ class VectorKnowledgeBase:
         self.embedding_engine = AdvancedEmbeddingEngine()
         
         # Initialize ChromaDB for vector storage
-        self.chroma_client = chromadb.PersistentClient(
-            path=str(self.db_path / "chroma_db"),
-            settings=Settings(
-                anonymized_telemetry=False,
-                allow_reset=True
+        if CHROMADB_AVAILABLE and chromadb is not None and Settings is not None:
+            self.chroma_client = chromadb.PersistentClient(
+                path=str(self.db_path / "chroma_db"),
+                settings=Settings(
+                    anonymized_telemetry=False,
+                    allow_reset=True
+                )
             )
-        )
+        else:
+            logger.warning("⚠️ ChromaDB not available - using simple in-memory storage")
+            self.chroma_client = None
         
         # Create collections for different knowledge types
         self.collections = {}
@@ -359,6 +403,10 @@ class VectorKnowledgeBase:
     
     def _initialize_collections(self):
         """Initialize ChromaDB collections for each knowledge type"""
+        if not self.chroma_client:
+            logger.warning("⚠️ ChromaDB client not available - skipping collection initialization")
+            return
+            
         try:
             for knowledge_type in KnowledgeType:
                 collection_name = f"knowledge_{knowledge_type.value}"
@@ -439,8 +487,8 @@ class VectorKnowledgeBase:
             logger.error(f"❌ Error initializing metadata database: {e}")
     
     def add_knowledge(self, content: str, knowledge_type: KnowledgeType,
-                     metadata: Dict[str, Any] = None, tags: List[str] = None,
-                     context: Dict[str, Any] = None, source: str = "system",
+                     metadata: Optional[Dict[str, Any]] = None, tags: Optional[List[str]] = None,
+                     context: Optional[Dict[str, Any]] = None, source: str = "system",
                      confidence: float = 1.0) -> str:
         """Add new knowledge entry to the vector database"""
         with self.lock:
@@ -508,7 +556,7 @@ class VectorKnowledgeBase:
                 return ""
     
     def query_knowledge(self, query: str, query_type: QueryType = QueryType.GENERAL_INQUIRY,
-                       knowledge_types: List[KnowledgeType] = None,
+                       knowledge_types: Optional[List[KnowledgeType]] = None,
                        max_results: int = 10, min_similarity: float = 0.3,
                        include_context: bool = True) -> RetrievalResult:
         """Query the knowledge base using semantic search"""
@@ -734,11 +782,15 @@ class PersonalizedRAGEngine:
         self.context_window = 8192
         
         # Initialize tokenizer for context management
-        try:
-            self.tokenizer = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        except Exception:
-            # Fallback tokenizer
-            self.tokenizer = tiktoken.get_encoding("cl100k_base")
+        if TIKTOKEN_AVAILABLE and tiktoken is not None:
+            try:
+                self.tokenizer = tiktoken.encoding_for_model("gpt-3.5-turbo")
+            except Exception:
+                # Fallback tokenizer
+                self.tokenizer = tiktoken.get_encoding("cl100k_base")
+        else:
+            logger.warning("⚠️ tiktoken not available - using simple token counting")
+            self.tokenizer = None
         
         # Response templates for different query types
         self.response_templates = {
@@ -803,8 +855,8 @@ Based on the trading knowledge and historical patterns, here's my analysis:
         }
     
     def generate_rag_response(self, query: str, query_type: QueryType = QueryType.GENERAL_INQUIRY,
-                             user_context: Dict[str, Any] = None,
-                             trading_context: Dict[str, Any] = None) -> RAGResponse:
+                             user_context: Optional[Dict[str, Any]] = None,
+                             trading_context: Optional[Dict[str, Any]] = None) -> RAGResponse:
         """Generate RAG-enhanced response for trading queries"""
         start_time = time.time()
         
@@ -1157,7 +1209,7 @@ Tags: {', '.join(entry.tags[:3])}
             
             # Add market context
             market_regime = enhanced_context.get("market_regime")
-            if market_regime != "unknown":
+            if market_regime and market_regime != "unknown":
                 response_parts.append(f"\nGiven the current {market_regime} market environment:")
                 regime_entries = [e for e in entries if market_regime.lower() in e.content.lower()]
                 if regime_entries:
@@ -1350,7 +1402,7 @@ Tags: {', '.join(entry.tags[:3])}
         recency_score = recent_entries / len(retrieval_result.entries)
         
         # Weighted combination
-        confidence = (
+        confidence = float(
             similarity_score * 0.3 +
             knowledge_confidence * 0.3 +
             coverage_score * 0.2 +
@@ -1480,7 +1532,7 @@ class ContinualLearningSystem:
     def track_trading_decision(self, decision_id: str, decision_type: str, 
                              context: Dict[str, Any], prediction: str,
                              symbol: str = "", strategy: str = "", 
-                             market_conditions: Dict[str, Any] = None,
+                             market_conditions: Optional[Dict[str, Any]] = None,
                              confidence: float = 1.0):
         """Track a trading decision for later learning"""
         try:
@@ -1929,7 +1981,7 @@ class AdvancedMemoryRAGSystem:
         logger.info("✅ Advanced Memory RAG System initialized successfully!")
     
     def add_trading_knowledge(self, content: str, knowledge_type: KnowledgeType, 
-                             metadata: Dict[str, Any] = None, **kwargs) -> str:
+                             metadata: Optional[Dict[str, Any]] = None, **kwargs) -> str:
         """Add trading knowledge to the system"""
         return self.knowledge_base.add_knowledge(
             content=content,
@@ -1939,8 +1991,8 @@ class AdvancedMemoryRAGSystem:
         )
     
     def query_trading_intelligence(self, query: str, query_type: QueryType = QueryType.GENERAL_INQUIRY,
-                                  user_context: Dict[str, Any] = None,
-                                  trading_context: Dict[str, Any] = None) -> RAGResponse:
+                                  user_context: Optional[Dict[str, Any]] = None,
+                                  trading_context: Optional[Dict[str, Any]] = None) -> RAGResponse:
         """Main interface for querying trading intelligence"""
         self.system_stats["total_queries"] += 1
         
