@@ -46,14 +46,106 @@ from .config import settings
 from .data import fetch_bars, fetch_all_bars
 from .util import logger
 
+# Import dependencies with proper fallbacks
 try:
     from .backtesting_engine import BacktestingEngine, Trade, Position, OrderSide
+    BACKTESTING_AVAILABLE = True
+except ImportError:
+    BACKTESTING_AVAILABLE = False
+    # Mock classes for when backtesting engine is not available
+    class BacktestingEngine:
+        pass
+    class Trade:
+        pass
+    class Position:
+        pass
+    class OrderSide:
+        pass
+
+try:
     from .backtest_metrics import backtest_metrics, BacktestMetrics
+    BACKTEST_METRICS_AVAILABLE = True
+except ImportError:
+    BACKTEST_METRICS_AVAILABLE = False
+    class BacktestMetrics:
+        pass
+    def backtest_metrics(*args, **kwargs):
+        return None
+
+try:
     from .ai_strategy_generator import StrategyDNA, StrategyPerformance, MarketRegime
+    AI_STRATEGY_AVAILABLE = True
+except ImportError:
+    AI_STRATEGY_AVAILABLE = False
+    # Mock classes for when AI strategy generator is not available
+    from enum import Enum
+    class MarketRegime(Enum):
+        BULL_TRENDING = "bull_trending"
+        BEAR_TRENDING = "bear_trending" 
+        HIGH_VOLATILITY = "high_volatility"
+        LOW_VOLATILITY = "low_volatility"
+        SIDEWAYS = "sideways"
+    
+    @dataclass
+    class StrategyDNA:
+        strategy_id: str = ""
+        name: str = ""
+        fitness_score: float = 0.0
+        # Additional attributes to match the real StrategyDNA
+        position_sizing: Dict[str, Any] = field(default_factory=dict)
+        stop_loss_config: Dict[str, Any] = field(default_factory=dict)
+        regime_sensitivity: Dict[MarketRegime, float] = field(default_factory=dict)
+        
+    @dataclass 
+    class StrategyPerformance:
+        total_return: float = 0.0
+        annualized_return: float = 0.0
+        volatility: float = 0.0
+        sharpe_ratio: float = 0.0
+        sortino_ratio: float = 0.0
+        calmar_ratio: float = 0.0
+        max_drawdown: float = 0.0
+        avg_drawdown: float = 0.0
+        var_95: float = 0.0
+        cvar_95: float = 0.0
+        total_trades: int = 0
+        win_rate: float = 0.0
+        profit_factor: float = 0.0
+        avg_win: float = 0.0
+        avg_loss: float = 0.0
+        beta: float = 0.0
+        alpha: float = 0.0
+        information_ratio: float = 0.0
+        treynor_ratio: float = 0.0
+
+try:
     from .market_regime_analyzer import RegimeAnalysis, AdvancedRegimeDetector
+    REGIME_ANALYZER_AVAILABLE = True
+except ImportError:
+    REGIME_ANALYZER_AVAILABLE = False
+    class RegimeAnalysis:
+        pass
+    class AdvancedRegimeDetector:
+        pass
+
+try:
     from .historical_data_manager import historical_data_manager
-except ImportError as e:
-    logger.warning(f"Some validation dependencies not available: {e}")
+    HISTORICAL_DATA_AVAILABLE = True
+except ImportError:
+    HISTORICAL_DATA_AVAILABLE = False
+    historical_data_manager = None
+
+# Helper function to safely convert numpy floats to Python floats
+def safe_float(value: Any, default: float = 0.0) -> float:
+    """Safely convert numpy float or any numeric type to Python float"""
+    if value is None:
+        return default
+    try:
+        if np.isnan(value) or np.isinf(value):
+            return default
+        return float(value)
+    except (TypeError, ValueError, OverflowError):
+        return default
 
 class ValidationLevel(Enum):
     """Validation intensity levels"""
@@ -71,6 +163,7 @@ class StressTestType(Enum):
     REGIME_CHANGE = "regime_change"
     BLACK_SWAN = "black_swan"
     EXTENDED_DRAWDOWN = "extended_drawdown"
+    FLASH_CRASH = "flash_crash"
 
 class ValidationStatus(Enum):
     """Validation status codes"""
