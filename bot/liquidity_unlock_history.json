@@ -20103,5 +20103,18 @@
       "QQQ",
       "UNH"
     ]
+  },
+  {
+    "timestamp": 1757758827.3376071,
+    "datetime": "2025-09-13T10:20:27.337607",
+    "trigger_cash": 0,
+    "target_amount": 2949.3945,
+    "positions_closed": 1,
+    "positions_failed": 0,
+    "capital_freed": 19104.822089,
+    "closed_symbols": [
+      "BTC/USD"
+    ],
+    "failed_symbols": []
   }
 ]

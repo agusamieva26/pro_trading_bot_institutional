@@ -137,9 +137,9 @@ def run_once(state: BotState, clf):
     # ✅ P&L diario usando valores reales de Alpaca
     logger.info(f"📈 P&L diario Alpaca: {daily_change_pct:+.2f}% (${daily_change:+,.2f}) | Ayer: ${last_equity:,.2f}")
     
-    # 🚨 KILL SWITCH DIARIO: Parar si pérdidas > $500 o > 2.5%
-    daily_loss_limit = -500  # $500 pérdida máxima
-    daily_loss_pct_limit = -2.5  # 2.5% pérdida máxima
+    # 🚨 KILL SWITCH DIARIO: Parar si pérdidas > $3000 o > 15%  
+    daily_loss_limit = -3000  # $3000 pérdida máxima (expandido para recuperación épica)
+    daily_loss_pct_limit = -15.0  # 15% pérdida máxima
     
     if daily_change <= daily_loss_limit or daily_change_pct <= daily_loss_pct_limit:
         logger.critical(f"🚨🛑 KILL SWITCH ACTIVADO: Pérdida diaria ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) excede límites!")
@@ -153,7 +153,7 @@ def run_once(state: BotState, clf):
             telegram_msg = f"""🚨 KILL SWITCH ACTIVADO 🚨
 
 💀 Pérdida diaria: ${daily_change:+,.2f} ({daily_change_pct:+.2f}%)
-🛑 Límite: -$500 o -2.5%
+🛑 Límite: -$3000 o -15%
 
 🚨 CERRANDO TODAS LAS POSICIONES
 ⏸️ TRADING PAUSADO hasta reset diario"""
