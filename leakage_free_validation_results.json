@@ -1,0 +1,305 @@
+{
+  "validation_timestamp": "2025-09-13T13:18:50.766753",
+  "validation_config": {
+    "n_splits": 5,
+    "embargo_period": 30,
+    "purge_period": 60,
+    "target_accuracy_range": [
+      0.7,
+      0.8
+    ]
+  },
+  "dataset_info": {
+    "samples": 3000,
+    "features": 33,
+    "time_span": "2024-01-01 09:30:00 to 2024-01-03 11:29:00",
+    "class_distribution": {
+      "2": 2210,
+      "1": 421,
+      "3": 321,
+      "4": 25,
+      "0": 23
+    }
+  },
+  "model_results": {
+    "RandomForest": {
+      "model_name": "RandomForestClassifier",
+      "validation_method": "purged_group_time_series",
+      "overall_accuracy": 0.7196,
+      "accuracy_std": 0.13892386404070395,
+      "split_accuracies": [
+        0.448,
+        0.784,
+        0.842,
+        0.764,
+        0.76
+      ],
+      "symbol_accuracies": {
+        "SYNTHETIC": 0.7196
+      },
+      "timeframe_accuracies": {
+        "1m": 0.7196
+      },
+      "confusion_matrices": [
+        [
+          [
+            1,
+            0,
+            11,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            86,
+            31,
+            0
+          ],
+          [
+            4,
+            0,
+            211,
+            83,
+            3
+          ],
+          [
+            1,
+            0,
+            43,
+            12,
+            0
+          ],
+          [
+            0,
+            0,
+            11,
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            49,
+            0
+          ],
+          [
+            0,
+            392,
+            0
+          ],
+          [
+            0,
+            59,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            53,
+            0
+          ],
+          [
+            0,
+            421,
+            0
+          ],
+          [
+            0,
+            26,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            51,
+            2
+          ],
+          [
+            0,
+            379,
+            11
+          ],
+          [
+            0,
+            54,
+            3
+          ]
+        ],
+        [
+          [
+            0,
+            42,
+            0
+          ],
+          [
+            0,
+            379,
+            0
+          ],
+          [
+            0,
+            78,
+            1
+          ]
+        ]
+      ],
+      "statistical_significance": {
+        "t_statistic": 7.480356288502889,
+        "p_value": 0.0017077060938011162,
+        "ci_lower": 0.57798,
+        "ci_upper": 0.7980200000000001
+      },
+      "is_realistic": true,
+      "leakage_detected": false,
+      "validation_timestamp": "2025-09-13T13:17:37.784407"
+    },
+    "XGBoost": {
+      "model_name": "XGBClassifier",
+      "validation_method": "purged_group_time_series",
+      "overall_accuracy": 0.7363999999999999,
+      "accuracy_std": 0.10283501349248707,
+      "split_accuracies": [
+        0.54,
+        0.782,
+        0.842,
+        0.764,
+        0.754
+      ],
+      "symbol_accuracies": {
+        "SYNTHETIC": 0.7363999999999999
+      },
+      "timeframe_accuracies": {
+        "1m": 0.7363999999999999
+      },
+      "confusion_matrices": [
+        [
+          [
+            3,
+            0,
+            10,
+            0,
+            0
+          ],
+          [
+            6,
+            0,
+            108,
+            4,
+            0
+          ],
+          [
+            4,
+            4,
+            263,
+            30,
+            0
+          ],
+          [
+            0,
+            1,
+            51,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            12,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            49,
+            0
+          ],
+          [
+            0,
+            391,
+            1
+          ],
+          [
+            0,
+            59,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            53,
+            0
+          ],
+          [
+            0,
+            421,
+            0
+          ],
+          [
+            0,
+            26,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            52,
+            1
+          ],
+          [
+            0,
+            382,
+            8
+          ],
+          [
+            0,
+            57,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            42,
+            0
+          ],
+          [
+            2,
+            377,
+            0
+          ],
+          [
+            1,
+            78,
+            0
+          ]
+        ]
+      ],
+      "statistical_significance": {
+        "t_statistic": 10.43224446193491,
+        "p_value": 0.0004769736192955823,
+        "ci_lower": 0.63984,
+        "ci_upper": 0.8024000000000001
+      },
+      "is_realistic": true,
+      "leakage_detected": false,
+      "validation_timestamp": "2025-09-13T13:18:39.426853"
+    }
+  },
+  "best_model": "XGBoost",
+  "realistic_models_found": 2,
+  "leakage_detected_models": 0,
+  "summary": {
+    "validation_successful": true,
+    "target_accuracy_achieved": "True",
+    "no_leakage_detected": true,
+    "realistic_performance": true
+  }
+}

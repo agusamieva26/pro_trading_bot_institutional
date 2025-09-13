@@ -44,3 +44,10 @@ beautifulsoup4
 html5lib
 lxml
 trafilatura
+lightgbm
+optuna
+scikit-learn
+scipy
+ta-lib
+tensorflow
+xgboost
