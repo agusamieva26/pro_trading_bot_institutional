@@ -1,23 +1,23 @@
 {
   "UNI/USD": {
     "trailing_activated": true,
-    "max_price_reached": 9.99976,
-    "partial_profit_taken": false,
-    "original_quantity": 5.249188201,
+    "max_price_reached": 10.18,
+    "partial_profit_taken": true,
+    "original_quantity": 16.96995638,
     "entry_price": 9.748411584
   },
   "XRP/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 3.04293,
-    "partial_profit_taken": false,
-    "original_quantity": 4.010452493,
+    "trailing_activated": true,
+    "max_price_reached": 3.1072,
+    "partial_profit_taken": true,
+    "original_quantity": 343.311292126,
     "entry_price": 3.01169
   },
   "ETH/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 4462.1015,
-    "partial_profit_taken": false,
-    "original_quantity": 0.022067522,
+    "trailing_activated": true,
+    "max_price_reached": 4714.13,
+    "partial_profit_taken": true,
+    "original_quantity": 0.050653518,
     "entry_price": 4416.094
   },
   "SHIB/USD": {
@@ -29,7 +29,7 @@
   },
   "CRV/USD": {
     "trailing_activated": true,
-    "max_price_reached": 0.83035,
+    "max_price_reached": 0.8431435,
     "partial_profit_taken": true,
     "original_quantity": 179.2282223065,
     "entry_price": 0.80125
@@ -42,10 +42,10 @@
     "entry_price": 1.061e-05
   },
   "AAVE/USD": {
-    "trailing_activated": false,
-    "max_price_reached": 310.07,
-    "partial_profit_taken": false,
-    "original_quantity": 0.098735478,
+    "trailing_activated": true,
+    "max_price_reached": 321.77,
+    "partial_profit_taken": true,
+    "original_quantity": 0.4939611885,
     "entry_price": 306.3
   },
   "AVAX/USD": {
@@ -64,9 +64,9 @@
   },
   "SOL/USD": {
     "trailing_activated": true,
-    "max_price_reached": 228.7575,
-    "partial_profit_taken": false,
-    "original_quantity": 0.165125745,
+    "max_price_reached": 242.0905,
+    "partial_profit_taken": true,
+    "original_quantity": 1.2350717415,
     "entry_price": 223.42
   },
   "BTC/USD": {
