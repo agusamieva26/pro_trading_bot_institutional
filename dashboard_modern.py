@@ -1606,22 +1606,31 @@ with tab6:
         if "agus_chat_history" not in st.session_state:
             st.session_state.agus_chat_history = []
             # Add welcome message
-            welcome_msg = """🌟 **¡Hola! Soy AGUS 2.0, tu asistente de IA híbrido.**
+            welcome_msg = """🧠 **¡AGUS 2.0 HÍBRIDO INTEGRADO AL SISTEMA DE TRADING!**
 
-✨ **Puedo ayudarte con:**
-• 📊 Análisis de mercados y trading
-• 📝 Crear archivos de código (Python, JS, etc.)
-• 🔧 Debugging y solución de problemas  
-• 💡 Estrategias y recomendaciones
-• 📈 Generación de reportes
+🏛️ **Soy la IA central del bot institucional con acceso completo a:**
+• 📊 Portfolio de $18,000+ operando 16 criptomonedas en tiempo real
+• 🛡️ Sistemas de gestión de riesgo multicapa activos
+• 🔄 Análisis multi-timeframe (5m, 15m, 1H, 4H) 
+• 🤖 Modelos ML Random Forest con análisis Fibonacci
+• 💰 Detección de arbitraje entre múltiples exchanges
+• 📈 Optimización de portfolio y rebalanceo automático
 
-🎯 **Ejemplos de comandos:**
-• "Crea archivo análisis_btc.py con código de análisis técnico"
-• "¿Qué opinas del mercado actual?"
-• "Genera estrategia de trading para ETH"
-• "Crear archivo config.json para configuración del bot"
+✨ **Capacidades especializadas:**
+• 🎯 Análisis de señales de trading en tiempo real
+• 📝 Creación de scripts de trading personalizados
+• 🔧 Debugging avanzado del sistema completo
+• 💡 Estrategias basadas en datos reales del portfolio
+• 📋 Reportes detallados con métricas institucionales
 
-¿En qué puedo ayudarte hoy?"""
+🚀 **Comandos especializados:**
+• "¿Cómo está funcionando el bot de trading?"
+• "Analiza las señales actuales de BTC y ETH"
+• "Crea script para nueva estrategia de momentum"
+• "Diagnostica el sistema de gestión de riesgo"
+• "Genera reporte del performance actual"
+
+**¡Pregúntame sobre el sistema de trading en funcionamiento!**"""
             st.session_state.agus_chat_history.append({"role": "assistant", "content": welcome_msg})
         
         # Chat container with better styling

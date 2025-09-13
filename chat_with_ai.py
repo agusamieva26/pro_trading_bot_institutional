@@ -93,9 +93,35 @@ class AITradingChat:
             else:
                 query_type = "general"
             
-            # Use AGUS 2.0 for intelligent analysis
+            # Create trading-specific context for AGUS 2.0
+            enhanced_prompt = f"""
+CONTEXT: You are AGUS 2.0, the advanced AI system integrated into a sophisticated institutional-grade trading bot. This system includes:
+
+🏛️ SYSTEM CAPABILITIES:
+- Real-time crypto trading (BTC, ETH, SHIB, UNI, PEPE, etc.)
+- Advanced risk management with multiple protection layers
+- Multi-timeframe technical analysis (5m, 15m, 1H, 4H)
+- AI-powered signal generation and validation
+- Arbitrage detection across exchanges
+- Portfolio optimization and rebalancing
+- Machine learning with Random Forest models
+- Fibonacci analysis and sentiment integration
+
+📊 CURRENT STATUS:
+- Portfolio equity: ~$18,000 with active risk management
+- Trading 16 cryptocurrencies in real-time
+- AGUS 2.0 Hybrid Intelligence fully operational
+- OpenAI GPT model active (not LocalAI fallback)
+- Multiple specialized AI components running
+
+USER QUERY: {question}
+
+RESPOND AS: The integrated AGUS 2.0 system that understands the full trading context, market data, and system capabilities. Provide intelligent, trading-focused responses that demonstrate your deep integration with this sophisticated system.
+"""
+            
+            # Use AGUS 2.0 for intelligent analysis with enhanced context
             response = await agus_2_analyze_query(
-                query=question,
+                query=enhanced_prompt,
                 user_id=self.user_id,
                 session_id=self.session_id
             )
@@ -215,8 +241,22 @@ AGUS 2.0 encontró un problema al crear el archivo:
         try:
             from bot.free_ai_assistant import free_ai_assistant
             
+            # Add trading context for legacy system too
+            enhanced_legacy_prompt = f"""
+SISTEMA: Eres AGUS, la IA integrada en un bot de trading institucional avanzado con:
+- Portfolio de ~$18,000 operando 16 criptomonedas 
+- Gestión de riesgo multicapa activa
+- Análisis técnico multi-timeframe 
+- Detección de arbitraje entre exchanges
+- Modelos ML con Random Forest
+
+PREGUNTA DEL USUARIO: {question}
+
+RESPONDE como la IA integrada del sistema, no como IA genérica.
+"""
+            
             # Analizar tipo de pregunta
-            question_lower = question.lower()
+            question_lower = enhanced_legacy_prompt.lower()
             
             # 🛠️ Preguntas sobre debugging/reparación
             if any(word in question_lower for word in ["debug", "error", "fix", "repair", "reparar", "problema", "arreglar", "bug"]):
