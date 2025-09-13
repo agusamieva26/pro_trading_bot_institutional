@@ -28,9 +28,21 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict, deque
 import psutil
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.ensemble import VotingClassifier, VotingRegressor
-from sklearn.preprocessing import StandardScaler
+# Conditional sklearn imports to avoid dill circular import issues
+try:
+    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+    from sklearn.ensemble import VotingClassifier, VotingRegressor
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    # Mock classes for when sklearn is not available
+    class VotingClassifier:
+        pass
+    class VotingRegressor:
+        pass
+    class StandardScaler:
+        pass
 import warnings
 warnings.filterwarnings("ignore")
 
