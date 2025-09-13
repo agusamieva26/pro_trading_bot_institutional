@@ -40,8 +40,8 @@ def get_available_cash():
         client = _client()
         account = client.get_account()
         total_cash = float(getattr(account, 'cash', 0.0) or 0.0)
-        # Usar 95% del cash para trading agresivo (reservar 5% buffer)
-        available = total_cash * 0.95 - _reserved_cash  
+        # Usar 98% del cash para trading ultra-agresivo (reservar 2% buffer)
+        available = total_cash * 0.98 - _reserved_cash  
         return max(0, available), total_cash
     except Exception as e:
         logger.error(f"❌ Error obteniendo cash disponible: {e}")
@@ -150,25 +150,42 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
         
         # 🛡️ SIMPLE EXPOSURE LIMIT: Block buys when exposure is too high
         if side.lower() == "buy":
-            # Simple check: if notional > available cash * 2, skip (emergency brake)
-            if notional_value > available_cash * 2.0:
-                logger.warning(f"🚫 EMERGENCY BRAKE: Order ${notional_value:.0f} > 2x available cash ${available_cash:.0f}. Skip {symbol}.")
+            # Simple check: if notional > available cash * 3, skip (emergency brake)
+            if notional_value > available_cash * 3.0:
+                logger.warning(f"🚫 EMERGENCY BRAKE: Order ${notional_value:.0f} > 3x available cash ${available_cash:.0f}. Skip {symbol}.")
                 return False
         
         if side.lower() == "buy" and price:
-            # NUEVO: Si no hay suficiente cash, intentar orden escalada
+            # ULTRA-INTELIGENTE: Auto-escalado máximo aprovechamiento
             if notional_value > available_cash:
-                if available_cash < 10.0:  # Menos de $10 disponibles
-                    logger.warning(f"⚠️ Liquidez crítica: ${available_cash:.2f} < $10. Skip {symbol}.")
-                    return False
+                # MICRO-ÓRDENES: Para cash muy bajo, usar micro trading
+                if available_cash < 50.0:
+                    if available_cash < 2.0:  # Menos de $2 disponibles
+                        logger.warning(f"⚠️ Liquidez extrema: ${available_cash:.2f} < $2. Skip {symbol}.")
+                        return False
                     
-                # Escalar orden al 80% del cash disponible
-                scaled_notional = available_cash * 0.80
-                scaled_qty = scaled_notional / price
-                
-                logger.info(f"💡 Escalando orden {symbol}: ${notional_value:.2f} → ${scaled_notional:.2f} (qty: {qty:.6f} → {scaled_qty:.6f})")
+                    # MICRO-TRADING: Usar 99% del cash disponible
+                    scaled_notional = available_cash * 0.99
+                    scaled_qty = scaled_notional / price
+                    
+                    logger.info(f"💡 MICRO-TRADING {symbol}: ${notional_value:.2f} → ${scaled_notional:.2f} (¡máximo aprovechamiento!)")
+                else:
+                    # ESCALADO ULTRA-MÁXIMO: Usar 99% del cash disponible  
+                    scaled_notional = available_cash * 0.99
+                    scaled_qty = scaled_notional / price
+                    
+                    logger.info(f"💡 ESCALADO ULTRA-MÁXIMO {symbol}: ${notional_value:.2f} → ${scaled_notional:.2f} (99% del cash)")
                 
                 # Actualizar valores para la orden escalada
+                notional_value = scaled_notional
+                qty = scaled_qty
+            elif notional_value > available_cash * 0.1:
+                # ESCALADO AGRESIVO: Si la orden usa >10% del cash, usar 99% disponible
+                scaled_notional = available_cash * 0.99
+                scaled_qty = scaled_notional / price
+                
+                logger.info(f"💡 ESCALADO AGRESIVO {symbol}: ${notional_value:.2f} → ${scaled_notional:.2f} (99% del cash disponible)")
+                
                 notional_value = scaled_notional
                 qty = scaled_qty
             
