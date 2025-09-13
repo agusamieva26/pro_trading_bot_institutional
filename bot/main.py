@@ -284,6 +284,24 @@ def run_once(state: BotState, clf):
         available_cash = float(getattr(account, 'cash', 0))
         logger.info(f"📊 Equity actualizado: ${total_equity:,.2f}, Cash: ${available_cash:,.2f}")
 
+    # 🧠 INTEGRACIÓN IA PERSONAL - Análisis cada 30min
+    ai_analysis = {}
+    try:
+        from bot.news_integration import get_ai_market_analysis
+        ai_analysis = await get_ai_market_analysis(settings.symbols[:10])  # Analizar top 10 símbolos
+        
+        if ai_analysis.get("ai_available") and ai_analysis.get("analysis"):
+            analysis = ai_analysis["analysis"]
+            logger.info(f"🧠 IA Personal activa - {len(analysis.get('signals', []))} señales generadas")
+            
+            # Log del sentiment general
+            sentiment = analysis.get("sentiment", {})
+            sentiment_score = sentiment.get("overall_sentiment", 0.0)
+            logger.info(f"📰 Sentiment noticias: {sentiment_score:+.2f} ({sentiment.get('confidence', 0):.1%} confianza)")
+            
+    except Exception as e:
+        logger.debug(f"IA Personal no disponible: {e}")
+
     # --- 6. BTC/USD DIVERSIFICADO (máximo 40% para balance) ---
     btc_max_allocation = 0.40  # Máximo 40% del equity total
     btc_max_cash = min(total_equity * btc_max_allocation, available_cash * 0.6)  # Máx 60% del cash disponible

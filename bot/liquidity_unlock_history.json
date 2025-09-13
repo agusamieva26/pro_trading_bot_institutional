@@ -20116,5 +20116,31 @@
       "BTC/USD"
     ],
     "failed_symbols": []
+  },
+  {
+    "timestamp": 1757759097.690131,
+    "datetime": "2025-09-13T10:24:57.690132",
+    "trigger_cash": 0,
+    "target_amount": 2939.85,
+    "positions_closed": 1,
+    "positions_failed": 0,
+    "capital_freed": 19034.863987,
+    "closed_symbols": [
+      "BTC/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1757759357.6056807,
+    "datetime": "2025-09-13T10:29:17.605681",
+    "trigger_cash": 0,
+    "target_amount": 2928.765,
+    "positions_closed": 1,
+    "positions_failed": 0,
+    "capital_freed": 18939.72503,
+    "closed_symbols": [
+      "BTC/USD"
+    ],
+    "failed_symbols": []
   }
 ]

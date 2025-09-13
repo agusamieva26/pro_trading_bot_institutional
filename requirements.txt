@@ -29,3 +29,5 @@ tornado>=6.5.2
 # Data handling
 openpyxl
 schedule
+openai
+trafilatura
