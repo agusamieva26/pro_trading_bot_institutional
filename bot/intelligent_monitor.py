@@ -140,7 +140,7 @@ class IntelligentMonitor:
                 self._check_critical_losses()
                 self._check_system_resources()
                 self._check_bot_functionality()
-                self._analyze_alerts_with_agus()
+                asyncio.run(self._analyze_alerts_with_agus())
                 
                 # Auto-corrección si es necesario
                 if self.system_health in [SystemHealth.CRITICAL, SystemHealth.EMERGENCY]:
@@ -314,7 +314,7 @@ class IntelligentMonitor:
                 {"issues": issues, "count": len(issues)}
             )
     
-    def _analyze_alerts_with_agus(self):
+    async def _analyze_alerts_with_agus(self):
         """Usa AGUS para analizar alertas y generar respuestas inteligentes"""
         if not self.agus or not self.alerts:
             return
@@ -353,7 +353,7 @@ class IntelligentMonitor:
                 logger.info(f"🧠 AGUS analyzed alert: {alert.component}")
                 
                 # Intentar auto-fix basado en respuesta de AGUS
-                if "restart" in response.lower() and "bot" in response.lower():
+                if "restart" in response.content.lower() and "bot" in response.content.lower():
                     self._restart_bot_service()
                     alert.auto_fixed = True
                 
