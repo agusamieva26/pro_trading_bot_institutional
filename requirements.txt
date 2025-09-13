@@ -58,3 +58,4 @@ langchain-community
 pytest
 sentence-transformers
 tiktoken
+psycopg2-binary

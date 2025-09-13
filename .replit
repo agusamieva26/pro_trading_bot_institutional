@@ -1,11 +1,11 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "postgresql-16"]
 [agent]
 expertMode = true
 integrations = ["python_openai:1.0.0", "web_scraper:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["bash", "cargo", "gcc", "glibcLocales", "libiconv", "libxcrypt", "ocl-icd", "opencl-headers", "pkg-config", "rustc", "unzip", "xcodebuild", "xsimd", "zlib", "go"]
+packages = ["bash", "cargo", "gcc", "glibcLocales", "go", "libiconv", "libxcrypt", "ocl-icd", "opencl-headers", "pkg-config", "rustc", "unzip", "xcodebuild", "xsimd", "zlib"]
 
 [workflows]
 runButton = "Project"

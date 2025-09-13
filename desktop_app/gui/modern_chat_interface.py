@@ -13,6 +13,9 @@ import os
 import subprocess
 from datetime import datetime
 import re
+import psycopg2
+import uuid
+import os
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -29,6 +32,9 @@ class ModernChatInterface:
     def __init__(self, parent):
         self.parent = parent
         self.chat_history = []
+        self.conversation_id = self._get_or_create_conversation_id()
+        self._initialize_chat_memory()
+        self._load_conversation_history()
         
         # Initialize AI chat FIRST - before setting up interface
         print(f"🔍 DEBUG: CHAT_AVAILABLE = {CHAT_AVAILABLE}")
@@ -52,6 +58,129 @@ class ModernChatInterface:
         
         # THEN setup interface
         self.setup_modern_interface()
+    
+    def _get_or_create_conversation_id(self):
+        """Get or create a unique conversation ID for memory persistence"""
+        # Use a file to persist conversation ID across sessions
+        conv_file = os.path.expanduser('~/.agus_conversation_id')
+        try:
+            if os.path.exists(conv_file):
+                with open(conv_file, 'r') as f:
+                    conversation_id = f.read().strip()
+                    if conversation_id:
+                        print(f"📚 Using existing conversation ID: {conversation_id[:8]}...")
+                        return conversation_id
+        except Exception as e:
+            print(f"⚠️ Failed to load conversation ID: {e}")
+        
+        # Create new conversation ID
+        conversation_id = str(uuid.uuid4())
+        try:
+            with open(conv_file, 'w') as f:
+                f.write(conversation_id)
+            print(f"🆕 Created new conversation ID: {conversation_id[:8]}...")
+        except Exception as e:
+            print(f"⚠️ Failed to save conversation ID: {e}")
+        
+        return conversation_id
+    
+    def _initialize_chat_memory(self):
+        """Initialize PostgreSQL chat memory table"""
+        try:
+            import os
+            DATABASE_URL = os.getenv('DATABASE_URL')
+            if not DATABASE_URL:
+                print("⚠️ No DATABASE_URL found - chat memory disabled")
+                self.memory_enabled = False
+                return
+                
+            # Create table for chat memory
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        CREATE TABLE IF NOT EXISTS chat_memory (
+                            id SERIAL PRIMARY KEY,
+                            conversation_id VARCHAR(255),
+                            message_type VARCHAR(50),
+                            content TEXT,
+                            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            user_id VARCHAR(255) DEFAULT 'default_user'
+                        )
+                    """)
+                    conn.commit()
+            self.memory_enabled = True
+            print("✅ Chat memory database initialized")
+        except Exception as e:
+            print(f"⚠️ Failed to initialize chat memory: {e}")
+            self.memory_enabled = False
+    
+    def _save_message_to_memory(self, message_type: str, content: str):
+        """Save message to persistent memory"""
+        if not self.memory_enabled:
+            return
+        
+        try:
+            import os
+            DATABASE_URL = os.getenv('DATABASE_URL')
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO chat_memory (conversation_id, message_type, content)
+                        VALUES (%s, %s, %s)
+                    """, (self.conversation_id, message_type, content))
+                    conn.commit()
+        except Exception as e:
+            print(f"⚠️ Failed to save message to memory: {e}")
+    
+    def _load_conversation_history(self):
+        """Load conversation history from persistent memory"""
+        if not self.memory_enabled:
+            return
+        
+        try:
+            import os
+            DATABASE_URL = os.getenv('DATABASE_URL')
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT message_type, content, timestamp 
+                        FROM chat_memory 
+                        WHERE conversation_id = %s 
+                        ORDER BY timestamp ASC
+                        LIMIT 50
+                    """, (self.conversation_id,))
+                    
+                    messages = cur.fetchall()
+                    
+            # Restore messages to chat display
+            if messages:
+                print(f"📚 Restoring {len(messages)} messages from memory")
+                for msg_type, content, timestamp in messages:
+                    if msg_type == 'user':
+                        self._restore_user_message(content, timestamp)
+                    elif msg_type == 'agus':
+                        self._restore_agus_message(content, timestamp)
+                    elif msg_type == 'system':
+                        # Skip system messages on restore to avoid duplicates
+                        pass
+        except Exception as e:
+            print(f"⚠️ Failed to load conversation history: {e}")
+    
+    def _restore_user_message(self, message: str, timestamp):
+        """Restore user message to display without saving again"""
+        self.chat_display.configure(state='normal')
+        time_str = timestamp.strftime('%H:%M') if hasattr(timestamp, 'strftime') else 'restored'
+        self.chat_display.insert('end', f'\n[{time_str}] You:\n', 'system_message')
+        self.chat_display.insert('end', f'{message}\n', 'user_message')
+        self.chat_display.configure(state='disabled')
+    
+    def _restore_agus_message(self, message: str, timestamp):
+        """Restore AGUS message to display without saving again"""
+        self.chat_display.configure(state='normal')
+        time_str = timestamp.strftime('%H:%M') if hasattr(timestamp, 'strftime') else 'restored'
+        self.chat_display.insert('end', f'\n[{time_str}] AGUS:\n', 'system_message')
+        self.parse_and_insert_message(message)
+        self.chat_display.configure(state='disabled')
 
     def setup_modern_interface(self):
         """Create modern chat interface similar to Replit Assistant"""
@@ -398,7 +527,7 @@ class ModernChatInterface:
         self.chat_display.configure(state='disabled')
 
     def add_user_message(self, message):
-        """Add user message with modern styling"""
+        """Add user message with modern styling and save to memory"""
         self.chat_display.configure(state='normal')
         
         timestamp = datetime.now().strftime('%H:%M')
@@ -407,12 +536,15 @@ class ModernChatInterface:
         
         self.chat_display.configure(state='disabled')
         
+        # Save to persistent memory
+        self._save_message_to_memory('user', message)
+        
         # Ensure scroll to bottom
         self.chat_display.see('end')
         self.chat_display.update()
 
     def add_agus_message(self, message):
-        """Add AGUS message with code highlighting"""
+        """Add AGUS message with code highlighting and save to memory"""
         self.chat_display.configure(state='normal')
         
         timestamp = datetime.now().strftime('%H:%M')
@@ -422,6 +554,9 @@ class ModernChatInterface:
         self.parse_and_insert_message(message)
         
         self.chat_display.configure(state='disabled')
+        
+        # Save to persistent memory
+        self._save_message_to_memory('agus', message)
         
         # Force scroll to bottom with multiple calls
         self.chat_display.see('end')
@@ -446,8 +581,13 @@ class ModernChatInterface:
         self.chat_display.insert('end', '\n')
 
     def add_system_message(self, message):
-        """Add system message"""
+        """Add system message with optional memory save"""
         self.chat_display.configure(state='normal')
         self.chat_display.insert('end', f'{message}\n\n', 'system_message')
         self.chat_display.configure(state='disabled')
+        
+        # Only save non-welcome system messages to avoid duplicate welcomes on restore
+        if "AGUS is ready" not in message and "AI system currently" not in message:
+            self._save_message_to_memory('system', message)
+        
         self.chat_display.see('end')
