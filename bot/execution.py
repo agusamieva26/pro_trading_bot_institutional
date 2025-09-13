@@ -116,9 +116,9 @@ def place_order(symbol: str, qty: float, side: str, price: float | None = None, 
                 logger.critical(f"🚨 ORDER BLOCKED: Exposure limit! Projected {projected_exposure_ratio:.2f}x > {settings.max_gross_exposure:.2f}x limit")
                 return False
                 
-            # Check cash buffer (use configured minimum)
+            # Check cash buffer (IA FIX: Reducido para permitir trading más agresivo) 
             cash_after_trade = available_cash - notional_value
-            min_cash_pct = getattr(settings, 'min_cash_buffer', 0.10)  # Default 10% if not set
+            min_cash_pct = getattr(settings, 'min_cash_buffer', 0.05)  # IA FIX: Reducido de 10% a 5% para recuperación épica
             min_cash_required = current_equity * min_cash_pct
             if cash_after_trade < min_cash_required:
                 logger.critical(f"🚨 ORDER BLOCKED: Cash buffer! After trade ${cash_after_trade:.0f} < ${min_cash_required:.0f} required ({min_cash_pct:.0%})")

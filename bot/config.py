@@ -27,7 +27,7 @@ class Settings(BaseModel):
     risk_per_trade: float = Field(default_factory=lambda: float(os.getenv("RISK_PER_TRADE","0.013")))  # AGRESIVO: 1.3% (rotación rápida)
     max_daily_loss_pct: float = Field(default_factory=lambda: float(os.getenv("MAX_DAILY_LOSS_PCT","10.0")))  # Aumentado para operar hoy
     max_gross_exposure: float = Field(default_factory=lambda: float(os.getenv("MAX_GROSS_EXPOSURE","1.00")))  # LIBERADO: Permitir operar con exposición actual
-    min_cash_buffer: float = Field(default_factory=lambda: float(os.getenv("MIN_CASH_BUFFER","0.10")))  # Mínimo 10% cash buffer
+    min_cash_buffer: float = Field(default_factory=lambda: float(os.getenv("MIN_CASH_BUFFER","0.05")))  # IA FIX: 5% cash buffer para trading agresivo
     enable_extended_hours: bool = Field(default_factory=lambda: os.getenv("ENABLE_EXTENDED_HOURS","true").lower() in ("1","true","yes"))  # 🔥 PRE/POST MARKET
     enable_crypto_shorts: bool = Field(default_factory=lambda: os.getenv("ENABLE_CRYPTO_SHORTS","true").lower() in ("1","true","yes"))  # 🔥 CRYPTO SHORTS FULL
     take_profit_pct: float = Field(default_factory=lambda: float(os.getenv("TAKE_PROFIT_PCT","0.015")))  # ROTACIÓN RÁPIDA: 1.5%

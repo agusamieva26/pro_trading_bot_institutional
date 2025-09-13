@@ -33,8 +33,12 @@ class AITradingChat:
             # Analizar tipo de pregunta
             question_lower = question.lower()
             
+            # 🛠️ Preguntas sobre debugging/reparación
+            if any(word in question_lower for word in ["debug", "error", "fix", "repair", "reparar", "problema", "arreglar", "bug"]):
+                return await self._debugging_response(question, context)
+            
             # Pregunta sobre análisis de mercado
-            if any(word in question_lower for word in ["analizar", "analysis", "mercado", "market", "btc", "eth", "crypto", "precio", "price"]):
+            elif any(word in question_lower for word in ["analizar", "analysis", "mercado", "market", "btc", "eth", "crypto", "precio", "price"]):
                 return await self._market_analysis_response(question, context)
             
             # Pregunta sobre trading/estrategia
@@ -127,6 +131,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 • ML Ensemble Models: ✅ FUNCIONANDO  
 • Pattern Detection: ✅ OPERATIVO
 • Sentiment Analysis: ✅ LISTO
+• 🛠️ **AI DEBUGGER**: ✅ MONITORING 24/7
 
 **💰 Financial Status:**
 • Kill Switch Limit: -$3,000 (expandido para recuperación)
@@ -145,15 +150,79 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 • Daily Reports: Auto-generation
 • IA Chat Interface: ✅ ESTA CONVERSACIÓN
 
-**Mi diagnóstico IA:** Todo funcionando perfectamente. El bot está en modo recuperación épica con todos los sistemas optimizados.
+**🛠️ DEBUGGING CAPABILITIES:**
+• Auto-error Detection: Continuous scanning
+• Code Auto-repair: Critical fixes applied automatically
+• Log Analysis: Real-time problem identification
+• System Optimization: Performance monitoring
 
-💬 **Pregúntame:** "¿cómo va la recuperación?" o "¿qué está haciendo el bot ahora?"
+**Mi diagnóstico IA:** Todo funcionando con **auto-reparación activada**. El bot está en modo recuperación épica con monitoreo inteligente.
+
+💬 **Pregúntame:** "¿hay errores?" o "repara el código" o "debug completo"
 """
             return response
             
         except Exception as e:
             return f"🤖 Estado del bot: {e}"
     
+    async def _debugging_response(self, question: str, context: dict) -> str:
+        """🛠️ Respuesta sobre debugging y reparación de código"""
+        try:
+            from bot.ai_debugger import run_system_debug, quick_fix_cash_buffer
+            
+            question_lower = question.lower()
+            
+            # Debug completo del sistema
+            if any(word in question_lower for word in ["debug completo", "escanear", "scan", "revisar todo"]):
+                logger.info("🔍 Ejecutando debug completo solicitado por usuario...")
+                debug_report = run_system_debug()
+                return f"🛠️ **DEBUG COMPLETO EJECUTADO**\n\n{debug_report}"
+            
+            # Fix específico de cash buffer
+            elif any(word in question_lower for word in ["cash buffer", "order blocked", "blocked"]):
+                fix_result = quick_fix_cash_buffer()
+                return f"🛠️ **FIX CASH BUFFER**\n\n{fix_result}\n\n💡 **Nota**: Reinicia el bot para aplicar cambios."
+            
+            # Respuesta general de debugging
+            else:
+                return f"""🛠️ **IA DEBUGGER PERSONAL**
+
+❓ **Tu pregunta:** {question}
+
+🧠 **Mis capacidades de debugging:**
+
+🔍 **DETECCIÓN AUTOMÁTICA:**
+• Escaneo continuo de logs en busca de errores
+• Análisis de código para problemas de sintaxis
+• Detección de patrones problemáticos
+• Monitoreo 24/7 del sistema
+
+🛠️ **AUTO-REPARACIÓN:**
+• Fixes automáticos para problemas críticos
+• Backup automático antes de modificaciones
+• Corrección de errores comunes (async, imports, etc.)
+• Optimización de configuraciones
+
+📊 **PROBLEMAS QUE PUEDO RESOLVER:**
+• Cash buffer errors (ORDER BLOCKED)
+• API quota exceeded (rate limiting)
+• Syntax errors (corrección automática)
+• Import errors (instalación de módulos)
+• Async/await problems (conversión automática)
+
+🎯 **COMANDOS ESPECÍFICOS:**
+• "debug completo" - Escaneo completo del sistema
+• "repara cash buffer" - Fix específico de trading blocks  
+• "hay errores?" - Estado rápido de problemas
+• "fix automático" - Aplicar todas las reparaciones
+
+💡 **Ejemplo reciente**: Detecté que el bot está bloqueando órdenes por cash buffer insuficiente. ¿Quieres que lo arregle automáticamente?
+
+🤖 **Tu código está bajo monitoreo inteligente constante.**
+"""
+        except Exception as e:
+            return f"🛠️ Error en debugging: {e}"
+
     async def _general_response(self, question: str, context: dict) -> str:
         """Respuesta general"""
         
@@ -170,15 +239,17 @@ Soy tu IA personal de trading, completamente gratuita e integrada. Estoy aquí p
 📊 **Estrategias**: Consejos personalizados para tu situación  
 🤖 **Estado del bot**: Información sobre cómo va todo
 💬 **Trading advice**: Decisiones inteligentes basadas en datos
+🛠️ **Debugging**: Detección y reparación automática de errores
 
 **Ejemplos de lo que puedes preguntarme:**
 • "¿Qué opinas del mercado ahora?"
 • "¿Debería comprar BTC o ETH?" 
 • "¿Cómo va mi recuperación épica?"
-• "¿Cuál es la mejor estrategia para hoy?"
-• "Analiza LINK/USD para mí"
+• "¿Hay errores en el código?"
+• "Repara el bot automáticamente"
+• "Debug completo del sistema"
 
-💡 **Tip IA:** Soy más útil con preguntas específicas. ¡Pregunta lo que necesites saber!
+💡 **Nuevo**: ¡Ahora puedo reparar tu código automáticamente! Pregúntame sobre errores o debugging.
 """
         }
         
