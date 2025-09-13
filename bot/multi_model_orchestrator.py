@@ -14,7 +14,6 @@ import json
 import asyncio
 import time
 import hashlib
-import pickle
 import sqlite3
 import threading
 import statistics
@@ -34,6 +33,14 @@ from sklearn.ensemble import VotingClassifier, VotingRegressor
 from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings("ignore")
+
+# Conditional imports to avoid dill circular import issues
+try:
+    import pickle
+    PICKLE_AVAILABLE = True
+except ImportError:
+    PICKLE_AVAILABLE = False
+    logger.warning("⚠️ pickle not available - caching functionality disabled")
 
 # Import existing LocalAI components
 from .localai_institutional_manager import LocalAIInstitutionalManager, ModelConfig, PerformanceMetrics
@@ -163,8 +170,14 @@ class ModelCache:
         
         # Load from disk
         try:
+            if not PICKLE_AVAILABLE:
+                self.miss_count += 1
+                return None
+                
             cache_file = self.cache_dir / f"{cache_key}.pkl"
             with open(cache_file, 'rb') as f:
+                # Ensure pickle is available before using
+                import pickle
                 result = pickle.load(f)
             
             self.access_times[cache_key] = datetime.now()
@@ -182,9 +195,15 @@ class ModelCache:
         cache_key = self._generate_cache_key(query, symbol, model_name, context)
         
         try:
+            if not PICKLE_AVAILABLE:
+                logger.debug("Pickle not available - skipping cache write")
+                return
+                
             # Save to disk
             cache_file = self.cache_dir / f"{cache_key}.pkl"
             with open(cache_file, 'wb') as f:
+                # Ensure pickle is available before using
+                import pickle
                 pickle.dump(result, f)
             
             # Update index
@@ -848,7 +867,7 @@ class ModelSpecializationRouter:
         self.model_registry = {}  # Maps model names to roles
         self.performance_tracker = defaultdict(list)
     
-    def register_model(self, model_name: str, role: ModelRole, capabilities: List[str] = None):
+    def register_model(self, model_name: str, role: ModelRole, capabilities: Optional[List[str]] = None):
         """Register a model with its specialization"""
         self.model_registry[model_name] = {
             "role": role,
@@ -861,7 +880,7 @@ class ModelSpecializationRouter:
         self,
         analysis_type: str,
         symbol: str = "",
-        market_conditions: Dict[str, Any] = None,
+        market_conditions: Optional[Dict[str, Any]] = None,
         max_models: int = 5,
         min_models: int = 2
     ) -> List[str]:
@@ -1092,10 +1111,14 @@ class MultiModelOrchestrator:
         
         try:
             # 1. Model Selection Phase
+            # Get market conditions with proper type handling
+            market_conditions = task.context.get("market_conditions")
+            market_conditions_dict = market_conditions if isinstance(market_conditions, dict) else None
+            
             selected_models = self.model_router.select_models_for_task(
                 analysis_type=task.analysis_type,
                 symbol=task.symbol,
-                market_conditions=task.context.get("market_conditions"),
+                market_conditions=market_conditions_dict,
                 max_models=len(task.required_models) + len(task.optional_models) if task.required_models else 5
             )
             
@@ -1387,7 +1410,7 @@ class MultiModelOrchestrator:
         except Exception as e:
             logger.debug(f"Database storage error: {e}")
     
-    def register_model(self, model_name: str, model_instance: Any, role: ModelRole, capabilities: List[str] = None):
+    def register_model(self, model_name: str, model_instance: Any, role: ModelRole, capabilities: Optional[List[str]] = None):
         """Register a new model with the orchestrator"""
         self.active_models[model_name] = model_instance
         self.model_router.register_model(model_name, role, capabilities)

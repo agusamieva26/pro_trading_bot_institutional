@@ -2,12 +2,19 @@
 import numpy as np
 import pandas as pd
 import os
-import joblib
 from bot.util import logger
 from sklearn.ensemble import RandomForestClassifier
-from joblib import dump
 from .features import make_features
 from .config import settings
+
+# Conditional imports to avoid dill circular import issues
+try:
+    import joblib
+    from joblib import dump
+    JOBLIB_AVAILABLE = True
+except ImportError:
+    JOBLIB_AVAILABLE = False
+    logger.warning("⚠️ joblib not available - model persistence disabled")
 _trading_model_instance = None
 
 # =========================
@@ -216,9 +223,14 @@ def train_model(df: pd.DataFrame):
     clf.fit(X, y)
     
     # Guardar modelo
-    os.makedirs(os.path.dirname(settings.model_path), exist_ok=True)
-    dump(clf, settings.model_path)
-    logger.info(f"✅ Modelo entrenado y guardado en {settings.model_path}")
+    if JOBLIB_AVAILABLE:
+        os.makedirs(os.path.dirname(settings.model_path), exist_ok=True)
+        # Import dump locally to ensure it's available
+        from joblib import dump
+        dump(clf, settings.model_path)
+        logger.info(f"✅ Modelo entrenado y guardado en {settings.model_path}")
+    else:
+        logger.warning("⚠️ joblib not available - model not saved to disk")
     return clf
 
 
@@ -232,6 +244,12 @@ def load_trading_model():
         return None
 
     try:
+        if not JOBLIB_AVAILABLE:
+            logger.warning("⚠️ joblib not available - cannot load model from disk")
+            return None
+        
+        # Import joblib locally to ensure it's available
+        import joblib
         model = joblib.load(settings.model_path)
         if hasattr(model, 'feature_names_in_'):
             missing = set(FEATURES) - set(model.feature_names_in_)
@@ -287,7 +305,10 @@ def hybrid_signal(features, model=None, timeframe=None, symbol=None):
             logger.error(f"❌ Feature faltante: {e}")
             return rule_signal(features)
 
-        if pd.isna(X).any().any():
+        # Check for NaN values - properly handle the boolean result
+        # Use pandas methods properly to avoid axis parameter issues
+        has_nan = pd.isna(X).any().any()  # First any() returns Series, second any() returns bool
+        if has_nan:
             logger.warning("⚠️ Input contiene NaN. Usando solo reglas.")
             return rule_signal(features)
 

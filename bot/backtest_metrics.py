@@ -109,8 +109,17 @@ class BacktestMetrics:
         
         # Calculate time period in years - handle index types safely
         try:
-            time_diff = equity_curve.index[-1] - equity_curve.index[0]
-            years = time_diff.total_seconds() / (365.25 * 24 * 3600)
+            # Safely handle index arithmetic with better type handling
+            start_val = equity_curve.index[0]
+            end_val = equity_curve.index[-1]
+            if hasattr(start_val, 'timestamp') and hasattr(end_val, 'timestamp'):
+                # Use pd.Timestamp to ensure proper datetime handling
+                start_ts = pd.Timestamp(start_val)
+                end_ts = pd.Timestamp(end_val)
+                time_diff = end_ts - start_ts
+                years = time_diff.total_seconds() / (365.25 * 24 * 3600)
+            else:
+                raise AttributeError("Non-datetime index")
         except (AttributeError, TypeError):
             # Fallback for non-datetime index
             years = len(equity_curve) / 252  # Assume daily data
@@ -134,12 +143,21 @@ class BacktestMetrics:
             
             # Estimate frequency from index - handle various index types
             try:
+                # Check if index has frequency information - handle DatetimeIndex specifically
+                # Safely check for DatetimeIndex with frequency
                 if hasattr(returns.index, 'freq') and returns.index.freq is not None:
                     # Handle specific pandas frequency objects
                     freq_factor = np.sqrt(252)  # Keep default for now
                 elif len(returns) > 1:
-                    # Estimate from time differences
-                    time_diff = returns.index[1] - returns.index[0]
+                    # Estimate from time differences - safely handle index types
+                    idx0 = returns.index[0] 
+                    idx1 = returns.index[1]
+                    if hasattr(idx0, 'timestamp') and hasattr(idx1, 'timestamp'):
+                        ts0 = pd.Timestamp(idx0)
+                        ts1 = pd.Timestamp(idx1)
+                        time_diff = ts1 - ts0
+                    else:
+                        raise AttributeError("Non-datetime index")
                     if hasattr(time_diff, 'total_seconds'):
                         seconds = time_diff.total_seconds()
                         if seconds < 3600:  # Less than 1 hour
@@ -242,10 +260,20 @@ class BacktestMetrics:
             elif not in_drawdown and start_idx is not None:
                 end_idx = i - 1
                 try:
-                    duration_calc = equity_curve.index[end_idx] - equity_curve.index[start_idx]
-                    if hasattr(duration_calc, 'days'):
-                        duration_days = duration_calc.days
-                        if pd.notna(duration_days):
+                    # Safely handle index arithmetic with proper timestamp conversion
+                    start_time = equity_curve.index[start_idx]
+                    end_time = equity_curve.index[end_idx]
+                    if hasattr(start_time, 'timestamp') and hasattr(end_time, 'timestamp'):
+                        start_ts = pd.Timestamp(start_time)
+                        end_ts = pd.Timestamp(end_time)
+                        duration_calc = end_ts - start_ts
+                        if hasattr(duration_calc, 'days'):
+                            duration_days = duration_calc.days
+                            if pd.notna(duration_days):
+                                drawdown_periods.append(float(duration_days))
+                        else:
+                            # Non-datetime index fallback
+                            duration_days = end_idx - start_idx
                             drawdown_periods.append(float(duration_days))
                     else:
                         # Non-datetime index fallback
@@ -261,11 +289,21 @@ class BacktestMetrics:
         current_duration = 0
         if start_idx is not None:
             try:
-                duration_calc = equity_curve.index[-1] - equity_curve.index[start_idx]
-                if hasattr(duration_calc, 'days'):
-                    current_duration = duration_calc.days
-                    if pd.notna(current_duration):
-                        current_duration = float(current_duration)
+                # Safely handle index arithmetic with proper timestamp conversion
+                start_time = equity_curve.index[start_idx]
+                end_time = equity_curve.index[-1]
+                if hasattr(start_time, 'timestamp') and hasattr(end_time, 'timestamp'):
+                    start_ts = pd.Timestamp(start_time)
+                    end_ts = pd.Timestamp(end_time)
+                    duration_calc = end_ts - start_ts
+                    if hasattr(duration_calc, 'days'):
+                        current_duration = duration_calc.days
+                        if pd.notna(current_duration):
+                            current_duration = float(current_duration)
+                            drawdown_periods.append(current_duration)
+                    else:
+                        # Non-datetime index fallback
+                        current_duration = float(len(equity_curve) - 1 - start_idx)
                         drawdown_periods.append(current_duration)
                 else:
                     # Non-datetime index fallback
@@ -548,17 +586,18 @@ class BacktestMetrics:
     
     def _empty_comprehensive_metrics(self) -> Dict[str, float]:
         """Return empty comprehensive metrics dictionary."""
+        # Ensure all base metrics are float type from the start
         base_metrics = {
-            'total_return_pct': 0, 'annualized_return_pct': 0, 'volatility_pct': 0,
-            'sharpe_ratio': 0, 'sortino_ratio': 0, 'calmar_ratio': 0,
-            'max_drawdown_pct': 0, 'var_5pct': 0, 'cvar_5pct': 0,
-            'skewness': 0, 'excess_kurtosis': 0, 'total_period_days': 0, 'data_points': 0,
-            'max_duration_days': 0, 'avg_duration_days': 0, 'current_duration_days': 0
+            'total_return_pct': 0.0, 'annualized_return_pct': 0.0, 'volatility_pct': 0.0,
+            'sharpe_ratio': 0.0, 'sortino_ratio': 0.0, 'calmar_ratio': 0.0,
+            'max_drawdown_pct': 0.0, 'var_5pct': 0.0, 'cvar_5pct': 0.0,
+            'skewness': 0.0, 'excess_kurtosis': 0.0, 'total_period_days': 0.0, 'data_points': 0.0,
+            'max_duration_days': 0.0, 'avg_duration_days': 0.0, 'current_duration_days': 0.0
         }
         
         trade_metrics = self._empty_trade_metrics()
         for key, value in trade_metrics.items():
-            base_metrics[key] = float(value)
+            base_metrics[key] = float(value) if value is not None else 0.0
         
         return base_metrics
     

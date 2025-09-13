@@ -15,7 +15,6 @@ import asyncio
 import time
 import uuid
 import hashlib
-import pickle
 import random
 import sqlite3
 import threading
@@ -29,13 +28,32 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 from loguru import logger
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score, ParameterGrid
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
 import warnings
 warnings.filterwarnings("ignore")
+
+# Safe logging fallback to avoid circular imports
+import logging
+safe_logger = logging.getLogger(__name__)
+
+# Conditional imports to avoid dill circular import issues
+try:
+    import pickle
+    PICKLE_AVAILABLE = True
+except ImportError:
+    PICKLE_AVAILABLE = False
+    safe_logger.warning("⚠️ pickle not available - strategy persistence disabled")
+
+# Conditional sklearn imports to avoid dill circular import issues
+try:
+    from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import cross_val_score, ParameterGrid
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.cluster import KMeans
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    safe_logger.warning("⚠️ sklearn not available - ML functionality disabled")
 
 def calculate_sharpe_ratio(returns: np.ndarray, risk_free_rate: float = 0.0) -> float:
     """
@@ -82,7 +100,7 @@ try:
     from .util import logger
     from .historical_data_manager import historical_data_manager
 except ImportError as e:
-    logger.warning(f"Some advanced integrations not available: {e}")
+    safe_logger.warning(f"Some advanced integrations not available: {e}")
 
 class StrategyType(Enum):
     """Types of trading strategies that can be generated"""
@@ -567,9 +585,14 @@ class MarketRegimeDetector:
                 
                 # Trend analysis
                 if len(df) >= 50:
-                    sma_20 = df['close'].rolling(20).mean().iloc[-1]
-                    sma_50 = df['close'].rolling(50).mean().iloc[-1]
-                    current_price = df['close'].iloc[-1]
+                    sma_20_series = df['close'].rolling(20).mean()
+                    sma_50_series = df['close'].rolling(50).mean()
+                    # Safely handle Series/ndarray types
+                    sma_20 = float(sma_20_series.iloc[-1]) if isinstance(sma_20_series, pd.Series) and not sma_20_series.empty else (
+                        float(sma_20_series[-1]) if hasattr(sma_20_series, '__len__') and len(sma_20_series) > 0 else 0.0)
+                    sma_50 = float(sma_50_series.iloc[-1]) if isinstance(sma_50_series, pd.Series) and not sma_50_series.empty else (
+                        float(sma_50_series[-1]) if hasattr(sma_50_series, '__len__') and len(sma_50_series) > 0 else 0.0)
+                    current_price = float(df['close'].iloc[-1]) if not df.empty else 0.0
                     
                     trend_strength = (current_price - sma_50) / sma_50 if sma_50 > 0 else 0
                     trend_consistency = (sma_20 - sma_50) / sma_50 if sma_50 > 0 else 0
@@ -690,18 +713,27 @@ class StrategyValidator:
         self.backtesting_engine = None
         
         try:
-            self.backtesting_engine = BacktestingEngine()
+            # Import BacktestingEngine with proper error handling
+            from .backtesting_engine import BacktestingEngine
+            # BacktestingEngine requires a proper config parameter
+            from .backtesting_engine import BacktestConfig
+            config = BacktestConfig() if 'BacktestConfig' in dir() else None
+            self.backtesting_engine = BacktestingEngine(config=config) if config else None
         except:
-            logger.warning("BacktestingEngine not available, using simplified validation")
+            safe_logger.warning("BacktestingEngine not available, using simplified validation")
     
     async def validate_strategy(self, strategy: StrategyDNA, 
-                              symbols: List[str] = None,
-                              start_date: datetime = None,
-                              end_date: datetime = None) -> StrategyPerformance:
+                              symbols: Optional[List[str]] = None,
+                              start_date: Optional[datetime] = None,
+                              end_date: Optional[datetime] = None) -> StrategyPerformance:
         """Comprehensive strategy validation"""
         
         if symbols is None:
-            symbols = settings.symbols[:10]  # Top 10 symbols for validation
+            try:
+                from .config import settings as config_settings
+                symbols = config_settings.symbols[:10] if hasattr(config_settings, 'symbols') else ["BTC/USD", "ETH/USD"]
+            except (ImportError, NameError, AttributeError):
+                symbols = ["BTC/USD", "ETH/USD"]  # Fallback symbols
         
         if start_date is None:
             start_date = datetime.now() - timedelta(days=365)  # 1 year backtest
@@ -723,7 +755,12 @@ class StrategyValidator:
             
             for symbol in symbols:
                 try:
-                    df = fetch_bars(symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                    try:
+                        from .data import fetch_bars as data_fetch_bars
+                        df = data_fetch_bars(symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                    except (ImportError, NameError):
+                        # Fallback: return empty DataFrame if fetch_bars not available
+                        df = pd.DataFrame()
                     if not df.empty and len(df) > 100:
                         historical_data[symbol] = df
                 except Exception as e:
@@ -806,7 +843,12 @@ class StrategyValidator:
                     if len(symbol_data) < 50:
                         continue
                     
-                    features_df = make_features(symbol_data, symbol=symbol)
+                    try:
+                        from .features import make_features as features_make_features
+                        features_df = features_make_features(symbol_data, symbol=symbol)
+                    except (ImportError, NameError):
+                        # Fallback: create minimal features if make_features not available
+                        features_df = symbol_data.copy() if not symbol_data.empty else pd.DataFrame()
                     if features_df.empty:
                         continue
                     
@@ -934,9 +976,10 @@ class StrategyValidator:
             ('volume', 'vol_sma'): 'vol_roll'
         }
         
-        # Try exact match first
-        if (indicator, parameter) in feature_mapping:
-            return feature_mapping[(indicator, parameter)]
+        # Try exact match first - cast to tuple to ensure proper type matching
+        key_tuple = (str(indicator), str(parameter))
+        if key_tuple in feature_mapping:
+            return feature_mapping[key_tuple]
         
         # Try partial matches
         if 'moving_averages' in indicator:
@@ -1076,13 +1119,13 @@ class StrategyValidator:
             calmar_ratio=annualized_return / max_drawdown if max_drawdown > 0 else 0,
             max_drawdown=max_drawdown,
             avg_drawdown=avg_drawdown,
-            var_95=var_95,
-            cvar_95=cvar_95,
+            var_95=float(var_95) if isinstance(var_95, (pd.Series, np.ndarray)) else float(var_95 or 0),
+            cvar_95=float(cvar_95) if isinstance(cvar_95, (pd.Series, np.ndarray)) else float(cvar_95 or 0),
             total_trades=len(trades),
             win_rate=win_rate,
-            profit_factor=profit_factor,
-            avg_win=avg_win,
-            avg_loss=avg_loss,
+            profit_factor=float(profit_factor) if not np.isnan(profit_factor) else 0.0,
+            avg_win=float(avg_win) if not np.isnan(avg_win) else 0.0,
+            avg_loss=float(avg_loss) if not np.isnan(avg_loss) else 0.0,
             beta=0.0,  # Simplified
             alpha=annualized_return,  # Simplified
             information_ratio=sharpe_ratio,  # Simplified
@@ -1145,10 +1188,12 @@ class StrategyValidator:
             - Position Sizing: {strategy.position_sizing.get('method', 'unknown')}
             """
             
-            knowledge_entry = KnowledgeEntry(
-                id=f"strategy_validation_{strategy.strategy_id}",
-                content=content,
-                knowledge_type=KnowledgeType.PERFORMANCE_INSIGHT,
+            # Only create knowledge entry if imports are available
+            if 'KnowledgeEntry' in globals() and 'KnowledgeType' in globals():
+                knowledge_entry = KnowledgeEntry(
+                    id=f"strategy_validation_{strategy.strategy_id}",
+                    content=content,
+                    knowledge_type=KnowledgeType.PERFORMANCE_INSIGHT,
                 metadata={
                     "strategy_id": strategy.strategy_id,
                     "strategy_type": strategy.strategy_type.value,
@@ -1160,8 +1205,15 @@ class StrategyValidator:
                 source="ai_strategy_generator"
             )
             
-            await self.memory_rag.store_knowledge(knowledge_entry)
-            logger.info(f"📚 Stored validation insights for strategy {strategy.strategy_id}")
+                # Store knowledge entry if method exists
+                if hasattr(self.memory_rag, 'store_knowledge'):
+                    await self.memory_rag.store_knowledge(knowledge_entry)
+                    logger.info(f"📚 Stored validation insights for strategy {strategy.strategy_id}")
+                elif hasattr(self.memory_rag, 'add_knowledge'):
+                    await self.memory_rag.add_knowledge(knowledge_entry)
+                    logger.info(f"📚 Stored validation insights for strategy {strategy.strategy_id}")
+            else:
+                logger.debug("Knowledge entry classes not available, skipping storage")
             
         except Exception as e:
             logger.error(f"❌ Error storing validation insights: {e}")

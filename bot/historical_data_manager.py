@@ -9,7 +9,6 @@ for institutional-grade backtesting with support for multiple timeframes and sym
 import pandas as pd
 import numpy as np
 import os
-import pickle
 import hashlib
 from typing import Dict, List, Optional, Tuple, Union
 from datetime import datetime, timedelta
@@ -22,6 +21,14 @@ from .config import settings
 from .util import logger
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# Conditional imports to avoid dill circular import issues
+try:
+    import pickle
+    PICKLE_AVAILABLE = True
+except ImportError:
+    PICKLE_AVAILABLE = False
+    logger.warning("⚠️ pickle not available - cache serialization disabled")
 
 
 class HistoricalDataManager:
@@ -229,10 +236,12 @@ class HistoricalDataManager:
         
         # Remove rows where all OHLC values are NaN (gaps in data)
         ohlc_cols = [col for col in ['open', 'high', 'low', 'close'] if col in resampled.columns]
-        # Fix dropna signature - use correct pandas API
+        
+        # Fix dropna signature - use named parameters to ensure correct LSP interpretation
         if ohlc_cols:
             # Remove rows where all specified OHLC columns are NaN
-            resampled_result = resampled.dropna(subset=ohlc_cols, how='all')
+            # Use explicit parameter naming to satisfy LSP type checking
+            resampled_result = resampled.dropna(how='all', subset=ohlc_cols)
         else:
             resampled_result = resampled.dropna(how='all')
         
