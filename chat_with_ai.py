@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-💬 CHAT CON TU IA PERSONAL DE TRADING - AGUS 2.0 POWERED
-Interfaz conversacional avanzada con AGUS 2.0 Hybrid Intelligence System
+💬 CHAT CON TU IA PERSONAL DE TRADING - AGUS POWERED
+Interfaz conversacional avanzada con AGUS Hybrid Intelligence System
 - LocalAI + Cloud hybrid routing
 - Advanced reasoning capabilities  
 - Contextual memory integration
@@ -21,7 +21,7 @@ from pathlib import Path
 logger.remove()
 logger.add(sys.stdout, format="<green>{time:HH:mm:ss}</green> | {message}", level="INFO")
 
-# AGUS 2.0 Integration
+# AGUS Integration
 try:
     from bot.agus_2_hybrid_system import (
         agus_2_analyze_query, 
@@ -31,14 +31,14 @@ try:
         agus_2_system
     )
     AGUS_2_AVAILABLE = True
-    logger.info("🧠 AGUS 2.0 Hybrid Intelligence System loaded successfully")
+    logger.info("🧠 AGUS Hybrid Intelligence System loaded successfully")
 except ImportError as e:
     AGUS_2_AVAILABLE = False
-    logger.warning(f"⚠️ AGUS 2.0 not available: {e}")
+    logger.warning(f"⚠️ AGUS not available: {e}")
 
 class AITradingChat:
     """
-    💬 Chat inteligente con AGUS 2.0 Hybrid Intelligence
+    💬 Chat inteligente con AGUS Hybrid Intelligence
     """
     
     def __init__(self):
@@ -47,13 +47,13 @@ class AITradingChat:
         self.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
         if AGUS_2_AVAILABLE:
-            logger.info("🧠 AGUS 2.0 Hybrid Intelligence System - Ready for advanced conversations!")
+            logger.info("🧠 AGUS Hybrid Intelligence System - Ready for advanced conversations!")
         else:
             logger.info("🤖 AGUS (tu IA personal) lista para conversar!")
         
     async def ask_ai(self, question: str, context: dict = None) -> str:
         """
-        🧠 Hace una pregunta a la IA personal con AGUS 2.0 capabilities
+        🧠 Hace una pregunta a la IA personal con AGUS capabilities
         """
         try:
             # Store question in session history
@@ -63,7 +63,7 @@ class AITradingChat:
                 "context": context
             })
             
-            # Use AGUS 2.0 if available for enhanced intelligence
+            # Use AGUS if available for enhanced intelligence
             if AGUS_2_AVAILABLE:
                 return await self._agus_2_enhanced_response(question, context)
             else:
@@ -73,7 +73,7 @@ class AITradingChat:
             return f"❌ Error comunicándome con la IA: {e}"
     
     async def _agus_2_enhanced_response(self, question: str, context: dict = None) -> str:
-        """🧠 Enhanced response using AGUS 2.0 Hybrid Intelligence"""
+        """🧠 Enhanced response using AGUS Hybrid Intelligence"""
         try:
             question_lower = question.lower()
             
@@ -93,9 +93,9 @@ class AITradingChat:
             else:
                 query_type = "general"
             
-            # Create trading-specific context for AGUS 2.0
+            # Create trading-specific context for AGUS
             enhanced_prompt = f"""
-CONTEXT: You are AGUS 2.0, the advanced AI system integrated into a sophisticated institutional-grade trading bot. This system includes:
+CONTEXT: You are AGUS, the advanced AI system integrated into a sophisticated institutional-grade trading bot. This system includes:
 
 🏛️ SYSTEM CAPABILITIES:
 - Real-time crypto trading (BTC, ETH, SHIB, UNI, PEPE, etc.)
@@ -110,16 +110,16 @@ CONTEXT: You are AGUS 2.0, the advanced AI system integrated into a sophisticate
 📊 CURRENT STATUS:
 - Portfolio equity: ~$18,000 with active risk management
 - Trading 16 cryptocurrencies in real-time
-- AGUS 2.0 Hybrid Intelligence fully operational
+- AGUS Hybrid Intelligence fully operational
 - OpenAI GPT model active (not LocalAI fallback)
 - Multiple specialized AI components running
 
 USER QUERY: {question}
 
-RESPOND AS: The integrated AGUS 2.0 system that understands the full trading context, market data, and system capabilities. Provide intelligent, trading-focused responses that demonstrate your deep integration with this sophisticated system.
+RESPOND AS: The integrated AGUS system that understands the full trading context, market data, and system capabilities. Provide intelligent, trading-focused responses that demonstrate your deep integration with this sophisticated system.
 """
             
-            # Use AGUS 2.0 for intelligent analysis with enhanced context
+            # Use AGUS for intelligent analysis with enhanced context
             response = await agus_2_analyze_query(
                 query=enhanced_prompt,
                 user_id=self.user_id,
@@ -127,7 +127,7 @@ RESPOND AS: The integrated AGUS 2.0 system that understands the full trading con
             )
             
             # Add session context
-            response_with_context = f"""🧠 **AGUS 2.0 HYBRID INTELLIGENCE**
+            response_with_context = f"""🧠 **AGUS HYBRID INTELLIGENCE**
 
 {response}
 
@@ -137,14 +137,14 @@ RESPOND AS: The integrated AGUS 2.0 system that understands the full trading con
             return response_with_context
             
         except Exception as e:
-            logger.error(f"❌ AGUS 2.0 error: {e}")
+            logger.error(f"❌ AGUS error: {e}")
             # Fallback to legacy system
             return await self._legacy_response(question, context)
     
     async def _handle_file_creation(self, question: str, context: dict = None) -> str:
-        """🔧 Handle file creation requests from AGUS 2.0"""
+        """🔧 Handle file creation requests from AGUS"""
         try:
-            # Get AGUS 2.0 response for the file content generation
+            # Get AGUS response for the file content generation
             response = await agus_2_analyze_query(
                 query=f"Generate file content for this request: {question}. Provide the complete file content that should be written.",
                 user_id=self.user_id,
@@ -203,13 +203,13 @@ RESPOND AS: The integrated AGUS 2.0 system that understands the full trading con
             with open(filename, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            success_message = f"""🎉 **ARCHIVO CREADO EXITOSAMENTE POR AGUS 2.0**
+            success_message = f"""🎉 **ARCHIVO CREADO EXITOSAMENTE POR AGUS**
 
 📁 **Archivo**: `{filename}`
 📏 **Tamaño**: {len(content)} caracteres
 ⏰ **Creado**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-✨ **Contenido generado por AGUS 2.0:**
+✨ **Contenido generado por AGUS:**
 ```
 {content[:200]}{'...' if len(content) > 200 else ''}
 ```
@@ -217,14 +217,14 @@ RESPOND AS: The integrated AGUS 2.0 system that understands the full trading con
 ✅ El archivo ha sido guardado y está listo para usar.
 
 ---
-*AGUS 2.0 puede crear, modificar y gestionar archivos de código, configuraciones, documentos y más.*"""
+*AGUS puede crear, modificar y gestionar archivos de código, configuraciones, documentos y más.*"""
             
             return success_message
             
         except Exception as e:
             return f"""❌ **Error creando archivo**
 
-AGUS 2.0 encontró un problema al crear el archivo:
+AGUS encontró un problema al crear el archivo:
 ```
 {str(e)}
 ```

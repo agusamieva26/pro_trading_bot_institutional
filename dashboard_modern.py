@@ -22,7 +22,7 @@ from alpaca.trading.enums import QueryOrderStatus
 # 🧠 LOCALAI SYSTEM IMPORTS
 # ===============================
 
-# AGUS 2.0 Hybrid Intelligence System
+# AGUS Hybrid Intelligence System
 try:
     from bot.agus_2_hybrid_system import (
         AGUS2HybridSystem, AIProvider, QueryComplexity, ReasoningMode,
@@ -1514,14 +1514,14 @@ with tab5:
     st.markdown(info_html, unsafe_allow_html=True)
 
 # ===============================
-# TAB 6: 🧠 AI CHAT - AGUS 2.0 HYBRID SYSTEM
+# TAB 6: 🧠 AI CHAT - AGUS HYBRID SYSTEM
 # ===============================
 
 with tab6:
-    st.markdown("# 🧠 AGUS 2.0 Hybrid Intelligence System")
+    st.markdown("# 🧠 AGUS Hybrid Intelligence System")
     
     if not AGUS_2_AVAILABLE or not CHAT_AVAILABLE:
-        st.error("❌ AGUS 2.0 Hybrid System not available. Please ensure all dependencies are installed.")
+        st.error("❌ AGUS Hybrid System not available. Please ensure all dependencies are installed.")
         st.info("Required: bot.agus_2_hybrid_system and chat_with_ai modules")
     else:
         # Chat Interface Header
@@ -1545,9 +1545,9 @@ with tab6:
                     provider = status.get('current_provider', 'Unknown')
                     st.metric("🎯 Active Provider", provider)
                 except Exception:
-                    st.metric("🎯 Active Provider", "AGUS 2.0")
+                    st.metric("🎯 Active Provider", "AGUS")
             else:
-                st.metric("🎯 Active Provider", "AGUS 2.0")
+                st.metric("🎯 Active Provider", "AGUS")
         
         with col2:
             if agus_system is not None and hasattr(agus_system, 'performance_tracker'):
@@ -1594,7 +1594,7 @@ with tab6:
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                     padding: 20px; border-radius: 15px; margin-bottom: 20px;'>
             <h2 style='color: white; text-align: center; margin: 0;'>
-                🧠 Chat with AGUS 2.0 Hybrid Intelligence
+                🧠 Chat with AGUS Hybrid Intelligence
             </h2>
             <p style='color: #f0f0f0; text-align: center; margin: 10px 0 0 0; font-size: 14px;'>
                 Advanced AI assistant powered by OpenAI • File creation • Trading analysis • Code generation
@@ -1606,7 +1606,7 @@ with tab6:
         if "agus_chat_history" not in st.session_state:
             st.session_state.agus_chat_history = []
             # Add welcome message
-            welcome_msg = """🧠 **¡AGUS 2.0 HÍBRIDO INTEGRADO AL SISTEMA DE TRADING!**
+            welcome_msg = """🧠 **¡AGUS HÍBRIDO INTEGRADO AL SISTEMA DE TRADING!**
 
 🏛️ **Soy la IA central del bot institucional con acceso completo a:**
 • 📊 Portfolio de $18,000+ operando 16 criptomonedas en tiempo real
@@ -1678,11 +1678,11 @@ with tab6:
             # Process with AGUS 2.0
             try:
                 # Show enhanced spinner
-                with st.spinner("🧠 AGUS 2.0 procesando tu solicitud... Esto puede incluir creación de archivos."):
+                with st.spinner("🧠 AGUS procesando tu solicitud... Esto puede incluir creación de archivos."):
                     if ai_chat is not None and hasattr(ai_chat, 'ask_ai'):
                         response = asyncio.run(ai_chat.ask_ai(user_input))
                     else:
-                        response = "⚠️ AGUS 2.0 no está completamente inicializado. Reinicia el dashboard."
+                        response = "⚠️ AGUS no está completamente inicializado. Reinicia el dashboard."
                 
                 # Add assistant response to history
                 st.session_state.agus_chat_history.append({"role": "assistant", "content": response})
@@ -1691,7 +1691,7 @@ with tab6:
                 st.rerun()
                 
             except Exception as e:
-                error_msg = f"""❌ **Error en AGUS 2.0**
+                error_msg = f"""❌ **Error en AGUS**
 
 Ocurrió un problema al procesar tu solicitud:
 ```
@@ -1703,7 +1703,7 @@ Ocurrió un problema al procesar tu solicitud:
 • Verifica tu conexión a OpenAI
 • Prueba con una consulta más simple"""
                 
-                st.error("❌ Error communicating with AGUS 2.0")
+                st.error("❌ Error communicating with AGUS")
                 st.session_state.agus_chat_history.append({
                     "role": "assistant", 
                     "content": error_msg
@@ -1752,7 +1752,7 @@ with tab7:
     
     with health_col1:
         agus_status = "🟢 Online" if AGUS_2_AVAILABLE else "🔴 Offline"
-        st.metric("🧠 AGUS 2.0", agus_status)
+        st.metric("🧠 AGUS", agus_status)
     
     with health_col2:
         orch_status = "🟢 Online" if ORCHESTRATOR_AVAILABLE else "🔴 Offline"
