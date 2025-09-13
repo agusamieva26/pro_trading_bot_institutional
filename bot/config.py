@@ -54,6 +54,10 @@ class Settings(BaseModel):
     arbitrage_min_profit_pct: float = Field(default_factory=lambda: float(os.getenv("ARBITRAGE_MIN_PROFIT_PCT","0.005")))  # 0.5% minimum profit
     arbitrage_max_position_usd: float = Field(default_factory=lambda: float(os.getenv("ARBITRAGE_MAX_POSITION_USD","10000")))  # $10k max per trade
     
+    # 🧪 RISK MANAGEMENT TESTING CONFIGURATION
+    risk_management_test_mode: bool = Field(default_factory=lambda: os.getenv("RISK_MANAGEMENT_TEST_MODE","false").lower() in ("1","true","yes"))  # Bypass kill switch for testing
+    disable_kill_switch: bool = Field(default_factory=lambda: os.getenv("DISABLE_KILL_SWITCH","false").lower() in ("1","true","yes"))  # Emergency bypass for testing
+    
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))

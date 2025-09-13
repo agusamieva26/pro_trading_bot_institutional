@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T11:30:25.434802",
+  "last_update": "2025-09-13T13:59:10.734268",
   "volatility_history": [
     {
       "timestamp": "2025-09-13T11:00:49.825468",
@@ -275,6 +275,14 @@
     },
     {
       "timestamp": "2025-09-13T11:30:25.149608",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T13:59:04.083693",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T13:59:10.011522",
       "value": 0.01839670816051316
     }
   ],
@@ -689,6 +697,18 @@
     },
     {
       "timestamp": "2025-09-13T11:30:25.242381",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T13:59:04.299464",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T13:59:10.108174",
       "daily_pnl": 0.0,
       "weekly_pnl": 0.0,
       "normalized": 0.0
@@ -2020,6 +2040,44 @@
           "volatility": -0.03852826334715895,
           "performance": -0.0,
           "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T13:59:04.623633",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.45,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0135,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T13:59:10.734194",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
           "liquidity": -0.01
         },
         "final_buffer": 0.02

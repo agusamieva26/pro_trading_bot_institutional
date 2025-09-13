@@ -170,7 +170,14 @@ def run_once(state: BotState, clf):
     daily_loss_limit = -3000  # $3000 pérdida máxima (expandido para recuperación épica)
     daily_loss_pct_limit = -15.0  # 15% pérdida máxima
     
-    if daily_change <= daily_loss_limit or daily_change_pct <= daily_loss_pct_limit:
+    # 🧪 RISK MANAGEMENT TEST MODE BYPASS
+    kill_switch_active = daily_change <= daily_loss_limit or daily_change_pct <= daily_loss_pct_limit
+    bypass_kill_switch = settings.risk_management_test_mode or settings.disable_kill_switch
+    
+    if kill_switch_active and bypass_kill_switch:
+        logger.warning(f"🧪 KILL SWITCH BYPASSED FOR TESTING: Loss ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) - Continuing for risk management validation")
+        logger.info(f"🧪 Test Mode: risk_management_test_mode={settings.risk_management_test_mode}, disable_kill_switch={settings.disable_kill_switch}")
+    elif kill_switch_active:
         logger.critical(f"🚨🛑 KILL SWITCH ACTIVADO: Pérdida diaria ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) excede límites!")
         logger.critical(f"🚨 CERRANDO TODAS LAS POSICIONES Y PAUSANDO TRADING")
         
@@ -676,22 +683,45 @@ def run_once(state: BotState, clf):
         else:  # Señales débiles pero >0.1
             position_equity = equity_for_rest * 0.08  # 8% del disponible por señal débil
         
-        # 🛡️ RISK MANAGEMENT 2.0: Cálculo avanzado con regímenes de mercado
-        risk_manager = AdvancedRiskManager()
-        symbol_regime = risk_environment["symbol_regimes"].get(symbol, {"regime": "neutral", "confidence": 0.5})
-        symbol_vol = risk_environment["symbol_vol_conditions"].get(symbol, {"vol_regime": "normal", "vol_ratio": 1.0})
+        # 🏛️ INSTITUTIONAL-GRADE DYNAMIC RISK MANAGEMENT SYSTEM
+        from .integrated_risk_system import get_integrated_risk_assessment
         
-        # Calcular position size optimizado
-        advanced_sizing = risk_manager.calculate_position_size_v2(
-            equity=position_equity, price=price, atr=atr, signal_strength=sig,
-            market_regime=symbol_regime, vol_clustering=symbol_vol
+        # Get comprehensive risk assessment from all risk management components
+        risk_assessment = get_integrated_risk_assessment(
+            symbol=symbol, signal_strength=sig, equity=position_equity, price=price, atr=atr
         )
         
-        # Calcular stops dinámicos
-        dynamic_stops = risk_manager.calculate_dynamic_stops(
-            symbol=symbol, price=price, atr=atr, signal_strength=sig,
-            market_regime=symbol_regime, vol_clustering=symbol_vol
-        )
+        # Check if trade should be allowed based on integrated risk analysis
+        if not risk_assessment.get('allow_trade', False):
+            logger.info(f"🚫 {symbol}: Trade blocked by integrated risk management")
+            logger.debug(f"   Risk Score: {risk_assessment.get('risk_score', 0):.2f} | "
+                        f"Drawdown: {risk_assessment.get('current_drawdown', 0):.1%} | "
+                        f"Emergency: {risk_assessment.get('emergency_mode', False)}")
+            continue
+        
+        # Get position sizing from integrated system
+        recommended_shares = risk_assessment.get('position_size_shares', 0)
+        max_position_usd = risk_assessment.get('max_position_usd', 0)
+        risk_multiplier = risk_assessment.get('risk_multiplier', 1.0)
+        
+        # Log integrated risk assessment
+        logger.info(f"🏛️ {symbol} RISK ASSESSMENT: "
+                   f"Score: {risk_assessment.get('risk_score', 0):.2f} | "
+                   f"Regime: {risk_assessment.get('volatility_regime', 'unknown')} | "
+                   f"Multiplier: {risk_multiplier:.2f}x | "
+                   f"Max: ${max_position_usd:.0f}")
+        
+        # Get dynamic stops from integrated system
+        stop_loss_adj = risk_assessment.get('stop_loss_adjustment', 1.0)
+        take_profit_adj = risk_assessment.get('take_profit_adjustment', 1.0)
+        
+        # Calculate adjusted stops
+        dynamic_stop_loss_pct = settings.stop_loss_pct * stop_loss_adj
+        dynamic_take_profit_pct = settings.take_profit_pct * take_profit_adj
+        
+        # Apply safety bounds
+        dynamic_stop_loss_pct = max(0.003, min(0.05, dynamic_stop_loss_pct))  # 0.3% to 5%
+        dynamic_take_profit_pct = max(0.01, min(0.15, dynamic_take_profit_pct))  # 1% to 15%
         
         # 🤖 ADVANCED ML PREDICTION: Combinar con modelo óptimo
         try:
@@ -722,14 +752,14 @@ def run_once(state: BotState, clf):
         except Exception as e:
             logger.warning(f"⚠️ AI Error para {symbol}: {e}")
         
-        # Usar sizing avanzado
-        shares = advanced_sizing["shares"]
-        leverage = max(min(abs(sig) * 0.8 + advanced_sizing["adjusted_risk_pct"] * 10, 1.0), 0.05)
-        qty = shares * leverage
+        # Use integrated risk management system for position sizing
+        shares = recommended_shares
+        leverage = max(min(abs(sig) * 0.8 + risk_multiplier * 0.2, 2.0), 0.05)  # Enhanced leverage calculation
+        qty = min(shares * leverage, max_position_usd / price) if price > 0 else 0
         
-        # Actualizar stops dinámicos
-        settings.stop_loss_pct = dynamic_stops["stop_loss_pct"]
-        settings.take_profit_pct = dynamic_stops["take_profit_pct"]
+        # Apply dynamic stops from integrated system
+        settings.stop_loss_pct = dynamic_stop_loss_pct
+        settings.take_profit_pct = dynamic_take_profit_pct
         side = "buy" if sig > 0 else "sell"
         
         logger.info(f"💰 {symbol}: qty={qty:.6f} side={side} (leverage={leverage:.2f}x, shares={shares:.6f})")

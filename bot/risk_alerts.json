@@ -1,0 +1,30 @@
+[
+  {
+    "id": "Portfolio VaR Limit_1757771952",
+    "timestamp": "2025-09-13T13:59:12.208304",
+    "level": "emergency",
+    "category": "market_risk",
+    "title": "Portfolio VaR Limit Breach",
+    "message": "Portfolio VaR Limit has breached emergency threshold: 0.0823 >= 0.0500",
+    "metric_name": "portfolio_var_95",
+    "current_value": 0.08225,
+    "threshold": 0.05,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Cash Buffer Minimum_1757771952",
+    "timestamp": "2025-09-13T13:59:12.619445",
+    "level": "emergency",
+    "category": "liquidity_risk",
+    "title": "Cash Buffer Minimum Breach",
+    "message": "Cash Buffer Minimum has breached emergency threshold: 1.0000 >= 0.0100",
+    "metric_name": "cash_ratio",
+    "current_value": 0.9999730636247957,
+    "threshold": 0.01,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  }
+]
