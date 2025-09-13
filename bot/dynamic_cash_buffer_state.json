@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-09-13T13:59:10.734268",
+  "last_update": "2025-09-13T14:36:21.173239",
   "volatility_history": [
     {
       "timestamp": "2025-09-13T11:00:49.825468",
@@ -283,6 +283,34 @@
     },
     {
       "timestamp": "2025-09-13T13:59:10.011522",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:11:32.543054",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:11:36.676241",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:16:53.344249",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:27:12.806418",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:32:42.679856",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:32:57.507550",
+      "value": 0.01839670816051316
+    },
+    {
+      "timestamp": "2025-09-13T14:36:20.875388",
       "value": 0.01839670816051316
     }
   ],
@@ -709,6 +737,48 @@
     },
     {
       "timestamp": "2025-09-13T13:59:10.108174",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:11:32.743331",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:11:36.769080",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:16:53.439935",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:27:12.905849",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:32:42.882323",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:32:57.608079",
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "normalized": 0.0
+    },
+    {
+      "timestamp": "2025-09-13T14:36:20.977432",
       "daily_pnl": 0.0,
       "weekly_pnl": 0.0,
       "normalized": 0.0
@@ -2078,6 +2148,139 @@
           "volatility": -0.03852826334715895,
           "performance": -0.0,
           "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:11:33.088856",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:11:36.964658",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:16:53.631734",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:27:13.096179",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:32:43.221656",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:32:57.814249",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.5,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.015,
+          "liquidity": -0.01
+        },
+        "final_buffer": 0.02
+      }
+    },
+    {
+      "timestamp": "2025-09-13T14:36:21.173097",
+      "buffer": 0.02,
+      "mode": "AGRESIVO",
+      "factors": {
+        "volatility": 0.01839670816051316,
+        "performance": 0.0,
+        "positions": 0.55,
+        "liquidity": 1.0,
+        "base_buffer": 0.05,
+        "adjustments": {
+          "volatility": -0.03852826334715895,
+          "performance": -0.0,
+          "positions": 0.0165,
           "liquidity": -0.01
         },
         "final_buffer": 0.02

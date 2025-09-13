@@ -26,5 +26,33 @@
     "symbol": "",
     "acknowledged": false,
     "resolved": false
+  },
+  {
+    "id": "Gross Exposure Limit_1757774247",
+    "timestamp": "2025-09-13T14:37:27.644792",
+    "level": "warning",
+    "category": "concentration_risk",
+    "title": "Gross Exposure Limit Breach",
+    "message": "Gross Exposure Limit has breached warning threshold: 0.9701 >= 0.8000",
+    "metric_name": "gross_exposure_ratio",
+    "current_value": 0.9701190169896856,
+    "threshold": 0.8,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Position Size Limit_1757774247",
+    "timestamp": "2025-09-13T14:37:27.661446",
+    "level": "emergency",
+    "category": "concentration_risk",
+    "title": "Position Size Limit Breach",
+    "message": "Position Size Limit has breached emergency threshold: 0.9701 >= 0.2500",
+    "metric_name": "position_weight",
+    "current_value": 0.9700872780262538,
+    "threshold": 0.25,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
   }
 ]

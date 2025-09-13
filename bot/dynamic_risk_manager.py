@@ -331,13 +331,13 @@ class DynamicRiskManager:
             
             # Calculate performance metrics
             performance_data = self._get_performance_data()
-            if performance_data:
+            if performance_data is not None and not performance_data.empty:
                 metrics.sharpe_ratio = self._calculate_sharpe_ratio(performance_data)
                 metrics.sortino_ratio = self._calculate_sortino_ratio(performance_data)
                 metrics.performance_regime = self._classify_performance_regime(metrics.sharpe_ratio)
             
             # Calculate VaR and CVaR
-            if performance_data:
+            if performance_data is not None and not performance_data.empty:
                 metrics.var_1d = self._calculate_var(performance_data, confidence=0.95, days=1)
                 metrics.cvar_1d = self._calculate_cvar(performance_data, confidence=0.95, days=1)
                 metrics.var_5d = self._calculate_var(performance_data, confidence=0.95, days=5)
