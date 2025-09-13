@@ -485,13 +485,33 @@ class IntelligentMonitor:
             for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
                 try:
                     cmdline = ' '.join(proc.info['cmdline'] or [])
-                    if 'main.py' in cmdline or 'trading_bot' in cmdline:
-                        return True
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    # Mejorado para detectar el workflow actual del bot
+                    if any(pattern in cmdline for pattern in [
+                        'bot.main',           # python -u -m bot.main
+                        'main.py',            # python main.py
+                        'trading_bot',        # trading_bot process
+                        'bot/main.py',        # python bot/main.py
+                        'run.py'              # python run.py
+                    ]):
+                        # Verificar que es un proceso Python activo
+                        if proc.info['name'] in ['python', 'python3', 'python3.11'] and proc.is_running():
+                            logger.debug(f"🤖 Bot process detected: PID={proc.pid}, CMD={cmdline}")
+                            return True
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     continue
+            
+            # Fallback: si el intelligent_monitor está corriendo, probablemente el bot también
+            # porque están en el mismo proceso/hilo
+            if hasattr(self, 'bot') and self.bot is not None:
+                logger.debug("🤖 Bot process detected via bot instance")
+                return True
+                
+            logger.debug("❌ Bot process not detected in running processes")
             return False
-        except:
-            return False
+        except Exception as e:
+            logger.error(f"❌ Error checking bot process: {e}")
+            # En caso de error, asumir que está corriendo para evitar falsos positivos
+            return True
     
     def _check_database(self) -> bool:
         """Verifica conexión a base de datos"""

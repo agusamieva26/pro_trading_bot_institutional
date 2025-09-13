@@ -73,86 +73,29 @@ class AITradingChat:
             return f"❌ Error comunicándome con la IA: {e}"
     
     async def _agus_2_enhanced_response(self, question: str, context: dict = None) -> str:
-        """🔧 Direct technical response using AGUS"""
+        """🧠 Respuesta técnica directa usando AGUS con capacidades completas del Editor"""
         try:
-            question_lower = question.lower()
-            
-            # Check for file creation requests
-            if any(word in question_lower for word in ["crear archivo", "create file", "generar código", "generate code", "escribir en", "write to", "guardar en", "save to"]):
-                return await self._handle_file_creation(question, context)
-            
-            # Determine query type for optimized processing
-            if any(word in question_lower for word in ["debug", "error", "fix", "repair", "reparar", "problema", "arreglar", "bug"]):
-                query_type = "debugging"
-            elif any(word in question_lower for word in ["analizar", "analysis", "mercado", "market", "btc", "eth", "crypto", "precio", "price"]):
-                query_type = "trading"
-            elif any(word in question_lower for word in ["trading", "comprar", "vender", "buy", "sell", "estrategia", "strategy"]):
-                query_type = "trading"
-            elif any(word in question_lower for word in ["bot", "estado", "status", "configuracion", "settings"]):
-                query_type = "system"
-            else:
-                query_type = "general"
-            
-            # Check for code review requests first
-            if self._is_code_review_request(question):
-                return await self._execute_automatic_code_review(question)
-            
-            enhanced_prompt = f"""
-You are AGUS - I am the EXACT SAME AS the Replit Editor assistant. I execute immediately, fix code directly, and solve problems without asking.
-
-🤖 **CURRENT SYSTEM STATE:**
-- Trading Bot: $18k equity running, 16 cryptos active
-- LSP Errors: {await self._get_lsp_count()} diagnostics detected
-- System Status: Ready to fix immediately
-
-USER REQUEST: "{question}"
-
-⚡ **IMMEDIATE ACTION PROTOCOL:**
-
-1️⃣ **IF ERROR REVIEW:** Check ALL LSP diagnostics → Fix EVERY error with code
-2️⃣ **IF CODE ISSUE:** Show exact fix code → Apply immediately  
-3️⃣ **IF REQUEST:** Execute solution → No questions, just results
-4️⃣ **IF ANALYSIS:** Run code analysis → Show concrete findings
-
-🚫 **FORBIDDEN RESPONSES:**
-❌ "Please provide specific code"
-❌ "What exactly do you want me to review"
-❌ "Could you clarify"
-❌ Any form of asking for more details
-
-✅ **REQUIRED BEHAVIOR:**
-✅ See "review code" → Automatically check LSP errors
-✅ Find problems → Fix them with exact code
-✅ User asks anything → Execute solution immediately
-✅ Act like Replit Editor → Direct, technical, solve now
-
-You ARE the trading bot's AI. You know the codebase. Execute immediately.
-"""
-            
-            # Use AGUS for intelligent analysis with enhanced context
+            # AGUS ahora maneja todo automáticamente - simplemente pasar la pregunta
+            # Las nuevas funciones de AGUS detectan automáticamente la intención y ejecutan las acciones
             response = await agus_2_analyze_query(
-                query=enhanced_prompt,
+                query=question,
                 user_id=self.user_id,
                 session_id=self.session_id
             )
             
-            # Add session context
-            # Clean response to remove any advisory language
-            cleaned_response = self._clean_advisory_response(response)
+            # Almacenar la respuesta en el historial de sesión
+            self.session_history.append({
+                "timestamp": datetime.now(),
+                "question": question,
+                "response": response,
+                "agus_version": "2.0_enhanced"
+            })
             
-            response_with_context = f"""🔧 **AGUS**
-🧠 AGUS 2.0 HYBRID INTELLIGENCE
-
-{cleaned_response}
-
----
-⚡ *Problem analyzed and solution provided*"""
-            
-            return response_with_context
+            return response
             
         except Exception as e:
-            logger.error(f"❌ AGUS error: {e}")
-            # Fallback to legacy system
+            logger.error(f"❌ Error en AGUS mejorado: {e}")
+            # Fallback al sistema legado si AGUS falla
             return await self._legacy_response(question, context)
     
     def _clean_advisory_response(self, response: str) -> str:
