@@ -503,18 +503,13 @@ def monitor_closed_positions(clf):
                 # --- PRIORITY 1: TIME-BASED EXIT SYSTEM (antes que TP/SL tradicional) ---
                 
                 # A) CIERRE FORZADO (2-4 horas para crypto, 75min para stocks): Timing inteligente
-                # 🚀 CRYPTO 24/7: 2-4 horas para permitir movimientos nocturnos
+                # 🚀 CRYPTO 24/7: 24 horas para permitir movimientos nocturnos y recuperación
                 # 📈 STOCKS: 75min durante horario de mercado
                 is_crypto_position = "/" in symbol or (symbol.endswith("USD") and len(symbol) <= 6)
                 
                 if is_crypto_position:
-                    # Crypto: 2-4 horas dinámico basado en volatilidad y P&L
-                    if pnl_pct > 0.02:  # +2% o más: extender a 4 horas
-                        max_time_crypto = 240  # 4 horas
-                    elif pnl_pct > 0:  # Beneficio pero < 2%: 3 horas
-                        max_time_crypto = 180  # 3 horas  
-                    else:  # Perdiendo: 2 horas máximo
-                        max_time_crypto = 120  # 2 horas
+                    # Crypto: 24 horas para permitir recuperación completa
+                    max_time_crypto = 1440  # 24 horas (1440 minutos)
                 else:
                     # Stocks: mantener 75min original
                     max_time_crypto = settings.max_position_time_force
