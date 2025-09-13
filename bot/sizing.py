@@ -1,11 +1,12 @@
 # bot/sizing.py
+from typing import Optional
 from .config import settings
 
 def volatility_target_size(
     equity: float,
     price: float,
     atr: float,
-    risk_per_trade: float = None
+    risk_per_trade: Optional[float] = None
 ) -> float:
     """
     Calcula el tamaño de posición en unidades (BTC, SPY, etc.) basado en ATR.
