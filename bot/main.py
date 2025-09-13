@@ -137,6 +137,36 @@ def run_once(state: BotState, clf):
     # ✅ P&L diario usando valores reales de Alpaca
     logger.info(f"📈 P&L diario Alpaca: {daily_change_pct:+.2f}% (${daily_change:+,.2f}) | Ayer: ${last_equity:,.2f}")
     
+    # 🚨 KILL SWITCH DIARIO: Parar si pérdidas > $500 o > 2.5%
+    daily_loss_limit = -500  # $500 pérdida máxima
+    daily_loss_pct_limit = -2.5  # 2.5% pérdida máxima
+    
+    if daily_change <= daily_loss_limit or daily_change_pct <= daily_loss_pct_limit:
+        logger.critical(f"🚨🛑 KILL SWITCH ACTIVADO: Pérdida diaria ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) excede límites!")
+        logger.critical(f"🚨 CERRANDO TODAS LAS POSICIONES Y PAUSANDO TRADING")
+        
+        # Cerrar todas las posiciones inmediatamente
+        try:
+            from bot.execution import close_all
+            from bot.telegram import send_telegram
+            
+            telegram_msg = f"""🚨 KILL SWITCH ACTIVADO 🚨
+
+💀 Pérdida diaria: ${daily_change:+,.2f} ({daily_change_pct:+.2f}%)
+🛑 Límite: -$500 o -2.5%
+
+🚨 CERRANDO TODAS LAS POSICIONES
+⏸️ TRADING PAUSADO hasta reset diario"""
+            send_telegram(telegram_msg)
+            
+            close_all()
+            logger.critical(f"✅ Todas las posiciones cerradas por KILL SWITCH")
+        except Exception as e:
+            logger.error(f"❌ Error cerrando posiciones: {e}")
+        
+        logger.critical(f"🚨 TRADING PAUSADO hasta próximo reset diario")
+        return "KILL_SWITCH_ACTIVATED"
+    
     # 🎯 TAKE PROFIT DIARIO: $1000 - Cerrar todas las posiciones
     if daily_change >= 1000:
         from bot.execution import close_all
