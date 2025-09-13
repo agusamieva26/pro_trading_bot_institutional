@@ -153,7 +153,7 @@ class AGUSIntegrationBridge:
         self, 
         symbol: str, 
         analysis_type: str,
-        context: Dict[str, Any] = None
+        context: Optional[Dict[str, Any]] = None
     ) -> EnsemblePrediction:
         """Enhanced prediction using both orchestrator and AGUS when needed"""
         
@@ -222,7 +222,7 @@ class AGUSIntegrationBridge:
         symbol: str, 
         analysis_type: str, 
         orchestrator_result: EnsemblePrediction,
-        context: Dict[str, Any]
+        context: Optional[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
         """Get enhancement from AGUS system"""
         try:
@@ -304,7 +304,7 @@ class AGUSIntegrationBridge:
         self, 
         symbol: str, 
         analysis_type: str, 
-        context: Dict[str, Any]
+        context: Optional[Dict[str, Any]]
     ) -> EnsemblePrediction:
         """Complete fallback to AGUS system"""
         query = f"Complete trading analysis for {symbol}: {analysis_type}"
@@ -363,7 +363,7 @@ class TradingIntegrationLayer:
         self.risk_manager = None
         self.execution_manager = None
         
-    def initialize_trading_components(self):
+    def initialize_trading_components(self) -> None:
         """Initialize trading system components if available"""
         try:
             if TradingStrategy:
@@ -514,7 +514,7 @@ class TradingIntegrationLayer:
         self, 
         symbol: str, 
         prediction: EnsemblePrediction, 
-        context: Dict[str, Any]
+        context: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Enhance prediction with trading-specific analysis"""
         
@@ -742,7 +742,7 @@ class OrchestratorIntegrationManager:
         except Exception as e:
             logger.warning(f"⚠️ Monitoring start failed: {e}")
     
-    def _monitoring_loop(self):
+    def _monitoring_loop(self) -> None:
         """Continuous monitoring loop"""
         while True:
             try:
@@ -758,7 +758,7 @@ class OrchestratorIntegrationManager:
             except Exception as e:
                 logger.debug(f"Monitoring error: {e}")
     
-    def _perform_health_checks(self):
+    def _perform_health_checks(self) -> None:
         """Perform health checks on all integrations"""
         try:
             # Check orchestrator

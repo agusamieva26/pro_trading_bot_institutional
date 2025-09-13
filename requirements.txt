@@ -51,3 +51,10 @@ scipy
 ta-lib
 tensorflow
 xgboost
+chromadb
+faiss-cpu
+langchain
+langchain-community
+pytest
+sentence-transformers
+tiktoken

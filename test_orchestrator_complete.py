@@ -51,7 +51,7 @@ class OrchestratorTestSuite:
         self.test_results = []
         self.start_time = time.time()
         
-    async def run_all_tests(self):
+    async def run_all_tests(self) -> None:
         """Run all orchestrator tests"""
         logger.info("🧪 Starting comprehensive orchestrator testing...")
         
@@ -439,7 +439,7 @@ class OrchestratorTestSuite:
             logger.error(f"❌ Stress testing failed: {e}")
             return False
     
-    async def generate_test_report(self):
+    async def generate_test_report(self) -> None:
         """Generate comprehensive test report"""
         total_time = time.time() - self.start_time
         
@@ -497,7 +497,7 @@ class OrchestratorTestSuite:
         
         logger.info(f"✅ Test report generated: {success_rate:.1f}% success rate")
 
-async def main():
+async def main() -> None:
     """Main test execution"""
     logger.info("🚀 Starting Multi-Model Orchestrator comprehensive testing")
     

@@ -109,7 +109,7 @@ class OrchestrationTask:
     optional_models: List[str]
     consensus_type: ConsensusType
     min_confidence: float
-    context: Dict[str, Any]
+    context: Dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
 class ModelCache:
@@ -202,7 +202,7 @@ class ModelCache:
         except Exception as e:
             logger.debug(f"Cache write error for {cache_key}: {e}")
     
-    def _load_cache_index(self):
+    def _load_cache_index(self) -> None:
         """Load cache index from disk"""
         index_file = self.cache_dir / "cache_index.json"
         if index_file.exists():
@@ -216,7 +216,7 @@ class ModelCache:
                 logger.debug(f"Cache index load error: {e}")
                 self.cache_index = {}
     
-    def _save_cache_index(self):
+    def _save_cache_index(self) -> None:
         """Save cache index to disk"""
         try:
             index_file = self.cache_dir / "cache_index.json"
@@ -230,7 +230,7 @@ class ModelCache:
         except Exception as e:
             logger.debug(f"Cache index save error: {e}")
     
-    def _check_cache_size(self):
+    def _check_cache_size(self) -> None:
         """Check and manage cache size"""
         total_size = sum(entry["size"] for entry in self.cache_index.values())
         max_size_bytes = self.max_size_mb * 1024 * 1024
@@ -252,7 +252,7 @@ class ModelCache:
                 removed_size += self.cache_index[key]["size"]
                 self._remove_cache_entry(key)
     
-    def _remove_cache_entry(self, cache_key: str):
+    def _remove_cache_entry(self, cache_key: str) -> None:
         """Remove cache entry"""
         try:
             cache_file = self.cache_dir / f"{cache_key}.pkl"
@@ -264,7 +264,7 @@ class ModelCache:
         except Exception as e:
             logger.debug(f"Cache entry removal error: {e}")
     
-    def _periodic_cleanup(self):
+    def _periodic_cleanup(self) -> None:
         """Periodic cache cleanup"""
         while True:
             try:
@@ -315,7 +315,7 @@ class EnsembleIntelligence:
         self,
         predictions: Dict[str, TradingModelOutput],
         consensus_type: ConsensusType = ConsensusType.DYNAMIC_WEIGHTED,
-        context: Dict[str, Any] = None
+        context: Optional[Dict[str, Any]] = None
     ) -> EnsemblePrediction:
         """Calculate ensemble prediction from multiple model outputs"""
         start_time = time.time()
@@ -494,7 +494,7 @@ class EnsembleIntelligence:
         
         return {"prediction": prediction, "confidence": confidence, "weights": weights}
     
-    def _dynamic_weighted_consensus(self, predictions: Dict[str, TradingModelOutput], context: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _dynamic_weighted_consensus(self, predictions: Dict[str, TradingModelOutput], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Advanced dynamic weighting based on multiple factors"""
         if not predictions:
             return {"prediction": 0.0, "confidence": 0.0, "weights": {}}
@@ -677,7 +677,7 @@ class EnsembleIntelligence:
         self,
         predictions: Dict[str, TradingModelOutput],
         consensus_type: ConsensusType,
-        context: Dict[str, Any] = None
+        context: Optional[Dict[str, Any]] = None
     ) -> str:
         """Generate human-readable reasoning for ensemble decision"""
         reasoning_parts = []
@@ -715,7 +715,7 @@ class EnsembleIntelligence:
         
         return " | ".join(reasoning_parts)
     
-    def _update_dynamic_weights(self, predictions: Dict[str, TradingModelOutput], context: Dict[str, Any] = None):
+    def _update_dynamic_weights(self, predictions: Dict[str, TradingModelOutput], context: Optional[Dict[str, Any]] = None) -> None:
         """Update model weights based on current predictions and context"""
         for model_name, pred in predictions.items():
             if model_name not in self.model_weights:
@@ -750,7 +750,7 @@ class EnsembleIntelligence:
             
             weight.last_updated = datetime.now()
     
-    def update_model_performance(self, model_name: str, accuracy: float, prediction_correct: bool):
+    def update_model_performance(self, model_name: str, accuracy: float, prediction_correct: bool) -> None:
         """Update model performance tracking"""
         if model_name not in self.performance_history:
             self.performance_history[model_name] = deque(maxlen=1000)
@@ -763,7 +763,7 @@ class EnsembleIntelligence:
             recent_performance = statistics.mean(list(self.performance_history[model_name])[-10:])
             weight.performance_weight = 0.7 * weight.performance_weight + 0.3 * recent_performance
     
-    def _load_model_weights(self):
+    def _load_model_weights(self) -> None:
         """Load model weights from disk"""
         weights_file = Path("bot/ensemble_weights.json")
         if weights_file.exists():
@@ -777,7 +777,7 @@ class EnsembleIntelligence:
             except Exception as e:
                 logger.debug(f"Weight loading error: {e}")
     
-    def save_model_weights(self):
+    def save_model_weights(self) -> None:
         """Save model weights to disk"""
         try:
             weights_file = Path("bot/ensemble_weights.json")
@@ -1507,7 +1507,7 @@ async def orchestrate_trading_analysis(
     symbol: str,
     analysis_type: str = "comprehensive",
     query: str = "",
-    context: Dict[str, Any] = None,
+    context: Optional[Dict[str, Any]] = None,
     timeout: float = 30.0
 ) -> EnsemblePrediction:
     """
