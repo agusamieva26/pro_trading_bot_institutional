@@ -47,6 +47,13 @@ class Settings(BaseModel):
     stagnant_pnl_min: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MIN","-0.003")))  # -0.3% límite inferior estancamiento
     stagnant_pnl_max: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MAX","0.007")))  # +0.7% límite superior estancamiento
     
+    # 🏛️ ARBITRAGE SYSTEM CONFIGURATION (CRITICAL SAFETY)
+    arbitrage_mode: str = Field(default_factory=lambda: os.getenv("ARBITRAGE_MODE","simulate"))  # "simulate" or "real" - SAFETY FIRST
+    arbitrage_enabled: bool = Field(default_factory=lambda: os.getenv("ARBITRAGE_ENABLED","true").lower() in ("1","true","yes"))  # Enable arbitrage subsystem
+    arbitrage_max_exposure_pct: float = Field(default_factory=lambda: float(os.getenv("ARBITRAGE_MAX_EXPOSURE_PCT","0.15")))  # 15% max exposure
+    arbitrage_min_profit_pct: float = Field(default_factory=lambda: float(os.getenv("ARBITRAGE_MIN_PROFIT_PCT","0.005")))  # 0.5% minimum profit
+    arbitrage_max_position_usd: float = Field(default_factory=lambda: float(os.getenv("ARBITRAGE_MAX_POSITION_USD","10000")))  # $10k max per trade
+    
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))

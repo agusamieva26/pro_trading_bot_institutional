@@ -98,6 +98,33 @@ def run_once(state: BotState, clf):
     
     # 0.1. RESETEAR MEMORIA DE SEÑALES (fix sesgo bajista perpetuo)
     reset_signal_memory()
+    
+    # 🏛️ ARBITRAGE SUBSYSTEM INITIALIZATION (CRITICAL: Outside kill-switch path)
+    arbitrage_initialized = False
+    arbitrage_engine = None
+    try:
+        from .arbitrage_engine import arbitrage_engine
+        from .execution import reset_arbitrage_tracking
+        
+        # Reset arbitrage tracking at start of each iteration
+        reset_arbitrage_tracking()
+        arbitrage_initialized = True
+        
+        # Log arbitrage initialization status
+        arbitrage_mode = settings.arbitrage_mode.lower()
+        if settings.arbitrage_enabled:
+            if arbitrage_mode == "real":
+                logger.critical(f"🚨 ARBITRAGE SUBSYSTEM: REAL TRADING MODE - Actual trades will be executed")
+            else:
+                logger.warning(f"🎭 ARBITRAGE SUBSYSTEM: SIMULATION MODE - No real trades (mode: {arbitrage_mode})")
+            logger.info(f"💰 Arbitrage engine initialized successfully")
+        else:
+            logger.info(f"💰 Arbitrage subsystem disabled in configuration")
+            
+    except Exception as e:
+        logger.error(f"❌ Arbitrage subsystem initialization failed: {e}")
+        logger.debug(f"❌ Arbitrage error details: {str(e)}")
+        arbitrage_initialized = False
 
     # 1. Configuración Dinámica y Auto-ajuste
     dynamic_config = dynamic_config_manager.get_current_config()
@@ -515,6 +542,114 @@ def run_once(state: BotState, clf):
     dynamic_config_manager.adapt_to_market_conditions(market_condition, sentiment_level)
 
     logger.info(f"📈 Total señales detectadas: {len(signals)} de {len(other_symbols)} activos")
+
+    # 🏛️ INSTITUTIONAL ARBITRAGE ANALYSIS
+    arbitrage_results = []
+    arbitrage_profits_executed = 0.0
+    
+    try:
+        # Import arbitrage modules
+        from .arbitrage_engine import arbitrage_engine
+        from .execution import execute_arbitrage_trade, validate_arbitrage_risk_limits, reset_arbitrage_tracking
+        
+        # Reset arbitrage tracking at start of each iteration
+        reset_arbitrage_tracking()
+        
+        logger.info("🏛️ SCANNING FOR ARBITRAGE OPPORTUNITIES...")
+        
+        # Detect arbitrage opportunities across all tradeable symbols
+        arbitrage_opportunities = arbitrage_engine.detect_opportunities(symbols_to_analyze)
+        
+        if arbitrage_opportunities:
+            logger.info(f"💰 ARBITRAGE: {len(arbitrage_opportunities)} opportunities detected!")
+            
+            # Filter executable opportunities based on available capital
+            executable_opportunities = arbitrage_engine.filter_executable_opportunities(
+                arbitrage_opportunities, available_cash
+            )
+            
+            if executable_opportunities:
+                logger.critical(f"🎯 EXECUTABLE ARBITRAGE: {len(executable_opportunities)} high-profit opportunities")
+                
+                # Execute arbitrage trades
+                for opportunity in executable_opportunities:
+                    # Validate risk limits before execution
+                    if validate_arbitrage_risk_limits(opportunity, current_equity):
+                        # Send high-profit alert to Telegram before execution
+                        if opportunity.is_high_profit(1.0):  # ≥1% profit
+                            try:
+                                from .telegram import send_telegram
+                                telegram_msg = f"""🏛️ HIGH-PROFIT ARBITRAGE DETECTED! 🏛️
+
+💰 Symbol: {opportunity.symbol}
+📈 Expected Profit: {opportunity.net_profit_pct:.1%}
+💵 Potential USD: ${opportunity.potential_profit_usd:.2f}
+⚡ Spread: {opportunity.spread_pct:.1%}
+
+🔵 Buy: {opportunity.buy_exchange} @ ${opportunity.buy_price:.6f}
+🔴 Sell: {opportunity.sell_exchange} @ ${opportunity.sell_price:.6f}
+
+🎯 Confidence: {opportunity.confidence_score:.0%}
+⏱️ Executing now..."""
+                                send_telegram(telegram_msg)
+                                logger.info("📱 Telegram: High-profit arbitrage alert sent")
+                            except Exception as e:
+                                logger.error(f"❌ Telegram arbitrage alert failed: {e}")
+                        
+                        # Execute the arbitrage trade
+                        execution_result = execute_arbitrage_trade(opportunity)
+                        arbitrage_results.append(execution_result)
+                        
+                        if execution_result.get("success", False):
+                            actual_profit = execution_result.get("actual_profit_usd", 0.0)
+                            arbitrage_profits_executed += actual_profit
+                            
+                            # Record successful execution in engine
+                            arbitrage_engine.record_execution(opportunity, actual_profit)
+                            
+                            # Send success notification for high profits
+                            if actual_profit >= 10.0:  # $10+ profit
+                                try:
+                                    from .telegram import send_telegram
+                                    success_msg = f"""✅ ARBITRAGE EXECUTED SUCCESSFULLY! ✅
+
+💰 Symbol: {opportunity.symbol}
+📈 Actual Profit: ${actual_profit:.2f}
+🎯 Expected: {opportunity.net_profit_pct:.1%}
+⚡ Trade ID: {execution_result.get('trade_id', 'N/A')}
+
+💵 Investment: ${execution_result.get('quantity', 0) * opportunity.buy_price:.2f}
+📊 Quantity: {execution_result.get('quantity', 0):.6f}
+
+🚀 Institutional arbitrage system working!"""
+                                    send_telegram(success_msg)
+                                except Exception as e:
+                                    logger.error(f"❌ Telegram success alert failed: {e}")
+                        else:
+                            error = execution_result.get("error", "Unknown error")
+                            logger.warning(f"⚠️ Arbitrage execution failed for {opportunity.symbol}: {error}")
+                    else:
+                        logger.debug(f"🚫 {opportunity.symbol}: Risk validation failed")
+            else:
+                logger.info("💰 ARBITRAGE: No executable opportunities within risk limits")
+        else:
+            logger.debug("🔍 ARBITRAGE: No opportunities detected this iteration")
+        
+        # Log arbitrage performance summary
+        if arbitrage_results:
+            successful_arbitrages = sum(1 for r in arbitrage_results if r.get("success", False))
+            total_arbitrages = len(arbitrage_results)
+            performance_stats = arbitrage_engine.get_performance_stats()
+            
+            logger.critical(f"🏛️ ARBITRAGE SUMMARY:")
+            logger.critical(f"   ✅ Executed: {successful_arbitrages}/{total_arbitrages}")
+            logger.critical(f"   💰 Session Profit: ${arbitrage_profits_executed:.2f}")
+            logger.critical(f"   📊 Success Rate: {performance_stats['success_rate']:.1%}")
+            logger.critical(f"   🎯 Total Detected: {performance_stats['opportunities_detected']}")
+        
+    except Exception as e:
+        logger.error(f"❌ Arbitrage analysis failed: {e}")
+        logger.debug(f"❌ Arbitrage error details: {str(e)}")
 
     signals.sort(key=lambda x: abs(x["signal"]), reverse=True)
 

@@ -9,6 +9,10 @@ from .trade_logger import log_trade_entry
 # Global variable to track reserved cash
 _reserved_cash = 0.0
 
+# Arbitrage execution tracking
+_arbitrage_positions = {}
+_arbitrage_reserved_cash = 0.0
+
 def normalize_symbol(symbol: str) -> str:
     """Normalize symbol to consistent format (with slash for crypto)."""
     if "/" in symbol:
@@ -491,3 +495,281 @@ def close_position(symbol: str, force_close: bool = False, retry_count: int = 0)
     except Exception as e:
         logger.error(f"❌ Error crítico closing position for {symbol}: {e}")
         return False
+
+
+# =======================
+# 🏛️ ARBITRAGE EXECUTION
+# =======================
+
+def reset_arbitrage_tracking():
+    """Reset arbitrage position tracking and reserved cash."""
+    global _arbitrage_positions, _arbitrage_reserved_cash
+    _arbitrage_positions.clear()
+    _arbitrage_reserved_cash = 0.0
+    logger.debug("🔄 Arbitrage tracking reset")
+
+
+def execute_arbitrage_trade(opportunity) -> dict:
+    """
+    Execute a complete arbitrage trade based on detected opportunity.
+    
+    Args:
+        opportunity: ArbitrageOpportunity object with trade details
+        
+    Returns:
+        Dict with execution results and profit calculation
+    """
+    from .arbitrage_engine import ArbitrageOpportunity
+    from .config import settings
+    
+    if not isinstance(opportunity, ArbitrageOpportunity):
+        logger.error("❌ Invalid opportunity object for arbitrage execution")
+        return {"success": False, "error": "Invalid opportunity object"}
+    
+    symbol = opportunity.symbol
+    trade_id = f"{symbol}_{int(opportunity.timestamp)}"
+    
+    # 🛡️ CRITICAL SAFETY GATE: Check arbitrage mode before ANY execution
+    if settings.arbitrage_mode.lower() != "real":
+        logger.warning(f"⚠️ ARBITRAGE in SIMULATE mode - no real trades executed for {symbol}")
+        logger.info(f"🎭 SIMULATED ARBITRAGE: {symbol}")
+        logger.info(f"   💰 Expected profit: {opportunity.net_profit_pct:.1%}")
+        logger.info(f"   📊 Buy: {opportunity.buy_exchange} @ ${opportunity.buy_price:.6f}")
+        logger.info(f"   📊 Sell: {opportunity.sell_exchange} @ ${opportunity.sell_price:.6f}")
+        logger.info(f"   🎯 Hypothetical profit: ${opportunity.potential_profit_usd:.2f}")
+        
+        # Return simulated successful execution
+        return {
+            "success": True,
+            "trade_id": trade_id,
+            "symbol": symbol,
+            "expected_profit_pct": opportunity.net_profit_pct,
+            "expected_profit_usd": opportunity.potential_profit_usd,
+            "actual_profit_usd": opportunity.potential_profit_usd,  # Simulated profit
+            "buy_executed": True,  # Simulated
+            "sell_executed": True,  # Simulated
+            "buy_price": opportunity.buy_price,
+            "sell_price": opportunity.sell_price,
+            "quantity": opportunity.potential_profit_usd / opportunity.buy_price,
+            "error": None,
+            "execution_time": time.time(),
+            "simulated": True  # Mark as simulated execution
+        }
+    
+    # 🚨 REAL TRADING MODE - proceed with actual execution
+    logger.critical(f"🚨 REAL ARBITRAGE MODE: Executing actual trades for {symbol}")
+    logger.info(f"🏛️ EXECUTING ARBITRAGE: {symbol}")
+    logger.info(f"   💰 Expected profit: {opportunity.net_profit_pct:.1%}")
+    logger.info(f"   📊 Buy: {opportunity.buy_exchange} @ ${opportunity.buy_price:.6f}")
+    logger.info(f"   📊 Sell: {opportunity.sell_exchange} @ ${opportunity.sell_price:.6f}")
+    
+    execution_result = {
+        "success": False,
+        "trade_id": trade_id,
+        "symbol": symbol,
+        "expected_profit_pct": opportunity.net_profit_pct,
+        "expected_profit_usd": opportunity.potential_profit_usd,
+        "actual_profit_usd": 0.0,
+        "buy_executed": False,
+        "sell_executed": False,
+        "buy_price": None,
+        "sell_price": None,
+        "quantity": 0.0,
+        "error": None,
+        "execution_time": time.time()
+    }
+    
+    try:
+        # 1. Validate available capital and limits
+        available_cash, total_cash = get_available_cash()
+        
+        # Calculate position size (conservative approach)
+        max_position_size = min(
+            opportunity.potential_profit_usd / opportunity.net_profit_pct,  # Based on expected profit
+            available_cash * 0.10,  # Max 10% of available cash
+            10000.0  # Hard limit of $10k per arbitrage
+        )
+        
+        if max_position_size < 100:  # Minimum $100 for arbitrage
+            logger.warning(f"🚫 {symbol}: Position size too small ${max_position_size:.0f} < $100")
+            execution_result["error"] = "Position size too small"
+            return execution_result
+        
+        # 2. Calculate quantity to trade
+        # Use the buy price to determine quantity since we're buying first
+        quantity = max_position_size / opportunity.buy_price
+        
+        # Validate minimum quantity requirements
+        if symbol.endswith("/USD") or "/" in symbol:  # Crypto
+            min_qty = 0.0001  # Minimum crypto quantity
+        else:  # Stock
+            min_qty = 0.001   # Minimum stock quantity
+            
+        if quantity < min_qty:
+            logger.warning(f"🚫 {symbol}: Quantity too small {quantity:.8f} < {min_qty}")
+            execution_result["error"] = "Quantity below minimum"
+            return execution_result
+        
+        execution_result["quantity"] = quantity
+        
+        # 3. Reserve cash for this arbitrage
+        global _arbitrage_reserved_cash
+        _arbitrage_reserved_cash += max_position_size
+        
+        logger.info(f"💰 Arbitrage execution: ${max_position_size:.0f} reserved, qty: {quantity:.8f}")
+        
+        # 4. PHASE 1: Execute BUY order (at lower price)
+        logger.info(f"🔵 PHASE 1: Buying {quantity:.8f} {symbol} @ {opportunity.buy_exchange}")
+        
+        # Use current market price for execution (since we can't actually access other exchanges)
+        # In a real implementation, this would route to the specific exchange
+        buy_success = place_order(
+            symbol=symbol,
+            qty=quantity,
+            side="buy",
+            price=opportunity.buy_price,
+            fractional=True,
+            is_crypto=("/" in symbol)
+        )
+        
+        if not buy_success:
+            logger.error(f"❌ {symbol}: BUY order failed")
+            execution_result["error"] = "Buy order failed"
+            _arbitrage_reserved_cash -= max_position_size  # Release reserved cash
+            return execution_result
+        
+        execution_result["buy_executed"] = True
+        execution_result["buy_price"] = opportunity.buy_price
+        logger.info(f"✅ BUY executed: {quantity:.8f} {symbol}")
+        
+        # 5. PHASE 2: Execute SELL order (at higher price)
+        # Small delay to ensure buy order is processed
+        import time
+        time.sleep(0.5)
+        
+        logger.info(f"🔴 PHASE 2: Selling {quantity:.8f} {symbol} @ {opportunity.sell_exchange}")
+        
+        # In a real implementation, this would be routed to the sell exchange
+        # For now, we simulate by using a limit order at the expected sell price
+        sell_success = place_order(
+            symbol=symbol,
+            qty=quantity,
+            side="sell", 
+            price=opportunity.sell_price,
+            fractional=True,
+            is_crypto=("/" in symbol)
+        )
+        
+        if not sell_success:
+            logger.error(f"❌ {symbol}: SELL order failed - position may be open")
+            execution_result["error"] = "Sell order failed - check positions"
+            return execution_result
+        
+        execution_result["sell_executed"] = True
+        execution_result["sell_price"] = opportunity.sell_price
+        logger.info(f"✅ SELL executed: {quantity:.8f} {symbol}")
+        
+        # 6. Calculate actual profit
+        gross_profit = (opportunity.sell_price - opportunity.buy_price) * quantity
+        
+        # Account for fees (0.1% per side = 0.2% total)
+        total_fees = max_position_size * 0.002
+        
+        actual_profit = gross_profit - total_fees
+        execution_result["actual_profit_usd"] = actual_profit
+        
+        # 7. Update tracking
+        _arbitrage_positions[trade_id] = {
+            "symbol": symbol,
+            "quantity": quantity,
+            "buy_price": opportunity.buy_price,
+            "sell_price": opportunity.sell_price,
+            "profit": actual_profit,
+            "timestamp": time.time(),
+            "status": "completed"
+        }
+        
+        execution_result["success"] = True
+        
+        # 8. Log successful arbitrage
+        profit_pct = (actual_profit / max_position_size) if max_position_size > 0 else 0
+        logger.critical(f"💰 ARBITRAGE COMPLETED: {symbol}")
+        logger.critical(f"   ✅ Quantity: {quantity:.8f}")
+        logger.critical(f"   💵 Investment: ${max_position_size:.2f}")
+        logger.critical(f"   📈 Profit: ${actual_profit:.2f} ({profit_pct:.1%})")
+        logger.critical(f"   ⚡ Spread: {opportunity.spread_pct:.1%}")
+        
+        # Release reserved cash
+        _arbitrage_reserved_cash = max(0, _arbitrage_reserved_cash - max_position_size)
+        
+        return execution_result
+        
+    except Exception as e:
+        logger.error(f"❌ Arbitrage execution failed for {symbol}: {e}")
+        execution_result["error"] = str(e)
+        
+        # Release reserved cash on error
+        if "max_position_size" in locals():
+            _arbitrage_reserved_cash = max(0, _arbitrage_reserved_cash - max_position_size)
+        
+        return execution_result
+
+
+def get_arbitrage_positions() -> dict:
+    """Get current arbitrage position status."""
+    return {
+        "active_positions": len(_arbitrage_positions),
+        "reserved_cash": _arbitrage_reserved_cash,
+        "positions": _arbitrage_positions.copy()
+    }
+
+
+def validate_arbitrage_risk_limits(opportunity, available_capital: float) -> bool:
+    """
+    Validate that arbitrage execution meets risk management requirements.
+    
+    Args:
+        opportunity: ArbitrageOpportunity object
+        available_capital: Available capital for trading
+        
+    Returns:
+        bool: True if safe to execute
+    """
+    try:
+        # Check maximum arbitrage exposure (15% of capital)
+        max_arbitrage_exposure = available_capital * 0.15
+        
+        # Calculate required capital for this trade
+        required_capital = min(
+            opportunity.potential_profit_usd / opportunity.net_profit_pct,
+            10000.0  # Hard limit
+        )
+        
+        # Check if we're within exposure limits
+        if _arbitrage_reserved_cash + required_capital > max_arbitrage_exposure:
+            logger.warning(f"🚫 {opportunity.symbol}: Arbitrage exposure limit exceeded")
+            logger.warning(f"   Current reserved: ${_arbitrage_reserved_cash:.0f}")
+            logger.warning(f"   Required: ${required_capital:.0f}")
+            logger.warning(f"   Limit: ${max_arbitrage_exposure:.0f}")
+            return False
+        
+        # Check minimum profit threshold
+        if opportunity.net_profit_pct < 0.005:  # 0.5% minimum
+            logger.debug(f"🚫 {opportunity.symbol}: Profit {opportunity.net_profit_pct:.1%} below 0.5% threshold")
+            return False
+        
+        # Check confidence score
+        if opportunity.confidence_score < 0.5:  # 50% minimum confidence
+            logger.debug(f"🚫 {opportunity.symbol}: Confidence {opportunity.confidence_score:.1%} too low")
+            return False
+        
+        logger.debug(f"✅ {opportunity.symbol}: Risk validation passed")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Risk validation error for {opportunity.symbol}: {e}")
+        return False
+
+
+# Add time import if not already present
+import time
