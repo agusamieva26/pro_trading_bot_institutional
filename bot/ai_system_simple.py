@@ -51,20 +51,20 @@ class SimplifiedAIEngine:
                 "name": "Alpha Vantage News",
                 "url": "https://www.alphavantage.co/query",
                 "api_key": getattr(settings, 'alpha_vantage_api_key', ''),
-                "enabled": hasattr(settings, 'alpha_vantage_api_key') and settings.alpha_vantage_api_key
+                "enabled": hasattr(settings, 'alpha_vantage_api_key') and getattr(settings, 'alpha_vantage_api_key', '')
             }
         ]
         
-        # OpenAI client (modelo REAL)
+        # AGUS client (modelo REAL)
         try:
             from openai import OpenAI
             self.openai_client = OpenAI(api_key=getattr(settings, 'openai_api_key', ''))
-            self.openai_available = bool(getattr(settings, 'openai_api_key', ''))
-            logger.info("🤖 OpenAI client inicializado correctamente")
+            self.agus_available = bool(getattr(settings, 'openai_api_key', ''))
+            logger.info("🤖 AGUS client inicializado correctamente")
         except Exception as e:
             self.openai_client = None
-            self.openai_available = False
-            logger.warning(f"⚠️ OpenAI no disponible: {e}")
+            self.agus_available = False
+            logger.warning(f"⚠️ AGUS no disponible: {e}")
         
         # Keywords para sentiment básico
         self.positive_keywords = [
@@ -204,14 +204,14 @@ class SimplifiedAIEngine:
         
         # Fuente 2: Alpha Vantage (si disponible)
         if (hasattr(settings, 'alpha_vantage_api_key') and 
-            settings.alpha_vantage_api_key and 
+            getattr(settings, 'alpha_vantage_api_key', '') and 
             len(all_news) < 5):
             try:
                 url = "https://www.alphavantage.co/query"
                 params = {
                     "function": "NEWS_SENTIMENT",
                     "tickers": symbol_clean,
-                    "apikey": settings.alpha_vantage_api_key,
+                    "apikey": getattr(settings, 'alpha_vantage_api_key', ''),
                     "limit": 10
                 }
                 
@@ -242,9 +242,9 @@ class SimplifiedAIEngine:
         all_text = " ".join([f"{item['title']} {item['body']}" for item in news_data]).lower()
         
         # Método 1: OpenAI (si disponible)
-        if self.openai_available and len(all_text) > 100:
+        if self.agus_available and len(all_text) > 100:
             try:
-                sentiment_score, confidence = self._openai_sentiment_analysis(all_text, symbol)
+                sentiment_score, confidence = self._agus_sentiment_analysis(all_text, symbol)
                 if confidence > 0.5:
                     logger.debug(f"🤖 OpenAI sentiment {symbol}: {sentiment_score:.3f}")
                     return sentiment_score, confidence
@@ -257,7 +257,7 @@ class SimplifiedAIEngine:
         
         return sentiment_score, confidence
     
-    def _openai_sentiment_analysis(self, text: str, symbol: str) -> Tuple[float, float]:
+    def _agus_sentiment_analysis(self, text: str, symbol: str) -> Tuple[float, float]:
         """Análisis de sentiment usando OpenAI"""
         try:
             prompt = f"""Analyze the sentiment of this financial news about {symbol}.
@@ -266,6 +266,9 @@ Return only a JSON with:
 
 News text: {text[:1500]}"""
             
+            if not self.openai_client:
+                return 0.0, 0.0
+                
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",  # MODELO REAL
                 messages=[{"role": "user", "content": prompt}],
@@ -273,7 +276,7 @@ News text: {text[:1500]}"""
                 temperature=0.3
             )
             
-            result_text = response.choices[0].message.content.strip()
+            result_text = (response.choices[0].message.content or '').strip()
             
             # Parsear JSON
             if result_text.startswith('{') and result_text.endswith('}'):
@@ -401,7 +404,7 @@ def get_ai_system_status() -> Dict:
     """
     return {
         "initialized": True,
-        "openai_available": ai_engine.openai_available,
+        "agus_available": ai_engine.agus_available,
         "last_analysis": ai_engine.last_analysis_time,
         "cache_symbols": list(ai_engine.analysis_cache.keys()),
         "news_sources": len(ai_engine.news_sources)

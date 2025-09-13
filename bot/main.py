@@ -483,7 +483,7 @@ def run_once(state: BotState, clf):
             # 🤖 SISTEMA AI REAL - Log de inicio
             logger.info("🧠 INICIANDO ANÁLISIS AI REAL...")
             ai_status = get_ai_system_status()
-            logger.info(f"🤖 AI Status: OpenAI={ai_status['openai_available']}, "
+            logger.info(f"🤖 AI Status: AGUS={ai_status['agus_available']}, "
                        f"Cache={len(ai_status['cache_symbols'])}, Sources={ai_status['news_sources']}")
             
             # Procesar cada señal con ajuste AI REAL

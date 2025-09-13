@@ -44,7 +44,7 @@ except ImportError:
 class AIProvider(Enum):
     """Available AI providers"""
     LOCAL_AI = "localai"
-    OPENAI_CLOUD = "openai_cloud"
+    AGUS_CLOUD = "agus_cloud"
     HYBRID_FUSION = "hybrid_fusion"
     FALLBACK_FREE = "fallback_free"
 
@@ -270,17 +270,17 @@ class IntelligentRoutingEngine:
                 "max_time": 5.0
             },
             QueryComplexity.MODERATE: {
-                "preferred": [AIProvider.LOCAL_AI, AIProvider.OPENAI_CLOUD],
+                "preferred": [AIProvider.LOCAL_AI, AIProvider.AGUS_CLOUD],
                 "max_cost": 0.05,
                 "max_time": 10.0
             },
             QueryComplexity.COMPLEX: {
-                "preferred": [AIProvider.OPENAI_CLOUD, AIProvider.HYBRID_FUSION],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.HYBRID_FUSION],
                 "max_cost": 0.20,
                 "max_time": 30.0
             },
             QueryComplexity.CRITICAL: {
-                "preferred": [AIProvider.HYBRID_FUSION, AIProvider.OPENAI_CLOUD],
+                "preferred": [AIProvider.HYBRID_FUSION, AIProvider.AGUS_CLOUD],
                 "max_cost": 1.00,
                 "max_time": 60.0
             }
@@ -357,7 +357,7 @@ class IntelligentRoutingEngine:
                 response = requests.get("http://localhost:8080/v1/models", timeout=2)
                 return 1.0 if response.status_code == 200 else 0.0
                 
-            elif provider == AIProvider.OPENAI_CLOUD:
+            elif provider == AIProvider.AGUS_CLOUD:
                 # Check if OpenAI API key is available
                 return 1.0 if os.environ.get("OPENAI_API_KEY") else 0.0
                 
@@ -452,7 +452,7 @@ class AdvancedReasoningEngine:
         start_time = time.time()
         
         try:
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 response_content = await self._openai_request(context.query)
             elif provider == AIProvider.LOCAL_AI:
                 response_content = await self._localai_request(context.query)
@@ -496,7 +496,7 @@ class AdvancedReasoningEngine:
             Provide a step-by-step breakdown:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 breakdown = await self._openai_request(breakdown_prompt)
             else:
                 breakdown = await self._localai_request(breakdown_prompt)
@@ -511,7 +511,7 @@ class AdvancedReasoningEngine:
             Now execute this analysis step by step, showing your reasoning:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 execution = await self._openai_request(execution_prompt)
             else:
                 execution = await self._localai_request(execution_prompt)
@@ -526,7 +526,7 @@ class AdvancedReasoningEngine:
             Provide a clear, actionable conclusion based on this reasoning:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 final_response = await self._openai_request(synthesis_prompt)
             else:
                 final_response = await self._localai_request(synthesis_prompt)
@@ -575,7 +575,7 @@ class AdvancedReasoningEngine:
             Provide a detailed critique:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 critique = await self._openai_request(critique_prompt)
             else:
                 critique = await self._localai_request(critique_prompt)
@@ -591,7 +591,7 @@ class AdvancedReasoningEngine:
             Based on the critique, provide an improved, refined response that addresses the identified issues:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 refined_response = await self._openai_request(refinement_prompt)
             else:
                 refined_response = await self._localai_request(refinement_prompt)
@@ -655,7 +655,7 @@ class AdvancedReasoningEngine:
             Synthesize the best insights from both approaches into a comprehensive response:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 ensemble_result = await self._openai_request(synthesis_prompt)
             else:
                 ensemble_result = await self._localai_request(synthesis_prompt)
@@ -703,7 +703,7 @@ class AdvancedReasoningEngine:
             For each approach, outline the key considerations:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 branches = await self._openai_request(branch_prompt)
             else:
                 branches = await self._localai_request(branch_prompt)
@@ -723,7 +723,7 @@ class AdvancedReasoningEngine:
             Provide evaluation:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 evaluation = await self._openai_request(evaluation_prompt)
             else:
                 evaluation = await self._localai_request(evaluation_prompt)
@@ -739,7 +739,7 @@ class AdvancedReasoningEngine:
             Based on the evaluation, synthesize the optimal analysis path and provide the final recommendation:
             """
             
-            if provider == AIProvider.OPENAI_CLOUD:
+            if provider == AIProvider.AGUS_CLOUD:
                 final_synthesis = await self._openai_request(synthesis_prompt)
             else:
                 final_synthesis = await self._localai_request(synthesis_prompt)
@@ -858,7 +858,7 @@ Ask me anything about trading, markets, or system optimization!"""
         """Calculate estimated cost for query"""
         token_estimate = len(query.split()) * 1.3  # Rough token estimate
         
-        if provider == AIProvider.OPENAI_CLOUD:
+        if provider == AIProvider.AGUS_CLOUD:
             return token_estimate * 0.00003  # GPT-4 pricing estimate
         elif provider == AIProvider.LOCAL_AI:
             return 0.0  # LocalAI is free
@@ -942,7 +942,7 @@ class TradingIntelligenceLayer:
             )
             
             # Use chain-of-thought for comprehensive analysis
-            response = await reasoning_engine._chain_of_thought_processing(context, AIProvider.OPENAI_CLOUD)
+            response = await reasoning_engine._chain_of_thought_processing(context, AIProvider.AGUS_CLOUD)
             
             return {
                 "fused_sentiment": response.content,
@@ -990,7 +990,7 @@ class TradingIntelligenceLayer:
             )
             
             # Use ensemble method for comprehensive strategy analysis
-            response = await reasoning_engine._ensemble_processing(context, AIProvider.OPENAI_CLOUD)
+            response = await reasoning_engine._ensemble_processing(context, AIProvider.AGUS_CLOUD)
             
             return {
                 "strategy_recommendations": response.content,
@@ -1039,7 +1039,7 @@ class TradingIntelligenceLayer:
             )
             
             # Use self-reflection for thorough debugging
-            response = await reasoning_engine._self_reflection_processing(context, AIProvider.OPENAI_CLOUD)
+            response = await reasoning_engine._self_reflection_processing(context, AIProvider.AGUS_CLOUD)
             
             # Store debug history
             self.debug_history.append({
@@ -1257,7 +1257,7 @@ class AGUS2HybridSystem:
         health_status = {
             "memory_db": "ok" if Path(self.memory_manager.memory_db_path).parent.exists() else "error",
             "localai": "ok" if self.routing_engine._check_provider_availability(AIProvider.LOCAL_AI) > 0.5 else "unavailable",
-            "openai": "ok" if self.routing_engine._check_provider_availability(AIProvider.OPENAI_CLOUD) > 0.5 else "unavailable",
+            "agus": "ok" if self.routing_engine._check_provider_availability(AIProvider.AGUS_CLOUD) > 0.5 else "unavailable",
             "fallback_ai": "ok"
         }
         
@@ -1495,7 +1495,7 @@ class AGUS2HybridSystem:
             "active_sessions": len(self.active_sessions),
             "providers": {
                 "localai": self.routing_engine._check_provider_availability(AIProvider.LOCAL_AI),
-                "openai": self.routing_engine._check_provider_availability(AIProvider.OPENAI_CLOUD),
+                "agus": self.routing_engine._check_provider_availability(AIProvider.AGUS_CLOUD),
                 "fallback": 1.0
             },
             "performance": self.performance_optimizer.get_performance_report(),

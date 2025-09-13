@@ -206,7 +206,7 @@ class AIHybridDashboard:
             st.metric(
                 "Análisis Sentiment",
                 f"🧠 {total_analyzed} análisis",
-                delta=f"OpenAI: {analyzer_stats.get('openai_calls', 0)} calls"
+                delta=f"AGUS: {analyzer_stats.get('agus_calls', 0)} calls"
             )
         
         # Predictor de precios
@@ -460,11 +460,11 @@ class AIHybridDashboard:
             analyzer_stats = sentiment_stats.get("analyzer_stats", {})
             
             cache_size = sentiment_stats.get("cache_size", 0)
-            openai_calls = analyzer_stats.get("openai_calls", 0)
+            agus_calls = analyzer_stats.get("agus_calls", 0)
             cache_hits = analyzer_stats.get("cache_hits", 0)
             
             st.metric("Cache Size", cache_size)
-            st.metric("OpenAI Calls", openai_calls)
+            st.metric("AGUS Calls", agus_calls)
             st.metric("Cache Hits", cache_hits)
         
         with col2:
@@ -582,6 +582,7 @@ def render_ai_section():
     st.header("🤖 AI Hybrid Analysis")
     
     # Versión simplificada para integración
+    loop = None
     try:
         # Ejecutar en loop de asyncio existente o crear uno nuevo
         loop = asyncio.new_event_loop()
@@ -607,4 +608,5 @@ def render_ai_section():
         st.error(f"Error en sección AI: {e}")
         logger.error(f"AI section error: {e}")
     finally:
-        loop.close()
+        if loop:
+            loop.close()

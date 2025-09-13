@@ -411,7 +411,7 @@ El bot está optimizado para recuperación. Los modelos ML + mi análisis gratui
 
 🤖 **Proveedores AI:**
 • LocalAI: {'✅ Disponible' if status['providers']['localai'] > 0.5 else '❌ No disponible'}
-• OpenAI: {'✅ Disponible' if status['providers']['openai'] > 0.5 else '❌ No disponible'} 
+• AGUS: {'✅ Disponible' if status['providers']['agus'] > 0.5 else '❌ No disponible'} 
 • Fallback: ✅ Siempre disponible
 
 📈 **Rendimiento:** {len(status.get('performance', {}).get('providers', {}))} proveedores monitoreados
