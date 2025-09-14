@@ -586,5 +586,47 @@
     "symbol": "",
     "acknowledged": false,
     "resolved": false
+  },
+  {
+    "id": "Portfolio VaR Limit_1757834985",
+    "timestamp": "2025-09-14T07:29:45.504001",
+    "level": "emergency",
+    "category": "market_risk",
+    "title": "Portfolio VaR Limit Breach",
+    "message": "Portfolio VaR Limit has breached emergency threshold: 0.0823 >= 0.0500",
+    "metric_name": "portfolio_var_95",
+    "current_value": 0.08225,
+    "threshold": 0.05,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Maximum Drawdown Limit_1757834985",
+    "timestamp": "2025-09-14T07:29:45.944210",
+    "level": "warning",
+    "category": "market_risk",
+    "title": "Maximum Drawdown Limit Breach",
+    "message": "Maximum Drawdown Limit has breached warning threshold: 0.0570 >= 0.0500",
+    "metric_name": "current_drawdown",
+    "current_value": 0.056987672837251487,
+    "threshold": 0.05,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
+  },
+  {
+    "id": "Cash Buffer Minimum_1757834985",
+    "timestamp": "2025-09-14T07:29:45.944480",
+    "level": "emergency",
+    "category": "liquidity_risk",
+    "title": "Cash Buffer Minimum Breach",
+    "message": "Cash Buffer Minimum has breached emergency threshold: 0.9565 >= 0.0100",
+    "metric_name": "cash_ratio",
+    "current_value": 0.9565053209357169,
+    "threshold": 0.01,
+    "symbol": "",
+    "acknowledged": false,
+    "resolved": false
   }
 ]
