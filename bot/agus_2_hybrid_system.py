@@ -50,6 +50,7 @@ from pathlib import Path
 class AIProvider(Enum):
     """Available AI providers"""
     LOCAL_AI = "localai"
+    QWEN = "qwen"
     AGUS_CLOUD = "agus_cloud"
     HYBRID_FUSION = "hybrid_fusion"
     FALLBACK_FREE = "fallback_free"
@@ -373,17 +374,17 @@ class IntelligentRoutingEngine:
         """Initialize routing decision rules"""
         return {
             QueryComplexity.TRIVIAL: {
-                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
+                "preferred": [AIProvider.QWEN, AIProvider.LOCAL_AI, AIProvider.AGUS_CLOUD, AIProvider.FALLBACK_FREE],
                 "max_cost": 0.01,  # Increased to allow OpenAI usage
                 "max_time": 5.0
             },
             QueryComplexity.SIMPLE: {
-                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
+                "preferred": [AIProvider.QWEN, AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
                 "max_cost": 0.02,
                 "max_time": 8.0
             },
             QueryComplexity.MODERATE: {
-                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.QWEN, AIProvider.LOCAL_AI, AIProvider.FALLBACK_FREE],
                 "max_cost": 0.05,
                 "max_time": 10.0
             },
@@ -393,7 +394,7 @@ class IntelligentRoutingEngine:
                 "max_time": 30.0
             },
             QueryComplexity.CRITICAL: {
-                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.HYBRID_FUSION, AIProvider.LOCAL_AI],
+                "preferred": [AIProvider.AGUS_CLOUD, AIProvider.QWEN, AIProvider.HYBRID_FUSION, AIProvider.LOCAL_AI],
                 "max_cost": 1.00,
                 "max_time": 60.0
             }
@@ -473,6 +474,11 @@ class IntelligentRoutingEngine:
             elif provider == AIProvider.AGUS_CLOUD:
                 # Check if OpenAI API key is available
                 return 1.0 if os.environ.get("OPENAI_API_KEY") else 0.0
+                
+            elif provider == AIProvider.QWEN:
+                # Check Qwen API endpoint
+                response = requests.get("http://localhost:5000/", timeout=2)
+                return 1.0 if response.status_code == 200 else 0.0
                 
             elif provider == AIProvider.FALLBACK_FREE:
                 # Free AI is always available
@@ -569,6 +575,8 @@ class AdvancedReasoningEngine:
                 response_content = await self._openai_request(context.query)
             elif provider == AIProvider.LOCAL_AI:
                 response_content = await self._localai_request(context.query)
+            elif provider == AIProvider.QWEN:
+                response_content = await self._qwen_request(context.query)
             else:
                 response_content = await self._fallback_processing(context.query)
             
@@ -611,6 +619,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 breakdown = await self._openai_request(breakdown_prompt)
+            elif provider == AIProvider.QWEN:
+                breakdown = await self._qwen_request(breakdown_prompt)
             else:
                 breakdown = await self._localai_request(breakdown_prompt)
                 
@@ -626,6 +636,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 execution = await self._openai_request(execution_prompt)
+            elif provider == AIProvider.QWEN:
+                execution = await self._qwen_request(execution_prompt)
             else:
                 execution = await self._localai_request(execution_prompt)
                 
@@ -641,6 +653,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 final_response = await self._openai_request(synthesis_prompt)
+            elif provider == AIProvider.QWEN:
+                final_response = await self._qwen_request(synthesis_prompt)
             else:
                 final_response = await self._localai_request(synthesis_prompt)
                 
@@ -690,6 +704,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 critique = await self._openai_request(critique_prompt)
+            elif provider == AIProvider.QWEN:
+                critique = await self._qwen_request(critique_prompt)
             else:
                 critique = await self._localai_request(critique_prompt)
                 
@@ -706,6 +722,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 refined_response = await self._openai_request(refinement_prompt)
+            elif provider == AIProvider.QWEN:
+                refined_response = await self._qwen_request(refinement_prompt)
             else:
                 refined_response = await self._localai_request(refinement_prompt)
                 
@@ -770,6 +788,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 ensemble_result = await self._openai_request(synthesis_prompt)
+            elif provider == AIProvider.QWEN:
+                ensemble_result = await self._qwen_request(synthesis_prompt)
             else:
                 ensemble_result = await self._localai_request(synthesis_prompt)
                 
@@ -818,6 +838,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 branches = await self._openai_request(branch_prompt)
+            elif provider == AIProvider.QWEN:
+                branches = await self._qwen_request(branch_prompt)
             else:
                 branches = await self._localai_request(branch_prompt)
                 
@@ -838,6 +860,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 evaluation = await self._openai_request(evaluation_prompt)
+            elif provider == AIProvider.QWEN:
+                evaluation = await self._qwen_request(evaluation_prompt)
             else:
                 evaluation = await self._localai_request(evaluation_prompt)
                 
@@ -854,6 +878,8 @@ class AdvancedReasoningEngine:
             
             if provider == AIProvider.AGUS_CLOUD:
                 final_synthesis = await self._openai_request(synthesis_prompt)
+            elif provider == AIProvider.QWEN:
+                final_synthesis = await self._qwen_request(synthesis_prompt)
             else:
                 final_synthesis = await self._localai_request(synthesis_prompt)
                 
@@ -892,7 +918,7 @@ class AdvancedReasoningEngine:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",  # Use GPT-4o-mini for reliability and availability
                 messages=[
-                    {"role": "system", "content": "You are AGUS 2.0, an advanced AI trading assistant with institutional-grade capabilities."},
+                    {"role": "system", "content": "Eres AGUS 2.0, un asistente de trading por IA avanzado con capacidades de grado institucional."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=1000,
@@ -913,7 +939,7 @@ class AdvancedReasoningEngine:
                 payload = {
                     "model": "microsoft/DialoGPT-large",
                     "messages": [
-                        {"role": "system", "content": "You are AGUS 2.0, an advanced AI trading assistant."},
+                        {"role": "system", "content": "Eres AGUS 2.0, un avanzado asistente de trading por IA."},
                         {"role": "user", "content": prompt}
                     ],
                     "max_tokens": 800,
@@ -935,6 +961,29 @@ class AdvancedReasoningEngine:
             logger.error(f"LocalAI request failed: {e}")
             raise e
     
+    async def _qwen_request(self, prompt: str) -> str:
+        """Make request to local Qwen API"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                payload = {
+                    "message": prompt
+                }
+                
+                async with session.post(
+                    "http://localhost:5000/api/qwen-chat",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=45) # Give it a bit more time
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return result.get("response", "No response content from Qwen")
+                    else:
+                        error_text = await response.text()
+                        raise Exception(f"Qwen API returned status {response.status}: {error_text}")
+        except Exception as e:
+            logger.error(f"Qwen request failed: {e}")
+            raise e
+    
     async def _fallback_processing(self, query: str) -> str:
         """Fallback processing using free AI assistant"""
         try:
@@ -944,29 +993,29 @@ class AdvancedReasoningEngine:
             query_lower = query.lower()
             
             if "status" in query_lower or "health" in query_lower:
-                return "🤖 AGUS 2.0 System Status: All systems operational. Hybrid AI engine ready."
+                return "🤖 Estado del Sistema AGUS 2.0: Todos los sistemas operativos. Motor de IA híbrido listo."
             
             elif "help" in query_lower:
-                return """🧠 AGUS 2.0 Hybrid AI Assistant
+                return """🧠 Asistente Híbrido de IA AGUS 2.0
                 
-Available capabilities:
-• Trading analysis and recommendations
-• Market sentiment analysis
-• Code debugging and optimization  
-• Risk assessment
-• Strategy recommendations
-• Real-time market insights
+Capacidades disponibles:
+• Análisis y recomendaciones de trading
+• Análisis de sentimiento de mercado
+• Depuración y optimización de código
+• Evaluación de riesgos
+• Recomendaciones de estrategia
+• Información de mercado en tiempo real
 
-Ask me anything about trading, markets, or system optimization!"""
+¡Pregúntame cualquier cosa sobre trading, mercados u optimización del sistema!"""
             
             elif "price" in query_lower or "market" in query_lower:
-                return "📊 Real-time market analysis capability activated. Please specify which assets you'd like me to analyze."
+                return "📊 Capacidad de análisis de mercado en tiempo real activada. Por favor, especifica qué activos te gustaría que analizara."
             
             else:
-                return f"🤖 AGUS 2.0: I understand you're asking about '{query[:100]}...'. While my advanced reasoning is temporarily using fallback mode, I can still help with basic analysis and guidance. For complex analysis, please ensure AGUS Cloud or LocalAI is configured."
+                return f"🤖 AGUS 2.0: Entiendo que preguntas sobre '{query[:100]}...'. Aunque mi razonamiento avanzado está usando temporalmente el modo de respaldo, puedo ayudarte con análisis básicos y guía. Para análisis complejos, asegúrate de que AGUS Cloud o LocalAI estén configurados."
                 
         except Exception as e:
-            return f"⚠️ Fallback processing error: {e}"
+            return f"⚠️ Error en el procesamiento de respaldo: {e}"
     
     def _calculate_cost(self, provider: AIProvider, query: str) -> float:
         """Calculate estimated cost for query"""
@@ -976,6 +1025,8 @@ Ask me anything about trading, markets, or system optimization!"""
             return token_estimate * 0.00003  # GPT-4 pricing estimate
         elif provider == AIProvider.LOCAL_AI:
             return 0.0  # LocalAI is free
+        elif provider == AIProvider.QWEN:
+            return 0.0  # Qwen is also local and free
         else:
             return 0.0  # Fallback is free
     
