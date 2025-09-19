@@ -17,6 +17,9 @@ Usage:
 
 import sys
 import os
+# 🧠 Force TensorFlow/PyTorch to use CPU only to avoid CUDA errors
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 sys.path.insert(0, '.')
 
 import pandas as pd
@@ -190,9 +193,15 @@ class ModelTrainer:
         )
         
         # Split data for validation
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+        try:
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
+        except ValueError:
+            logger.warning("⚠️ No se pudo estratificar el split (clases con pocos ejemplos). Usando split normal.")
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
         
         logger.info(f"📚 Training set: {len(X_train):,} samples")
         logger.info(f"🧪 Validation set: {len(X_val):,} samples")
@@ -393,4 +402,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Salir con código de error si el entrenamiento falla
+    if not main():
+        sys.exit(1)

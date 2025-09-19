@@ -1,9 +1,15 @@
 # run.py
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in environments without GPU
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import threading
 import time
 import subprocess
+import sys
 import webbrowser
 from bot.main import main
+from health_server import start_health_server
 from bot.automated_trainer import run_automated_trainer
 from bot.util import logger
 
@@ -29,8 +35,8 @@ def run_dashboard():
         # Esperar un poco para que el servidor inicie
         def open_browser():
             time.sleep(3)  # Esperar 3 segundos para que Streamlit inicie
-            webbrowser.open('http://0.0.0.0:5000')
-            logger.info("🌐 Navegador abierto automáticamente en http://0.0.0.0:5000")
+            webbrowser.open('http://localhost:5000')
+            logger.info("🌐 Navegador abierto automáticamente en http://localhost:5000")
         
         # Abrir navegador en un thread separado
         browser_thread = threading.Thread(target=open_browser, daemon=True)
@@ -38,7 +44,7 @@ def run_dashboard():
         
         # Iniciar Streamlit
         subprocess.run([
-            "streamlit", "run", "dashboard_modern.py", 
+            sys.executable, "-m", "streamlit", "run", "dashboard_modern.py",
             "--server.port=5000", 
             "--server.address=0.0.0.0", 
             "--server.headless=true",
@@ -70,6 +76,9 @@ if __name__ == "__main__":
     # Thread 4: Monitor de debug 24/7 con reparación automática
     t4 = threading.Thread(target=run_debug_monitor, daemon=True, name="DebugMonitor")
 
+    # Thread 5: Servidor de Health Check para monitoreo externo (Fly.io)
+    t5 = threading.Thread(target=start_health_server, daemon=True, name="HealthServer")
+
     logger.info("🤖 Iniciando threads del sistema...")
     t1.start()
     logger.info("✅ Thread 1: Trading Bot iniciado")
@@ -83,9 +92,12 @@ if __name__ == "__main__":
     t4.start()
     logger.info("✅ Thread 4: Console Debug Monitor 24/7 iniciado (reparación automática)")
     
+    t5.start()
+    logger.info("✅ Thread 5: Health Check Server iniciado en puerto 8080")
+    
     logger.info("🚀 SISTEMA EVOLUTIVO COMPLETO ACTIVO")
-    logger.info("📊 Trading Bot + Dashboard + Reportes + Training + Optuna + Debug Monitor")
-    logger.info("🌐 Dashboard disponible en: http://0.0.0.0:5000 (se abrirá automáticamente)")
+    logger.info("📊 Trading Bot + Dashboard + Reportes + Training + Optuna + Debug + Health")
+    logger.info("🌐 Dashboard: http://0.0.0.0:5000 (se abrirá automáticamente)")
     logger.info("🔧 Debug Monitor: Monitoreo 24/7 con reparación automática de errores")
 
     try:

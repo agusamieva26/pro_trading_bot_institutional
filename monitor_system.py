@@ -4,6 +4,10 @@
 Monitoreo en tiempo real del bot de trading institucional
 """
 
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import time
 import psutil
 import requests
@@ -11,6 +15,7 @@ import subprocess
 import sys
 import codecs
 from datetime import datetime
+from pathlib import Path
 from loguru import logger
 import json
 import os
@@ -25,7 +30,7 @@ class TradingSystemMonitor:
     """Monitor completo del sistema de trading"""
     
     def __init__(self):
-        self.dashboard_url = "http://localhost:8501"
+        self.dashboard_url = "http://localhost:5000"
         self.bot_processes = []
         self.start_time = datetime.now()
         
@@ -58,12 +63,16 @@ class TradingSystemMonitor:
     
     def check_port_usage(self):
         """Verifica qué puertos están en uso"""
+        ports_to_check = {
+            5000: "Dashboard",
+            8080: "Health Check"
+        }
         ports = {}
         try:
             for conn in psutil.net_connections():
                 if conn.status == 'LISTEN' and conn.pid:
                     port = conn.laddr.port
-                    if port in [8501, 8080, 5000]:  # Puertos importantes (añadido 5000 para Qwen)
+                    if port in ports_to_check:
                         try:
                             proc = psutil.Process(conn.pid)
                             ports[port] = {'pid': conn.pid, 'name': proc.name()}
@@ -90,18 +99,20 @@ class TradingSystemMonitor:
     def check_log_files(self):
         """Verifica archivos de log recientes"""
         log_files = []
-        for file in os.listdir('.'):
-            if file.endswith('.log') or 'log' in file.lower():
+        log_dir = Path("/tmp/logs")
+        
+        if log_dir.exists():
+            for file_path in log_dir.glob("*.log"):
                 try:
-                    stat = os.stat(file)
+                    stat = file_path.stat()
                     mod_time = datetime.fromtimestamp(stat.st_mtime)
                     if (datetime.now() - mod_time).seconds < 300:  # Últimos 5 minutos
                         log_files.append({
-                            'file': file,
+                            'file': file_path.name,
                             'modified': mod_time.strftime('%H:%M:%S'),
                             'size': stat.st_size
                         })
-                except:
+                except Exception:
                     continue
         return log_files
     

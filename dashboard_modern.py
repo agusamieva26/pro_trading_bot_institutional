@@ -1,4 +1,8 @@
 # dashboard_modern.py - Professional Trading Dashboard
+import os
+# 🧠 Force TensorFlow/PyTorch to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go

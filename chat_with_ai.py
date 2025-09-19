@@ -9,6 +9,10 @@ Interfaz conversacional avanzada con AGUS Hybrid Intelligence System
 - Performance optimization
 """
 import asyncio
+import os
+# 🧠 Force TensorFlow/PyTorch to use CPU only to avoid CUDA errors
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import sys
 from datetime import datetime
 from loguru import logger
@@ -78,6 +82,15 @@ except ImportError as e:
     agus_generate_report = None
     agus_get_portfolio_summary = None
     logger.warning(f"⚠️ AGUS Advisory System not available: {e}")
+
+# AGUS MONITORING SYSTEM Integration
+try:
+    from bot.agus_monitoring import get_monitoring_system, AGUSMonitoringSystem
+    MONITORING_AVAILABLE = True
+    logger.info("🔍 AGUS Monitoring System loaded successfully")
+except ImportError as e:
+    MONITORING_AVAILABLE = False
+    logger.warning(f"⚠️ AGUS Monitoring System not available: {e}")
 
 class AITradingChat:
     """
@@ -1223,6 +1236,51 @@ async def chat_with_ai():
     chat = AITradingChat()
     await chat.run_chat()
 
+async def run_startup_monitoring():
+    """
+    🔍 Inicia el monitoreo de logs y sistema al arrancar.
+    """
+    if not MONITORING_AVAILABLE:
+        logger.warning("⚠️ Sistema de monitoreo no disponible, saltando chequeo de logs.")
+        return
+
+    logger.info("🚀 Iniciando monitoreo de sistema y logs en tiempo real...")
+    
+    try:
+        monitoring_system = get_monitoring_system()
+        asyncio.create_task(monitoring_system.start_monitoring())
+        
+        # Esperar unos segundos para que el sistema se inicialice y haga el primer chequeo
+        await asyncio.sleep(5)
+        
+        status = monitoring_system.get_system_status()
+        
+        print("\n" + "="*80)
+        logger.info("✅ MONITOREO INICIAL COMPLETADO")
+        
+        # Resumen del estado
+        orchestrator_status = status.get('orchestrator_status', {})
+        print(f"   - Estado del Orquestador: {'🟢 Activo' if orchestrator_status.get('running') else '🔴 Inactivo'}")
+        
+        agents_status = status.get('agents_status', {})
+        print(f"   - Agentes de Monitoreo: {len(agents_status)} activos")
+        
+        # Mostrar alertas iniciales si las hay
+        recent_alerts = status.get('recent_alerts', [])
+        if recent_alerts:
+            print("\n   🚨 ALERTAS INICIALES DETECTADAS:")
+            for alert in recent_alerts[:3]: # Mostrar las 3 más recientes
+                print(f"      - [{alert['severity'].upper()}] {alert['title']} ({alert['source']})")
+        else:
+            print("   - ✅ Sin alertas críticas detectadas al arrancar.")
+            
+        print("="*80 + "\n")
+        
+    except Exception as e:
+        logger.error(f"❌ Error durante el monitoreo inicial: {e}")
+        print("="*80 + "\n")
+
+
 def quick_ask(question: str):
     """Pregunta rápida a la IA (sin chat interactivo)"""
     async def _ask():
@@ -1232,14 +1290,21 @@ def quick_ask(question: str):
     
     asyncio.run(_ask())
 
+async def main():
+    """Función principal para ejecutar monitoreo y luego el chat."""
+    # 1. Ejecutar monitoreo de arranque
+    await run_startup_monitoring()
+    
+    # 2. Iniciar chat interactivo
+    await chat_with_ai()
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         # Pregunta directa desde línea de comandos
         question = " ".join(sys.argv[1:])
         quick_ask(question)
     else:
-        # Chat interactivo
         try:
-            asyncio.run(chat_with_ai())
+            asyncio.run(main())
         except KeyboardInterrupt:
             print("\n👋 ¡Bye!")

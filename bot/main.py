@@ -1,4 +1,8 @@
 # bot/main.py
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import logging
 import time
 import threading
@@ -36,6 +40,10 @@ from .intelligent_monitor import IntelligentMonitor  # 🤖 SISTEMA DE MONITOREO
 from .util import logger
 import datetime as dt
 import pytz
+import os
+import sys
+from pathlib import Path
+import subprocess
 
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
@@ -848,10 +856,36 @@ def main():
     logger.info("🚀 Bot de trading institucional iniciado (modo paper). Ctrl+C para detener.")
     state = BotState()
 
+    # 🤖 AUTO-TRAINING: Entrenar solo si no existe NINGÚN modelo en la carpeta.
+    model_dir = Path(os.path.dirname(settings.model_path))
+    existing_models = list(model_dir.glob("*.pkl"))
+
+    if not existing_models:
+        logger.warning(f"⚠️ No se encontraron modelos en '{model_dir}'. Iniciando entrenamiento automático...")
+        try:
+            # Ejecutar script de entrenamiento de forma segura
+            result = subprocess.run(
+                [sys.executable, "scripts/train_model.py"],
+                capture_output=True, text=True, check=True, timeout=1800 # 30 min timeout
+            )
+            logger.info("✅ Entrenamiento completado. El modelo ya está disponible.")
+            logger.debug(f"Output del entrenamiento:\n{result.stdout}")
+        except subprocess.CalledProcessError as train_error:
+            logger.critical(f"❌ Falló el entrenamiento automático del modelo: {train_error.stderr}")
+            logger.critical("Deteniendo bot. Revisa los logs de entrenamiento.")
+            return
+        except Exception as train_error:
+            logger.critical(f"❌ Error inesperado durante el entrenamiento: {train_error}. Deteniendo bot.")
+            return
+    else:
+        logger.info(f"✅ {len(existing_models)} modelo(s) detectado(s) en '{model_dir}'. Saltando entrenamiento.")
+
     try:
         clf = load_trading_model()
         if clf is None:
-            logger.critical("❌ No se pudo cargar el modelo. Deteniendo bot.")
+            logger.critical(f"❌ No se pudo cargar el modelo desde '{settings.model_path}'.")
+            logger.critical("   El archivo podría estar corrupto o no ser compatible.")
+            logger.critical("   Por favor, borra el modelo existente y reinicia para re-entrenar.")
             return
         logger.info("✅ Modelo de trading cargado y listo para usar.")
         logger.info(f"🧠 Modelo: {type(clf).__name__} | Features: {len(clf.feature_names_in_)} | Riesgo: {settings.risk_per_trade:.2%}")

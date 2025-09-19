@@ -5,6 +5,10 @@ Auto-detecta errores críticos, auto-diagnóstica y auto-corrige problemas del b
 Reacciona ante pérdidas críticas y fallos de funcionalidad automáticamente
 """
 
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import asyncio
 import json
 import time

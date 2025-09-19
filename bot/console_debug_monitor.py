@@ -5,6 +5,10 @@ Monitor continuo que detecta y repara errores automáticamente
 Integrado con AGUS para corrección automática de problemas críticos
 """
 
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import asyncio
 import time
 import subprocess
@@ -32,6 +36,7 @@ class ConsoleDebugMonitor:
     def __init__(self):
         self.is_running = False
         self.last_check = time.time()
+        self._workspace_path = self._get_validated_workspace()
         self.alerts: List[SystemAlert] = []
         # SOLO errores técnicos reales, NO mecanismos de protección
         self.error_patterns = {
@@ -60,7 +65,18 @@ class ConsoleDebugMonitor:
             'import_errors': self._fix_import_errors
         }
         
-        logger.info("🔧 Console Debug Monitor 24/7 initialized")
+        logger.info(f"🔧 Console Debug Monitor 24/7 initialized. Using workspace: {os.path.abspath(self._workspace_path)}")
+
+    def _get_validated_workspace(self) -> str:
+        """
+        Gets and validates the workspace path from the BOT_WORKSPACE environment variable.
+        Falls back to the current directory if the specified path is invalid.
+        """
+        configured_path = os.getenv('BOT_WORKSPACE', '.')
+        if not os.path.isdir(configured_path):
+            logger.warning(f"Workspace path '{configured_path}' not found or not a directory. Defaulting to current directory.")
+            return '.'
+        return configured_path
     
     async def start_monitoring(self):
         """Inicia el monitoreo continuo 24/7"""
@@ -104,14 +120,21 @@ class ConsoleDebugMonitor:
         
         try:
             # Refresh logs
-            result = subprocess.run([
+            proc = await asyncio.create_subprocess_exec(
                 'python', '-c', """
 import sys
 sys.path.append('.')
 from tools.log_tools import refresh_all_logs
 refresh_all_logs()
-"""
-            ], capture_output=True, text=True, cwd='/home/runner/workspace')
+""",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            _stdout, stderr = await proc.communicate()
+
+            if proc.returncode != 0:
+                logger.error(f"❌ Error refreshing logs: {stderr.decode().strip()}")
+                # Continúa para analizar logs existentes aunque el refresco falle
             
             # Read latest log files
             log_files = [
@@ -173,18 +196,26 @@ refresh_all_logs()
         
         try:
             # Check LSP diagnostics
-            result = subprocess.run([
+            proc = await asyncio.create_subprocess_exec(
                 'python', '-c', """
 import sys
 sys.path.append('.')
 from tools.lsp_tools import get_latest_lsp_diagnostics
 diagnostics = get_latest_lsp_diagnostics()
 print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
-"""
-            ], capture_output=True, text=True, cwd='/home/runner/workspace')
+""",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self._workspace_path
+            )
+            stdout, stderr = await proc.communicate()
+            stdout_str = stdout.decode()
             
-            if "LSP_DIAGNOSTICS:" in result.stdout:
-                lsp_count = int(result.stdout.split("LSP_DIAGNOSTICS:")[1].strip())
+            if proc.returncode != 0:
+                logger.error(f"❌ Error checking LSP diagnostics: {stderr.decode().strip()}")
+            elif "LSP_DIAGNOSTICS:" in stdout_str:
+                lsp_count_str = stdout_str.split("LSP_DIAGNOSTICS:")[1].strip()
+                lsp_count = int(lsp_count_str) if lsp_count_str.isdigit() else 0
                 if lsp_count > 0:
                     issues.append(SystemAlert(
                         alert_type='lsp_errors',
@@ -207,7 +238,7 @@ print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
                     logger.info(f"🛡️ MANUAL OVERRIDE DETECTED: {file} (not an error - user protection)")
         
         except Exception as e:
-            logger.error(f"❌ Error checking system health: {e}")
+            logger.error(f"❌ Error checking system health: {e}", exc_info=True)
             
         return issues
     
@@ -274,17 +305,21 @@ print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
         """Reinicia workflows crasheados"""
         try:
             # Restart workflows
-            result = subprocess.run([
+            proc = await asyncio.create_subprocess_exec(
                 'python', '-c', """
 import sys
 sys.path.append('.')
 from tools.workflow_tools import restart_workflow
 restart_workflow('Trading Bot')
 restart_workflow('Dashboard')
-"""
-            ], capture_output=True, text=True, cwd='/home/runner/workspace')
-            
-            logger.info("✅ Workflows restarted")
+""",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self._workspace_path
+            )
+            await proc.communicate()
+            if proc.returncode == 0:
+                logger.info("✅ Workflows restarted")
             
         except Exception as e:
             logger.error(f"❌ Failed to restart workflows: {e}")
