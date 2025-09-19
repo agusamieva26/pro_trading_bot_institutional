@@ -9,10 +9,17 @@ import psutil
 import requests
 import subprocess
 import sys
+import codecs
 from datetime import datetime
 from loguru import logger
 import json
 import os
+
+# 🚀 FIX: Forzar UTF-8 para evitar UnicodeEncodeError en Windows
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 class TradingSystemMonitor:
     """Monitor completo del sistema de trading"""

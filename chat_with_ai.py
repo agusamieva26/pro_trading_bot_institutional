@@ -22,7 +22,28 @@ from typing import Optional, Dict, Any
 logger.remove()
 logger.add(sys.stdout, format="<green>{time:HH:mm:ss}</green> | {message}", level="INFO")
 
-# AGUS Integration
+# QWEN 2.5 INTEGRATION - Reemplazo de OpenAI/LocalAI
+try:
+    from bot.qwen_lightweight import (
+        qwen_chat_completion_async,
+        qwen_analyze_trading_data,
+        is_qwen_available,
+        get_qwen_status,
+        test_qwen_integration
+    )
+    QWEN_AVAILABLE = True
+    logger.info("🧠 Qwen 2.5 Lightweight System loaded successfully - replacing OpenAI/LocalAI")
+except ImportError as e:
+    QWEN_AVAILABLE = False
+    # Define variables as None to avoid unbound errors
+    qwen_chat_completion_async = None
+    qwen_analyze_trading_data = None
+    is_qwen_available = None
+    get_qwen_status = None
+    test_qwen_integration = None
+    logger.warning(f"⚠️ Qwen not available: {e}")
+
+# AGUS Integration (using Qwen as backend)
 try:
     from bot.agus_2_hybrid_system import (
         agus_2_analyze_query, 
@@ -42,6 +63,22 @@ except ImportError as e:
     agus_2_system = None
     logger.warning(f"⚠️ AGUS not available: {e}")
 
+# AGUS ADVISORY SYSTEM Integration
+try:
+    from bot.agus_advisory_system import (
+        agus_chat,
+        agus_generate_report,
+        agus_get_portfolio_summary
+    )
+    ADVISORY_AVAILABLE = True
+    logger.info("📊 AGUS Advisory System loaded successfully")
+except ImportError as e:
+    ADVISORY_AVAILABLE = False
+    agus_chat = None
+    agus_generate_report = None
+    agus_get_portfolio_summary = None
+    logger.warning(f"⚠️ AGUS Advisory System not available: {e}")
+
 class AITradingChat:
     """
     💬 Chat inteligente con AGUS Hybrid Intelligence
@@ -52,6 +89,9 @@ class AITradingChat:
         self.user_id = "default_user"
         self.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
+        if QWEN_AVAILABLE:
+            logger.info("🚀 Qwen 2.5 AI System - Reemplazando OpenAI/LocalAI completamente!")
+        
         if AGUS_2_AVAILABLE:
             logger.info("🧠 AGUS Hybrid Intelligence System - Ready for advanced conversations!")
         else:
@@ -59,7 +99,7 @@ class AITradingChat:
         
     async def ask_ai(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """
-        🧠 Hace una pregunta a la IA personal con AGUS capabilities
+        🧠 Hace una pregunta a la IA personal con AGUS capabilities + Advisory System router
         """
         try:
             # Store question in session history
@@ -69,14 +109,236 @@ class AITradingChat:
                 "context": context
             })
             
-            # Use AGUS if available for enhanced intelligence
-            if AGUS_2_AVAILABLE:
+            # NUEVO: Router de intents para sistema de asesoramiento
+            advisory_response = await self._try_advisory_router(question, context)
+            if advisory_response:
+                return advisory_response
+            
+            # Use Qwen 2.5 first, then AGUS if available
+            if QWEN_AVAILABLE:
+                return await self._qwen_2_5_response(question, context)
+            elif AGUS_2_AVAILABLE:
                 return await self._agus_2_enhanced_response(question, context)
             else:
                 return await self._legacy_response(question, context)
                 
         except Exception as e:
             return f"❌ Error comunicándome con la IA: {e}"
+    
+    async def _try_advisory_router(self, question: str, context: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        """
+        🎯 Router de intents para Sistema de Asesoramiento AGUS
+        Detecta intenciones específicas y las enruta a las APIs correspondientes
+        """
+        if not ADVISORY_AVAILABLE:
+            return None
+            
+        question_lower = question.lower().strip()
+        
+        try:
+            # Intent: Generar reporte
+            if any(keyword in question_lower for keyword in [
+                "genera reporte", "create report", "reporte diario", "daily report",
+                "genera un reporte", "crea reporte", "reportar", "informe",
+                "performance report", "trading report", "resumen del día"
+            ]):
+                logger.info("🎯 Intent detectado: GENERAR REPORTE")
+                if agus_generate_report is not None:
+                    return await agus_generate_report("daily")
+                else:
+                    return "⚠️ Sistema de reportes no disponible en este momento."
+            
+            # Intent: Resumen de portafolio
+            if any(keyword in question_lower for keyword in [
+                "portfolio summary", "resumen portafolio", "resumen del portafolio",
+                "portfolio status", "estado portafolio", "portfolio overview",
+                "my portfolio", "mi portafolio", "portfolio", "cartera",
+                "balance", "posiciones", "positions", "equity"
+            ]):
+                logger.info("🎯 Intent detectado: RESUMEN PORTAFOLIO")
+                if agus_get_portfolio_summary is not None:
+                    summary = await agus_get_portfolio_summary()
+                else:
+                    return "⚠️ Sistema de portafolio no disponible en este momento."
+                
+                # Formatear la respuesta para el usuario
+                return f"""📊 **RESUMEN DE PORTAFOLIO AGUS**
+
+💰 **Equity Total**: ${summary.get('total_equity', 0):,.2f}
+📈 **P&L Diario**: ${summary.get('daily_pnl', 0):+,.2f} ({summary.get('daily_pnl_pct', 0):+.1f}%)
+💵 **Cash Disponible**: ${summary.get('cash', 0):,.2f}
+📊 **Valor de Mercado**: ${summary.get('market_value', 0):,.2f}
+
+🎯 **Posiciones Activas**: {len(summary.get('positions', []))}
+⚡ **Buying Power**: ${summary.get('buying_power', 0):,.2f}
+
+📋 **Estado**: {summary.get('status', 'Operativo')}
+🕐 **Actualizado**: {summary.get('timestamp', 'Ahora')}"""
+            
+            # Intent: Chat directo con AGUS Advisory
+            if any(keyword in question_lower for keyword in [
+                "agus", "advisory", "asesor", "asesoramiento", "consejo",
+                "recomendación", "análisis personalizado", "estrategia personalizada"
+            ]):
+                logger.info("🎯 Intent detectado: CHAT AGUS ADVISORY")
+                if agus_chat is not None:
+                    return await agus_chat(question, context)
+                else:
+                    return "⚠️ Sistema de asesoramiento AGUS no disponible en este momento."
+            
+            # Intent: Análisis específico de riesgo
+            if any(keyword in question_lower for keyword in [
+                "risk analysis", "análisis de riesgo", "risk assessment",
+                "evaluación de riesgo", "riesgo actual", "current risk"
+            ]):
+                logger.info("🎯 Intent detectado: ANÁLISIS DE RIESGO")
+                # Usar chat con contexto específico de riesgo
+                risk_context = {
+                    "analysis_type": "risk_assessment",
+                    "portfolio_context": True,
+                    **(context or {})
+                }
+                if agus_chat is not None:
+                    return await agus_chat(f"Análisis de riesgo detallado: {question}", risk_context)
+                else:
+                    return "⚠️ Sistema de análisis de riesgo no disponible en este momento."
+            
+            # Intent: Recomendaciones de trading
+            if any(keyword in question_lower for keyword in [
+                "trading recommendations", "recomendaciones", "que debería",
+                "should i", "debo", "estrategia", "strategy", "next move",
+                "próximo movimiento", "trading advice", "consejo trading"
+            ]):
+                logger.info("🎯 Intent detectado: RECOMENDACIONES TRADING")
+                # Usar chat con contexto específico de recomendaciones
+                rec_context = {
+                    "analysis_type": "recommendations",
+                    "portfolio_context": True,
+                    "market_context": True,
+                    **(context or {})
+                }
+                if agus_chat is not None:
+                    return await agus_chat(f"Recomendaciones de trading: {question}", rec_context)
+                else:
+                    return "⚠️ Sistema de recomendaciones no disponible en este momento."
+            
+            # Intent: Performance analysis
+            if any(keyword in question_lower for keyword in [
+                "performance", "rendimiento", "como va", "how am i doing",
+                "performance analysis", "análisis de rendimiento", "results",
+                "resultados", "métricas", "metrics"
+            ]):
+                logger.info("🎯 Intent detectado: ANÁLISIS DE PERFORMANCE")
+                # Generar reporte de performance específico
+                if agus_generate_report is not None:
+                    return await agus_generate_report("performance")
+                else:
+                    return "⚠️ Sistema de análisis de performance no disponible en este momento."
+            
+            # No intent específico detectado
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Error en advisory router: {e}")
+            return f"⚠️ Error procesando consulta de asesoramiento: {e}"
+    
+    async def _qwen_2_5_response(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """🚀 Respuesta usando Qwen 2.5 - Reemplaza OpenAI/LocalAI"""
+        try:
+            # Verificar disponibilidad de Qwen
+            if not QWEN_AVAILABLE or is_qwen_available is None or not is_qwen_available():
+                logger.warning("⚠️ Qwen not available, falling back to AGUS...")
+                if AGUS_2_AVAILABLE:
+                    return await self._agus_2_enhanced_response(question, context)
+                else:
+                    return await self._legacy_response(question, context)
+            
+            # Detectar tipo de pregunta para usar análisis especializado
+            question_lower = question.lower()
+            
+            # Análisis de trading específico
+            if any(word in question_lower for word in 
+                  ["btc", "bitcoin", "eth", "ethereum", "crypto", "análizar", "analiza", 
+                   "precio", "price", "mercado", "market", "trading", "comprar", "vender"]):
+                
+                # Obtener contexto de trading si está disponible
+                market_context = context or {}
+                
+                # Determinar símbolo si se menciona específicamente
+                symbol = ""
+                if "btc" in question_lower or "bitcoin" in question_lower:
+                    symbol = "BTC/USD"
+                elif "eth" in question_lower or "ethereum" in question_lower:
+                    symbol = "ETH/USD"
+                elif "sol" in question_lower or "solana" in question_lower:
+                    symbol = "SOL/USD"
+                
+                if qwen_analyze_trading_data is not None:
+                    response = await qwen_analyze_trading_data(
+                        symbol=symbol,
+                        market_data=market_context,
+                        question=question
+                    )
+                else:
+                    return "⚠️ Sistema de análisis Qwen no disponible. Usando fallback..."
+                
+                # Almacenar en historial
+                self.session_history.append({
+                    "timestamp": datetime.now(),
+                    "question": question,
+                    "response": response,
+                    "ai_model": "qwen-2.5-trading-analysis"
+                })
+                
+                return response
+            
+            # Chat general con contexto de trading
+            else:
+                messages = [
+                    {
+                        "role": "system", 
+                        "content": """Eres AGUS, la IA integrada en un sistema de trading institucional avanzado con:
+- Portfolio de ~$16,900 operando 16 criptomonedas
+- Gestión de riesgo multicapa activa  
+- Análisis técnico multi-timeframe
+- Modelos ML con Random Forest
+- Monitoreo 24/7 con alertas automáticas
+
+Responde de forma clara, profesional y en español. Proporciona análisis precisos y accionables."""
+                    },
+                    {
+                        "role": "user",
+                        "content": question
+                    }
+                ]
+                
+                if qwen_chat_completion_async is not None:
+                    response = await qwen_chat_completion_async(
+                        messages=messages,
+                        temperature=0.3,
+                        max_tokens=1024
+                    )
+                else:
+                    return "⚠️ Sistema de chat Qwen no disponible. Usando fallback..."
+                
+                # Almacenar en historial
+                self.session_history.append({
+                    "timestamp": datetime.now(),
+                    "question": question,
+                    "response": response,
+                    "ai_model": "qwen-2.5-general"
+                })
+                
+                return response
+                
+        except Exception as e:
+            logger.error(f"❌ Error in Qwen 2.5 response: {e}")
+            # Fallback a AGUS si Qwen falla
+            if AGUS_2_AVAILABLE:
+                logger.info("🔄 Falling back to AGUS system...")
+                return await self._agus_2_enhanced_response(question, context)
+            else:
+                return await self._legacy_response(question, context)
     
     async def _agus_2_enhanced_response(self, question: str, context: Optional[Dict[str, Any]] = None) -> str:
         """🧠 Respuesta técnica directa usando AGUS con capacidades completas del Editor"""

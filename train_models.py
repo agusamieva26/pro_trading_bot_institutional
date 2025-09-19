@@ -20,7 +20,6 @@ from bot.advanced_features import advanced_feature_generator
 from bot.model_selection import advanced_model_selector
 from bot.config import settings
 from bot.util import logger
-from bot.strategy import train_model as train_legacy_model
 
 def fetch_training_data(symbols, timeframe='1Day', bars_count=1000):
     """
@@ -263,34 +262,6 @@ def validate_trained_models(training_data):
         print(f"❌ Error en validación: {e}")
         return {'success': False}
 
-def train_legacy_model_for_compatibility(historical_data: Dict[str, pd.DataFrame]) -> bool:
-    """
-    Entrena y guarda el modelo legacy 'rf_clf.pkl' para compatibilidad.
-    Esto asegura que el bot principal pueda arrancar.
-    """
-    print("\n\n🔧 ENTRENANDO MODELO LEGACY (rf_clf.pkl) PARA COMPATIBILIDAD...")
-    print("=" * 60)
-    try:
-        # Usar datos de un símbolo principal como BTC/USD
-        main_symbol_data = historical_data.get('BTC/USD')
-        if main_symbol_data is None or main_symbol_data.empty:
-            # Usar cualquier otro si BTC no está
-            if not historical_data:
-                logger.error("❌ No hay datos para entrenar modelo legacy.")
-                return False
-            main_symbol_data = next(iter(historical_data.values()))
-        
-        logger.info(f"   • Usando datos de {next(iter(historical_data.keys()))} para modelo legacy...")
-        
-        # La función train_legacy_model se encarga de todo (features, training, save)
-        model = train_legacy_model(main_symbol_data)
-        
-        return model is not None
-            
-    except Exception as e:
-        logger.error(f"❌ Error entrenando modelo legacy: {e}")
-        return False
-
 def main():
     """
     Ejecuta entrenamiento completo de todos los modelos ML.
@@ -336,22 +307,18 @@ def main():
     # 5. Entrenar Deep Learning models
     dl_success = train_deep_learning_models(training_data)
     
-    # 6. Entrenar modelo legacy para compatibilidad
-    legacy_success = train_legacy_model_for_compatibility(historical_data)
-    
-    # 7. Validar modelos entrenados
+    # 6. Validar modelos entrenados
     validation_results = validate_trained_models(training_data)
     
     # Resumen final
     print("\n" + "=" * 60)
     print("🏆 RESUMEN FINAL DE ENTRENAMIENTO")
     print("=" * 60)
-
+    
     results = [
         ('Ensemble Model', '✅' if ensemble_success else '❌'),
         ('Reinforcement Learning', '✅' if rl_success else '❌'),
         ('Deep Learning Models', '✅' if dl_success else '❌'),
-        ('Legacy Compatibility Model', '✅' if legacy_success else '❌'),
         ('Validación Final', '✅' if validation_results.get('test_prediction_success') else '❌')
     ]
     
@@ -363,7 +330,7 @@ def main():
         print(f"📊 Score: {validation_results.get('best_score', 0):.3f}")
         print(f"🔢 Modelos disponibles: {validation_results.get('model_count', 0)}")
     
-    success_rate = sum([ensemble_success, rl_success, dl_success, legacy_success]) / 4
+    success_rate = sum([ensemble_success, rl_success, dl_success]) / 3
     print(f"\n📈 Tasa de éxito general: {success_rate:.1%}")
     
     if success_rate >= 0.67:

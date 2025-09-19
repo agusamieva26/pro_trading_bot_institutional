@@ -1,6 +1,8 @@
 cd C:\pro_trading_bot_institutional
+
 venv\Scripts\activate
-python run.py
+
+python start_and_monitor.py
 
 streamlit run dashboard.py
 

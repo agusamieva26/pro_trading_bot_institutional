@@ -28,12 +28,14 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-# Vector embeddings and search (conditional imports to avoid dill issues)
+# Vector embeddings and search (conditional imports to avoid Keras 3 compatibility issues)
 try:
     import sentence_transformers
     from sentence_transformers import SentenceTransformer, util
     SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
+except (ImportError, ValueError, AttributeError) as e:
+    # Handle Keras 3 compatibility issues and other import errors
+    print(f"⚠️ sentence_transformers not available: {e} - Using fallback mode")
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     SentenceTransformer = None
     logger.warning("sentence_transformers not available")

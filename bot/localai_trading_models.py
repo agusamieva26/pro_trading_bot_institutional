@@ -24,10 +24,33 @@ import joblib
 import pickle
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from transformers import AutoTokenizer, AutoModel, pipeline
+
+# PyTorch imports - made optional to avoid circular import errors in v2.8.0
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    TORCH_AVAILABLE = True
+    logger.info("🔥 PyTorch available - GPU acceleration enabled")
+except (ImportError, AttributeError) as e:
+    logger.warning(f"⚠️ PyTorch not available: {e} - Using CPU mode only")
+    TORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    optim = None
+
+# Transformers import - also optional
+try:
+    from transformers import AutoTokenizer, AutoModel, pipeline
+    TRANSFORMERS_AVAILABLE = True
+    logger.info("🤖 Transformers available - Advanced NLP models enabled")
+except (ImportError, AttributeError) as e:
+    logger.warning(f"⚠️ Transformers not available: {e} - Basic models only")
+    TRANSFORMERS_AVAILABLE = False
+    AutoTokenizer = None
+    AutoModel = None
+    pipeline = None
+
 import ta  # Technical analysis library
 
 @dataclass

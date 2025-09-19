@@ -440,7 +440,7 @@ with tab3:
                         title="P&L Acumulado (Trades Cerrados)",
                         labels={"cum_pnl": "P&L ($)", "exit_date": "Fecha"}
                     )
-                    st.plotly_chart(fig, use_column_width=True)
+                    st.plotly_chart(fig, width="stretch")
                 except Exception:
                     # Fallback si plotly falla
                     if not df_closed.empty and "exit_date" in df_closed.columns:

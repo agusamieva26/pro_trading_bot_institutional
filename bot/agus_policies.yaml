@@ -1,0 +1,121 @@
+description: AGUS Strategic Decision Policies
+policies:
+- actions:
+  - reason: Emergency drawdown protection
+    type: adjust_risk_per_trade
+    value: 0.005
+  - reason: Reduce exposure due to drawdown
+    type: reduce_exposure
+    value: 0.5
+  - reason: Tighten stop losses
+    type: tighten_stops
+    value: 0.7
+  conditions:
+    current_drawdown:
+      operator: greater_than
+      value: 0.1
+    emergency_mode:
+      operator: equals
+      value: false
+  cooldown_minutes: 30
+  description: Reduce risk when drawdown exceeds 10%
+  name: Emergency Drawdown Protection
+  priority: 1
+  rule_id: emergency_drawdown_protection
+- actions:
+  - reason: High volatility detected
+    type: adjust_risk_per_trade
+    value: 0.008
+  - reason: Account for volatility
+    type: widen_stops
+    value: 1.3
+  - reason: Smaller positions in volatility
+    type: reduce_position_size
+    value: 0.8
+  conditions:
+    risk_score:
+      operator: greater_than
+      value: 0.7
+    volatility_regime:
+      operator: in
+      value:
+      - high
+      - extreme
+  cooldown_minutes: 60
+  description: Adjust parameters during high volatility periods
+  name: High Volatility Adaptation
+  priority: 3
+  rule_id: high_volatility_adaptation
+- actions:
+  - reason: Poor performance detected
+    type: reduce_risk_per_trade
+    value: 0.5
+  - reason: Be more selective
+    type: increase_confidence_threshold
+    value: 0.7
+  - duration_minutes: 60
+    reason: Allow strategy to reset
+    type: pause_new_positions
+  conditions:
+    sharpe_ratio:
+      operator: less_than
+      value: 0.0
+    trades_count:
+      operator: greater_than
+      value: 20
+    win_rate:
+      operator: less_than
+      value: 0.35
+  cooldown_minutes: 120
+  description: Intervene when strategy performance is poor
+  name: Poor Performance Intervention
+  priority: 2
+  rule_id: poor_performance_intervention
+- actions:
+  - reason: Excellent performance
+    type: increase_risk_per_trade
+    value: 1.2
+  - reason: Strategy is working well
+    type: relax_confidence_threshold
+    value: 0.9
+  - reason: Scale up winning strategy
+    type: increase_exposure
+    value: 1.1
+  conditions:
+    current_drawdown:
+      operator: less_than
+      value: 0.03
+    sharpe_ratio:
+      operator: greater_than
+      value: 1.5
+    win_rate:
+      operator: greater_than
+      value: 0.65
+  cooldown_minutes: 180
+  description: Scale up during exceptional performance
+  name: Exceptional Performance Scaling
+  priority: 4
+  rule_id: exceptional_performance_scaling
+- actions:
+  - reason: Strong trend detected
+    type: adjust_take_profit
+    value: 1.3
+  - reason: Capture trend momentum
+    type: trail_stops_closer
+    value: 0.8
+  - reason: Let trends run
+    type: increase_position_hold_time
+    value: 1.5
+  conditions:
+    market_regime:
+      operator: equals
+      value: trending
+    trend_strength:
+      operator: greater_than
+      value: 0.7
+  cooldown_minutes: 240
+  description: Adapt to different market regimes
+  name: Market Regime Adaptation
+  priority: 5
+  rule_id: market_regime_adaptation
+version: '1.0'

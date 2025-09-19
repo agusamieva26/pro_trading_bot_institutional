@@ -309,7 +309,7 @@ class AIHybridDashboard:
             ))
             
             fig.update_layout(height=300)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             # Métricas de sentiment
@@ -349,7 +349,7 @@ class AIHybridDashboard:
                 )
                 
                 fig.update_layout(height=400)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
     
     def render_ai_adjustments(self, market_data):
         """Renderiza información de ajustes de IA"""

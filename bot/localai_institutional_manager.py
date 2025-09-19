@@ -94,6 +94,30 @@ class LocalAIInstitutionalManager:
         
         logger.info("🏛️ LocalAI Institutional Manager initialized")
     
+    def _start_monitoring(self):
+        """Inicia el monitoreo de rendimiento de modelos"""
+        try:
+            self.monitoring_active = True
+            logger.info("📊 Performance monitoring started")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to start monitoring: {e}")
+            return False
+
+    def _configure_load_balancer(self):
+        """Configura el balanceador de carga para modelos"""
+        try:
+            self.load_balancer_config = {
+                "strategy": "round_robin",
+                "health_check_interval": 30,
+                "timeout": 5.0
+            }
+            logger.info("⚖️ Load balancer configured")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to configure load balancer: {e}")
+            return False
+    
     def _check_gpu_availability(self) -> bool:
         """Check if GPU acceleration is available"""
         try:
@@ -222,10 +246,10 @@ class LocalAIInstitutionalManager:
             await self._start_all_models()
             
             # 5. Initialize performance monitoring
-            await self._start_monitoring()
+            self._start_monitoring()
             
-            # 6. Setup load balancer
-            await self._configure_load_balancer()
+            # 6. Setup load balancer  
+            self._configure_load_balancer()
             
             # 7. Health checks
             health_status = await self._perform_health_checks()

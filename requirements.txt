@@ -20,14 +20,11 @@ optuna>=3.6
 tensorflow>=2.15
 xgboost>=2.0
 
-
 # Dashboard (optional)
 streamlit>=1.35
 streamlit-autorefresh>=1.0
 plotly>=5.22.0
 tornado>=6.5.2
-psutil
-openai
 
 # Data handling
 openpyxl
@@ -62,3 +59,14 @@ pytest
 sentence-transformers
 tiktoken
 psycopg2-binary
+accelerate
+bitsandbytes
+sentencepiece
+torch
+transformers
+xformers
+fastapi
+python-multipart
+uvicorn
+psutil
+alpaca-trade-api

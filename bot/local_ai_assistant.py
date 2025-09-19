@@ -33,14 +33,7 @@ class LocalAITradingAssistant:
     
     def __init__(self):
         self.local_api_url = "http://localhost:8080/v1"  # LocalAI endpoint
-        # Modelos más específicos para trading financiero
         self.model_name = "microsoft/DialoGPT-large"  # Modelo por defecto
-        self.financial_models = [
-            "microsoft/DialoGPT-large",
-            "gpt2",
-            "distilgpt2",
-            "microsoft/DialoGPT-medium"
-        ]
         self.available = self._check_availability()
         
         if self.available:
@@ -64,42 +57,26 @@ class LocalAITradingAssistant:
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
             
-            # Configuración optimizada para análisis financiero
             payload = {
                 "model": self.model_name,
                 "messages": messages,
-                "temperature": 0.3,  # Más determinístico para análisis técnico
-                "max_tokens": 200,   # Respuestas más concisas
-                "top_p": 0.9,
-                "frequency_penalty": 0.0,
-                "presence_penalty": 0.0
+                "temperature": 0.7,
+                "max_tokens": 300
             }
             
             response = requests.post(
                 f"{self.local_api_url}/chat/completions",
                 json=payload,
-                timeout=15  # Timeout más corto
+                timeout=30
             )
             
             if response.status_code == 200:
                 result = response.json()
-                content = result["choices"][0]["message"]["content"]
-                
-                # Limpiar respuesta de caracteres extraños
-                content = content.strip()
-                if content.startswith('```json'):
-                    content = content[7:]
-                if content.endswith('```'):
-                    content = content[:-3]
-                content = content.strip()
-                
-                return content
+                return result["choices"][0]["message"]["content"]
             else:
-                logger.debug(f"LocalAI error: {response.status_code}")
                 return f"Error: {response.status_code}"
                 
         except Exception as e:
-            logger.debug(f"LocalAI request failed: {e}")
             return f"Error local AI: {e}"
     
     async def analyze_trading_sentiment(self, symbol: str, market_data: str) -> Dict:
@@ -109,24 +86,20 @@ class LocalAITradingAssistant:
         if not self.available:
             return {"sentiment": 0.0, "confidence": 0.0, "reasoning": "IA local no disponible"}
         
-        system_prompt = """Eres un trader profesional especializado en análisis técnico. Tu trabajo es analizar datos de mercado y generar señales de trading precisas.
-
-IMPORTANTE: Responde ÚNICAMENTE con JSON válido en este formato exacto:
-{"sentiment": <número decimal entre -1.0 y 1.0>, "confidence": <número decimal entre 0.0 y 1.0>, "reasoning": "<explicación técnica específica>"}
-
-NO uses texto libre, NO des consejos genéricos, SOLO JSON."""
+        system_prompt = """Eres un experto analista financiero. Analiza el sentiment del mercado para trading.
+        Responde SOLO con un JSON válido: {"sentiment": float(-1.0 a 1.0), "confidence": float(0.0 a 1.0), "reasoning": "explicación breve"}"""
         
-        prompt = f"""ANÁLISIS TÉCNICO INMEDIATO para {symbol}:
+        prompt = f"""Analiza el sentiment de trading para {symbol}:
 
-DATOS DE MERCADO:
-{market_data}
+Datos del mercado: {market_data}
 
-CALCULA:
-- Sentiment: -1.0 (muy bajista) a +1.0 (muy alcista)
-- Confidence: 0.0 (incierto) a 1.0 (muy seguro)
-- Reasoning: Explicación técnica específica basada en los datos
+Considera:
+1. Tendencias de precio
+2. Volatilidad
+3. Momentum
+4. Indicadores técnicos
 
-RESPUESTA REQUERIDA: Solo JSON válido"""
+Responde con JSON válido."""
         
         try:
             response = self._local_ai_request(prompt, system_prompt)
@@ -136,50 +109,23 @@ RESPUESTA REQUERIDA: Solo JSON válido"""
                 result = json.loads(response)
                 return result
             except:
-                # Si no es JSON válido, usar análisis técnico de respaldo
-                return self._fallback_technical_analysis(symbol, market_data)
+                # Si no es JSON válido, extraer información
+                if "positiv" in response.lower() or "bull" in response.lower():
+                    sentiment = 0.3
+                elif "negativ" in response.lower() or "bear" in response.lower():
+                    sentiment = -0.3
+                else:
+                    sentiment = 0.0
+                
+                return {
+                    "sentiment": sentiment,
+                    "confidence": 0.6,
+                    "reasoning": response[:100] + "..."
+                }
                 
         except Exception as e:
             logger.debug(f"Error análisis sentiment local: {e}")
             return {"sentiment": 0.0, "confidence": 0.0, "reasoning": "Error en análisis"}
-    
-    def _fallback_technical_analysis(self, symbol: str, market_data: str) -> Dict:
-        """
-        🔧 Análisis técnico de respaldo cuando LocalAI falla
-        """
-        try:
-            # Análisis básico basado en palabras clave
-            market_lower = market_data.lower()
-            
-            # Detectar patrones alcistas
-            bullish_indicators = ['rsi oversold', 'support', 'bounce', 'breakout', 'momentum', 'volume increase']
-            bearish_indicators = ['rsi overbought', 'resistance', 'rejection', 'breakdown', 'weakness', 'volume decrease']
-            
-            bullish_score = sum(1 for indicator in bullish_indicators if indicator in market_lower)
-            bearish_score = sum(1 for indicator in bearish_indicators if indicator in market_lower)
-            
-            # Calcular sentiment
-            if bullish_score > bearish_score:
-                sentiment = min(0.8, 0.3 + (bullish_score * 0.1))
-                reasoning = f"Análisis técnico: {bullish_score} indicadores alcistas detectados"
-            elif bearish_score > bullish_score:
-                sentiment = max(-0.8, -0.3 - (bearish_score * 0.1))
-                reasoning = f"Análisis técnico: {bearish_score} indicadores bajistas detectados"
-            else:
-                sentiment = 0.0
-                reasoning = "Análisis técnico: Señales mixtas, mercado lateral"
-            
-            confidence = min(0.8, 0.4 + (max(bullish_score, bearish_score) * 0.1))
-            
-            return {
-                "sentiment": sentiment,
-                "confidence": confidence,
-                "reasoning": reasoning
-            }
-            
-        except Exception as e:
-            logger.debug(f"Error análisis técnico respaldo: {e}")
-            return {"sentiment": 0.0, "confidence": 0.0, "reasoning": "Error en análisis técnico"}
     
     async def generate_trading_signal(self, symbol: str, price: float, technical_data: Dict) -> Optional[LocalMarketSignal]:
         """
@@ -188,24 +134,20 @@ RESPUESTA REQUERIDA: Solo JSON válido"""
         if not self.available:
             return None
             
-        system_prompt = """Eres un trader institucional con 20 años de experiencia. Analizas datos técnicos y generas señales de trading precisas.
-
-IMPORTANTE: Responde ÚNICAMENTE con JSON válido en este formato exacto:
-{"action": "<BUY|SELL|HOLD>", "confidence": <número decimal entre 0.0 y 1.0>, "reasoning": "<análisis técnico específico>"}
-
-NO uses texto libre, NO des consejos genéricos, SOLO JSON con análisis técnico."""
+        system_prompt = """Eres un trader experto. Genera una señal de trading clara.
+        Responde SOLO con JSON: {"action": "BUY/SELL/HOLD", "confidence": float(0.0-1.0), "reasoning": "explicación clara"}"""
         
-        prompt = f"""SEÑAL DE TRADING INMEDIATA para {symbol} @ ${price}:
+        prompt = f"""Genera señal de trading para {symbol} @ ${price}:
 
-DATOS TÉCNICOS:
-{json.dumps(technical_data, indent=2)}
+Datos técnicos: {json.dumps(technical_data, indent=2)}
 
-ANÁLISIS REQUERIDO:
-- Action: BUY (compra), SELL (venta), HOLD (mantener)
-- Confidence: 0.0 (incierto) a 1.0 (muy seguro)
-- Reasoning: Análisis técnico específico basado en RSI, MACD, EMA, soporte/resistencia
+Considera:
+1. RSI, MACD, EMA
+2. Soporte/resistencia
+3. Volumen y momentum
+4. Risk/reward
 
-RESPUESTA REQUERIDA: Solo JSON válido"""
+Responde con JSON válido."""
         
         try:
             response = self._local_ai_request(prompt, system_prompt)
@@ -214,8 +156,23 @@ RESPUESTA REQUERIDA: Solo JSON válido"""
             try:
                 ai_signal = json.loads(response)
             except:
-                # Usar análisis técnico de respaldo para señales
-                ai_signal = self._fallback_trading_signal(symbol, price, technical_data)
+                # Fallback parsing
+                response_lower = response.lower()
+                if "buy" in response_lower:
+                    action = "BUY"
+                    confidence = 0.6
+                elif "sell" in response_lower:
+                    action = "SELL" 
+                    confidence = 0.6
+                else:
+                    action = "HOLD"
+                    confidence = 0.4
+                
+                ai_signal = {
+                    "action": action,
+                    "confidence": confidence,
+                    "reasoning": response[:150]
+                }
             
             # Crear señal
             signal = LocalMarketSignal(
@@ -233,73 +190,6 @@ RESPUESTA REQUERIDA: Solo JSON válido"""
             logger.debug(f"Error generando señal local: {e}")
             return None
     
-    def _fallback_trading_signal(self, symbol: str, price: float, technical_data: Dict) -> Dict:
-        """
-        🔧 Señal de trading de respaldo basada en análisis técnico
-        """
-        try:
-            # Análisis básico de indicadores técnicos
-            rsi = technical_data.get('rsi', 50)
-            macd = technical_data.get('macd', 0)
-            ema_20 = technical_data.get('ema_20', price)
-            ema_50 = technical_data.get('ema_50', price)
-            volume = technical_data.get('volume', 0)
-            
-            # Calcular score técnico
-            technical_score = 0
-            
-            # RSI analysis
-            if rsi < 30:
-                technical_score += 0.3  # Oversold - bullish
-            elif rsi > 70:
-                technical_score -= 0.3   # Overbought - bearish
-            elif 40 <= rsi <= 60:
-                technical_score += 0.1  # Neutral zone
-            
-            # MACD analysis
-            if macd > 0:
-                technical_score += 0.2
-            else:
-                technical_score -= 0.2
-            
-            # EMA crossover analysis
-            if ema_20 > ema_50:
-                technical_score += 0.2
-            else:
-                technical_score -= 0.2
-            
-            # Volume analysis (if available)
-            if volume > technical_data.get('avg_volume', volume * 1.5):
-                technical_score += 0.1
-            
-            # Determinar acción
-            if technical_score > 0.3:
-                action = "BUY"
-                confidence = min(0.9, 0.5 + abs(technical_score))
-                reasoning = f"Análisis técnico: RSI {rsi:.1f}, MACD {macd:+.3f}, EMA20>EMA50"
-            elif technical_score < -0.3:
-                action = "SELL"
-                confidence = min(0.9, 0.5 + abs(technical_score))
-                reasoning = f"Análisis técnico: RSI {rsi:.1f}, MACD {macd:+.3f}, EMA20<EMA50"
-            else:
-                action = "HOLD"
-                confidence = 0.4
-                reasoning = f"Análisis técnico: Señales mixtas, RSI {rsi:.1f}, MACD {macd:+.3f}"
-            
-            return {
-                "action": action,
-                "confidence": confidence,
-                "reasoning": reasoning
-            }
-            
-        except Exception as e:
-            logger.debug(f"Error señal trading respaldo: {e}")
-            return {
-                "action": "HOLD",
-                "confidence": 0.3,
-                "reasoning": "Error en análisis técnico"
-            }
-    
     def analyze_market_summary(self, symbols_data: Dict) -> str:
         """
         📋 Genera resumen del mercado usando IA local
@@ -307,52 +197,28 @@ RESPUESTA REQUERIDA: Solo JSON válido"""
         if not self.available:
             return "🤖 IA local no disponible - usando análisis básico"
         
-        system_prompt = """Eres un analista técnico profesional. Analiza datos de mercado y genera insights específicos.
-
-IMPORTANTE: Responde ÚNICAMENTE con análisis técnico específico en máximo 100 palabras.
-NO uses texto genérico, NO des consejos vagos, SOLO análisis técnico basado en los datos."""
+        system_prompt = "Eres un analista de mercados. Crea un resumen profesional y conciso del estado del mercado."
         
-        # Preparar datos para análisis técnico
+        # Preparar datos para análisis
         market_overview = []
-        bullish_count = 0
-        bearish_count = 0
-        
         for symbol, data in list(symbols_data.items())[:5]:  # Solo top 5 para no sobrecargar
-            price = data.get('price', 0)
-            change = data.get('change', 0)
-            market_overview.append(f"{symbol}: ${price:.2f} ({change:+.2%})")
-            
-            if change > 0:
-                bullish_count += 1
-            elif change < 0:
-                bearish_count += 1
+            market_overview.append(f"{symbol}: ${data.get('price', 0):.2f}")
         
-        prompt = f"""ANÁLISIS TÉCNICO DE MERCADO:
+        prompt = f"""Analiza este resumen de mercado:
 
-DATOS ACTUALES:
 {chr(10).join(market_overview)}
 
-ESTADÍSTICAS:
-- Alcistas: {bullish_count}
-- Bajistas: {bearish_count}
+Genera un resumen profesional de máximo 200 palabras sobre:
+1. Tendencia general del mercado
+2. Oportunidades destacadas  
+3. Riesgos a considerar
+4. Recomendación general
 
-GENERA:
-- Tendencias técnicas específicas
-- Oportunidades de trading concretas
-- Niveles de soporte/resistencia clave
-
-RESPUESTA: Análisis técnico específico (máximo 100 palabras)"""
+Mantén un tono profesional y directo."""
         
         try:
             response = self._local_ai_request(prompt, system_prompt)
-            
-            # Limpiar respuesta si contiene texto genérico
-            if "CONSEJO DE AGUSTO" in response or "Mi análisis" in response or "AGUS" in response:
-                # Generar análisis técnico básico como fallback
-                trend = "ALCISTA" if bullish_count > bearish_count else "BAJISTA" if bearish_count > bullish_count else "LATERAL"
-                return f"🤖 Análisis técnico: Tendencia {trend}. {bullish_count} alcistas vs {bearish_count} bajistas. Oportunidades en símbolos con mayor momentum."
-            
-            return f"🤖 Análisis técnico: {response}"
+            return f"🤖 ANÁLISIS IA LOCAL:\n\n{response}"
             
         except Exception as e:
             return f"🤖 IA local: Error generando análisis - {e}"

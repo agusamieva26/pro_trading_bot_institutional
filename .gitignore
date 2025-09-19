@@ -23,6 +23,8 @@ MANIFEST
 
 # Virtual Environment
 venv/
+__pycache__/
+node_modules/
 env/
 ENV/
 env.bak/
@@ -62,9 +64,11 @@ backups/
 
 # Temporary files
 *.tmp
+*.log
 *.temp
 temp/
 tmp/
+.cache/
 
 # Model files (large files)
 *.pkl
@@ -76,3 +80,79 @@ tmp/
 trades/
 positions/
 portfolio/
+*.checkpoint
+*.log
+*.cache/
+*.local/
+
+# Project-specific additions
+reports/
+*.db
+.pythonlibs/
+bot/backups/
+bot/localai_configs/
+bot/orchestrator_tracking.db
+bot/metrics.db
+bot/agus_memory.db
+bot/monitoring_alerts.db
+bot/*.json
+*.gguf
+attached_assets/
+bot/__pycache__
+bot/backups
+
+# Excluir Git y Replit
+*.git*
+*.replit
+
+# Archivos temporales y logs
+*.tmp
+*.log
+logs/
+log/
+
+# Cachés y configuraciones locales
+.cache/
+.local/
+__pycache__/
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Backups y data pesada
+backups/
+data/
+models/
+
+# Archivos de Python grandes o binarios
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# Librerías instaladas por Replit
+.pythonlibs/
+
+# Exclusión específica de paquetes pesados
+.pythonlibs/lib/python3.11/site-packages/numpy/*
+.pythonlibs/lib/python3.11/site-packages/scipy/*
+.pythonlibs/lib/python3.11/site-packages/tensorflow/*
+.pythonlibs/lib/python3.11/site-packages/torch/*
+.pythonlibs/lib/python3.11/site-packages/pandas/*
+.pythonlibs/lib/python3.11/site-packages/matplotlib/*
+.pythonlibs/lib/python3.11/site-packages/sklearn/*
+
+# Archivos y carpetas de assets y resultados temporales
+attached_assets/
+desktop_app/assets/
+results/
+backup-repo/
+
+# Resultados de tests y optimizaciones
+integration_test_results.json
+realistic_integration_results.json
+optuna_results.json

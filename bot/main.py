@@ -902,6 +902,45 @@ def main():
     reporter_thread.start()
     logger.info("✅ Daily Reporter activo - detectará reset de Alpaca automáticamente")
     
+    # 🔧 INICIAR SELF-HEALING SYSTEM EN THREAD SEPARADO
+    logger.info("🔧 Iniciando Self-Healing System en thread separado...")
+    try:
+        import asyncio
+        from .agus_self_healing import initialize_self_healing
+        from .agus_self_healing_integration import AGUSSelfHealingBridge
+        
+        # Create and start the self-healing system
+        def run_self_healing_async():
+            """Run self-healing in its own event loop"""
+            async def init_system():
+                try:
+                    # Initialize the self-healing system
+                    self_healing = await initialize_self_healing()
+                    logger.info("✅ Self-Healing initialized and monitoring started")
+                    
+                    # Keep system running
+                    while True:
+                        await asyncio.sleep(60)  # Health check every minute
+                        if not self_healing.is_running:
+                            logger.warning("⚠️ Self-healing stopped, restarting...")
+                            await self_healing.start()
+                except Exception as e:
+                    logger.error(f"❌ Self-healing system error: {e}")
+            
+            asyncio.run(init_system())
+        
+        self_healing_thread = threading.Thread(
+            target=run_self_healing_async,
+            daemon=True,
+            name="SelfHealingSystem"
+        )
+        self_healing_thread.start()
+        logger.info("✅ Self-Healing System activo - monitoreando errores automáticamente")
+    except ImportError as e:
+        logger.warning(f"⚠️ Self-Healing System no disponible: {e}")
+    except Exception as e:
+        logger.error(f"❌ Error iniciando Self-Healing System: {e}")
+    
     # 🤖 INICIAR INTELLIGENT MONITOR EN THREAD SEPARADO
     logger.info("🤖 Iniciando Intelligent Monitor 24/7 con AGUS...")
     intelligent_monitor = IntelligentMonitor(bot_instance={'state': state, 'clf': clf})

@@ -26,9 +26,7 @@ sys.path.insert(0, '.')
 
 # Configurar timezone del sistema para schedulers
 os.environ["TZ"] = "Europe/Madrid"
-# time.tzset() no está disponible en Windows
-if hasattr(time, 'tzset'):
-    time.tzset()
+time.tzset()
 
 class AutomatedTrainer:
     """Sistema de entrenamiento automático inteligente."""
