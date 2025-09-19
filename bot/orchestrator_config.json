@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "institutional_grade": true,
+  "max_workers": 8,
+  "cache_size_mb": 512,
+  "cache_dir": "data_cache/model_cache",
+  "timeout_seconds": 30,
+  
+  "ensemble": {
+    "consensus_type": "confidence_weighted",
+    "min_models": 2,
+    "max_models": 8,
+    "confidence_threshold": 0.75,
+    "disagreement_threshold": 0.3,
+    "enable_uncertainty_quantification": true
+  },
+  
+  "models": {
+    "sentiment_analyzer": {
+      "enabled": true,
+      "weight": 1.0,
+      "timeout": 10,
+      "fallback_enabled": true
+    },
+    "technical_predictor": {
+      "enabled": true,
+      "weight": 1.2,
+      "timeout": 15,
+      "fallback_enabled": true
+    },
+    "risk_assessor": {
+      "enabled": true,
+      "weight": 1.1,
+      "timeout": 10,
+      "fallback_enabled": true
+    },
+    "market_scanner": {
+      "enabled": true,
+      "weight": 0.9,
+      "timeout": 12,
+      "fallback_enabled": true
+    },
+    "volatility_predictor": {
+      "enabled": true,
+      "weight": 1.0,
+      "timeout": 10,
+      "fallback_enabled": true
+    }
+  },
+  
+  "performance": {
+    "enable_caching": true,
+    "cache_expiry_minutes": 30,
+    "parallel_execution": true,
+    "load_balancing": "round_robin",
+    "auto_scaling": true,
+    "max_concurrent_requests": 50
+  },
+  
+  "monitoring": {
+    "enable_metrics": true,
+    "log_predictions": true,
+    "track_performance": true,
+    "alert_on_errors": true,
+    "health_check_interval": 60
+  },
+  
+  "fallback": {
+    "enable_fallback_models": true,
+    "fallback_timeout": 5,
+    "fallback_confidence_threshold": 0.5
+  },
+  
+  "security": {
+    "enable_rate_limiting": true,
+    "max_requests_per_minute": 100,
+    "enable_authentication": false,
+    "log_access": true
+  }
+}
