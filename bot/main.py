@@ -6,6 +6,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import logging
 import time
 import threading
+from typing import Dict, Any
 import pandas as pd
 from tenacity import retry, wait_exponential, stop_after_attempt
 from alpaca.trading.client import TradingClient
