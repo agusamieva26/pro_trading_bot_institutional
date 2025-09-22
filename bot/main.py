@@ -913,7 +913,7 @@ def run_periodic_optimization(state: BotState):
     """
     Ejecuta la optimización de hiperparámetros con Optuna periódicamente.
     """
-    from .strategy_optimizer import run_advanced_optimization
+    from .strategy_optimizer import optimize_strategy_parameters
     from .config import settings
     
     optimize_interval_days = 14 # Re-optimizar cada 14 días (dos semanas)
@@ -934,14 +934,22 @@ def run_periodic_optimization(state: BotState):
                 # Ejecutar optimización con un número razonable de trials
                 # Usar un subconjunto de símbolos para no tardar demasiado
                 symbols_to_optimize = settings.symbols[:10] # Optimizar con los 10 primeros símbolos
+
+                # Definir el rango de fechas para la optimización
+                end_date = datetime.now()
+                start_date = end_date - timedelta(days=settings.training_data_days)
                 
-                optimization_results = run_advanced_optimization(
+                optimization_results_obj = optimize_strategy_parameters(
                     symbols=symbols_to_optimize,
-                    n_trials=50 # Número de trials razonable para ejecución periódica
+                    start_date=start_date.strftime('%Y-%m-%d'),
+                    end_date=end_date.strftime('%Y-%m-%d'),
+                    optimization_method="bayesian",
+                    max_trials=50 # Número de trials razonable para ejecución periódica
                 )
                 
-                if optimization_results and not optimization_results.get('error'):
-                    best_params = optimization_results.get('best_params')
+                # El resultado es un objeto OptimizationResult, no un diccionario
+                if optimization_results_obj and optimization_results_obj.best_score > -float('inf'):
+                    best_params = optimization_results_obj.best_parameters
                     logger.info("✅ OPTUNA: Optimización periódica completada.")
                     logger.info(f"🏆 Mejores parámetros encontrados: {best_params}")
                     
