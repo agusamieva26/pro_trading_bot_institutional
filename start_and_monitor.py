@@ -3,7 +3,10 @@ import time
 import logging
 import sys
 import threading
+import os
+import signal
 import webbrowser
+from typing import Dict
 
 # Configure logging to see the monitor's output
 logging.basicConfig(
@@ -15,10 +18,9 @@ logger = logging.getLogger("Supervisor")
 
 # Commands to run
 PROCESSES = {
-    # 🔧 FIX: Add -X utf8 to force UTF-8 encoding on Windows for emoji support
-    "bot": ["python", "-X", "utf8", "-u", "-m", "bot.main"],
-    # 🔧 FIX: Removed enableCORS to prevent warning, added headless for cleaner start
-    "dashboard": ["streamlit", "run", "dashboard_modern.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
+    # Use sys.executable to ensure the correct Python interpreter from the virtual environment is used.
+    "bot": [sys.executable, "-X", "utf8", "-u", "-m", "bot.main"],
+    "dashboard": [sys.executable, "-m", "streamlit", "run", "dashboard_modern.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
 }
 
 def open_dashboard():
@@ -37,23 +39,49 @@ def main():
     Restarts them if they crash.
     """
     threading.Thread(target=open_dashboard, daemon=True).start()
-    procs = {}
+    procs: Dict[str, subprocess.Popen] = {}
     logger.info("🚀 Starting Process Supervisor v2.0...")
 
-    while True:
-        for name, command in PROCESSES.items():
-            # Check if the process is running
-            if name not in procs or procs[name].poll() is not None:
-                if name in procs:
-                    logger.warning(f"Process '{name}' terminated with code {procs[name].returncode}. Restarting...")
+    try:
+        while True:
+            for name, command in PROCESSES.items():
+                # Check if the process is running
+                if name not in procs or procs[name].poll() is not None:
+                    if name in procs:
+                        logger.warning(f"Process '{name}' terminated with code {procs[name].returncode}. Restarting...")
+                    else:
+                        logger.info(f"Starting process '{name}' for the first time.")
+
+                    # Start the process with flags for graceful shutdown
+                    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
+                    procs[name] = subprocess.Popen(
+                        command, 
+                        stdout=sys.stdout, 
+                        stderr=sys.stderr,
+                        creationflags=creationflags
+                    )
+                    logger.info(f"✅ Process '{name}' started with PID: {procs[name].pid}")
+
+            time.sleep(15)
+    except KeyboardInterrupt:
+        logger.info("🛑 User interrupt detected. Shutting down all processes gracefully...")
+    finally:
+        for name, proc in procs.items():
+            if proc.poll() is None: # If process is still running
+                logger.info(f"Terminating process '{name}' (PID: {proc.pid})...")
+                # Send a signal that can be caught as KeyboardInterrupt
+                if sys.platform == "win32":
+                    os.kill(proc.pid, signal.CTRL_BREAK_EVENT)
                 else:
-                    logger.info(f"Starting process '{name}' for the first time.")
-
-                # Start the process
-                procs[name] = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stderr)
-                logger.info(f"✅ Process '{name}' started with PID: {procs[name].pid}")
-
-        time.sleep(15)
+                    proc.terminate() # Sends SIGTERM on Unix
+                
+                try:
+                    proc.wait(timeout=15)
+                    logger.info(f"✅ Process '{name}' terminated.")
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"⚠️ Process '{name}' did not terminate in time. Forcing kill...")
+                    proc.kill()
+        logger.info("All processes shut down. Exiting.")
 
 if __name__ == "__main__":
     main()

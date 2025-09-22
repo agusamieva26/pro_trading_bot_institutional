@@ -1,5 +1,11 @@
 # bot/main.py
 import os
+import sys
+
+# 🚀 EARLY STARTUP MESSAGE: Inform user about loading process
+print("🚀 Initializing bot... Loading large AI/ML libraries (TensorFlow, PyTorch, etc.). This may take a moment, please be patient...")
+sys.stdout.flush() # Ensure the message is displayed immediately
+
 # 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
