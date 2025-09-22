@@ -34,5 +34,5 @@ primary_region = "iad"
   memory_mb = 2048
 
 # Keep the bot running 24/7
-[[processes]]
+[processes]
   app = "python -u start_and_monitor.py"

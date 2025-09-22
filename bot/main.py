@@ -1025,6 +1025,10 @@ def run_periodic_retraining(state: BotState):
             time.sleep(3600) # Wait an hour on error
 
 def main():
+    # ☁️ INICIAR SERVIDOR DE SALUD PARA LA NUBE (FLY.IO)
+    start_health_server()
+    logger.info("✅ Servidor de salud iniciado en el puerto 8080")
+
     # 🧠 INICIAR ORQUESTADOR CENTRAL
     orchestrator = AGUSOrchestrator()
     asyncio.run(orchestrator.start())
