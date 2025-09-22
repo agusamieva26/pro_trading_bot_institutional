@@ -3,21 +3,40 @@ from .data import fetch_bars
 from .features import make_features, ema, rsi, macd, atr
 from .strategy import load_trading_model, hybrid_signal, FEATURES
 from .config import settings
-from .util import logger
+from .util import logger, should_skip_realtime_pricing
+from .symbol_configs import get_symbol_config, symbol_config_manager
 
 def objective(trial: optuna.Trial, symbols, start, end):
-    # Tune thresholds and MACD/RSI params used downstream by signals (simple inline mod)
+    # --- 1. OPTIMIZACIÓN DE PARÁMETROS DE INDICADORES (EXISTENTE) ---
     macd_fast = trial.suggest_int("macd_fast", 8, 18)
     macd_slow = trial.suggest_int("macd_slow", 20, 30)
     macd_sig  = trial.suggest_int("macd_sig", 5, 12)
     rsi_len   = trial.suggest_int("rsi_len", 8, 21)
     thr_entry = trial.suggest_float("thr_entry", 0.3, 0.7)
     thr_exit  = trial.suggest_float("thr_exit", -0.7, -0.3)
+    
+    # --- 2. 💎 NUEVO: OPTIMIZACIÓN DE TP/SL POR NIVEL DE VOLATILIDAD ---
+    tier_params = {}
+    tier_ranges = {
+        "low":        {"tp_range": (0.01, 0.04), "sl_range": (0.005, 0.02)},
+        "medium":     {"tp_range": (0.02, 0.08), "sl_range": (0.01, 0.04)},
+        "high":       {"tp_range": (0.04, 0.15), "sl_range": (0.02, 0.08)},
+        "ultra_high": {"tp_range": (0.08, 0.25), "sl_range": (0.04, 0.12)},
+    }
+    
+    for tier, ranges in tier_ranges.items():
+        # Sugerir un TP y SL para cada nivel de volatilidad
+        tp = trial.suggest_float(f"tp_{tier}", ranges["tp_range"][0], ranges["tp_range"][1])
+        sl = trial.suggest_float(f"sl_{tier}", ranges["sl_range"][0], ranges["sl_range"][1])
+        tier_params[tier] = {'tp': tp, 'sl': sl}
 
-    pnl = 0.0
+    total_pnl = 0.0
+    clf = load_trading_model()
+
     for s in symbols:
         df = fetch_bars(s, start, end)
         if df.empty: continue
+        
         f = df.copy()
         f["ret_1"] = f["close"].pct_change()
         f["ema_12"] = ema(pd.Series(f["close"]), 12)
