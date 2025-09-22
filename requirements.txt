@@ -27,6 +27,7 @@ alpaca-py>=0.21
 scikit-learn>=1.4
 tensorflow>=2.15
 xgboost>=2.0
+lightgbm>=4.0 # Añadido para el entrenamiento de modelos
 torch
 transformers
 openai

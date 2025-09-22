@@ -165,6 +165,7 @@ class PerformanceAdapter:
         self.last_update = None
         self.performance_declining = False
         self.intervention_mode = False
+        self.degradation_reasons = []
         
         # Monitoring
         self._monitoring_active = False
@@ -184,6 +185,7 @@ class PerformanceAdapter:
                 with open(self.state_file, 'r') as f:
                     state_data = json.load(f)
                     self.performance_declining = state_data.get('performance_declining', False)
+                    self.degradation_reasons = state_data.get('degradation_reasons', [])
                     self.intervention_mode = state_data.get('intervention_mode', False)
                     
                     self.last_update = state_data.get('last_update')
@@ -213,6 +215,7 @@ class PerformanceAdapter:
             state_data = {
                 'performance_declining': self.performance_declining,
                 'intervention_mode': self.intervention_mode,
+                'degradation_reasons': self.degradation_reasons,
                 'last_update': self.last_update.isoformat() if self.last_update else None,
                 'current_regime': self.current_metrics.regime.value,
                 'current_multiplier': self.current_adaptation.performance_multiplier
@@ -654,28 +657,30 @@ class PerformanceAdapter:
                 reasons.append(f"Low profit factor: {self.current_metrics.profit_factor:.2f}")
             
             # Update degradation state
-            if degradation_detected and not self.performance_declining:
+            if degradation_detected:
+                if not self.performance_declining: # Log only on first detection
+                    logger.warning(f"⚠️ PERFORMANCE DEGRADATION DETECTED: {', '.join(reasons)}")
+                    # Send alert
+                    try:
+                        from .telegram import send_telegram
+                        msg = f"⚠️ PERFORMANCE DEGRADATION\n\nReasons:\n" + "\n".join([f"• {r}" for r in reasons])
+                        msg += f"\n\nWin Rate: {self.current_metrics.win_rate:.1%}"
+                        msg += f"\nSharpe: {self.current_metrics.sharpe_ratio:.2f}"
+                        msg += f"\nRegime: {self.current_metrics.regime.value.upper()}"
+                        send_telegram(msg)
+                    except:
+                        pass
                 self.performance_declining = True
                 self.intervention_mode = True
-                logger.warning(f"⚠️ PERFORMANCE DEGRADATION DETECTED: {', '.join(reasons)}")
-                
-                # Send alert
-                try:
-                    from .telegram import send_telegram
-                    msg = f"⚠️ PERFORMANCE DEGRADATION\n\nReasons:\n" + "\n".join([f"• {r}" for r in reasons])
-                    msg += f"\n\nWin Rate: {self.current_metrics.win_rate:.1%}"
-                    msg += f"\nSharpe: {self.current_metrics.sharpe_ratio:.2f}"
-                    msg += f"\nRegime: {self.current_metrics.regime.value.upper()}"
-                    send_telegram(msg)
-                except:
-                    pass
-                    
-            elif not degradation_detected and self.performance_declining:
+                self.degradation_reasons = reasons
+
+            elif self.performance_declining: # If not detected now, but was before
                 # Check if we can clear degradation mode
                 if (self.current_metrics.win_rate > 0.4 and 
                     self.current_metrics.sharpe_ratio > 0.0):
                     self.performance_declining = False
                     self.intervention_mode = False
+                    self.degradation_reasons = []
                     logger.info("✅ Performance degradation cleared - returning to normal operation")
                     
         except Exception as e:
@@ -787,6 +792,7 @@ class PerformanceAdapter:
             'max_position_count': self.current_adaptation.max_position_count,
             'intervention_mode': self.intervention_mode,
             'performance_declining': self.performance_declining,
+            'degradation_reasons': self.degradation_reasons,
             'trade_count': len(self.trade_history),
             'last_update': self.last_update.isoformat() if self.last_update else None
         }

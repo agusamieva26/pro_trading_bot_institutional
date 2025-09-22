@@ -1465,8 +1465,17 @@ with tab1:
     if PERFORMANCE_ADAPTER_AVAILABLE and performance_adapter:
         perf_summary = performance_adapter.get_performance_summary()
         intervention_mode = perf_summary.get('intervention_mode', False)
+        
         if intervention_mode:
-            st.warning("⚠️ **INTERVENTION MODE ACTIVE:** The system has automatically reduced risk due to recent performance degradation. Position sizes will be smaller and entry criteria stricter.")
+            reasons = perf_summary.get('degradation_reasons', [])
+            reasons_md = "\n".join([f"- {reason}" for reason in reasons])
+            warning_message = (
+                "**INTERVENTION MODE ACTIVE:** The system has automatically reduced risk due to recent performance degradation. "
+                "Position sizes will be smaller and entry criteria stricter."
+            )
+            if reasons_md:
+                warning_message += f"\n\n**Detected Issues:**\n{reasons_md}"
+            st.warning(warning_message, icon="🛡️")
         else:
             st.success("✅ **Normal Operation:** Performance metrics are within acceptable ranges.")
         st.markdown("---")
@@ -2125,16 +2134,19 @@ with tab6:
 
         st.markdown("#### 📊 Key Risk Metrics")
         risk_col1, risk_col2, risk_col3, risk_col4 = st.columns(4)
+        risk_col1, risk_col2, risk_col3, risk_col4, risk_col5 = st.columns(5)
         
         with risk_col1:
             risk_score = risk_summary.get('risk_score', 0.5)
             risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
             create_metric_card("RISK SCORE", f"{risk_score:.2f}", risk_level, "error" if risk_score > 0.7 else "warning", "primary", "🔥")
+            create_metric_card("RISK SCORE", f"{risk_score:.2f}", risk_level, "error" if risk_score > 0.7 else "warning" if risk_score > 0.4 else "success", "primary", "🔥")
 
         with risk_col2:
             current_dd = dd_summary.get('current_drawdown', 0.0) * 100
             dd_level = "🔴 SEVERE" if current_dd > 10 else "🟡 MODERATE" if current_dd > 5 else "🟢 MINIMAL"
             create_metric_card("CURRENT DRAWDOWN", f"{current_dd:.2f}%", dd_level, "error" if current_dd > 10 else "warning", "primary", "📉")
+            create_metric_card("CURRENT DRAWDOWN", f"{current_dd:.2f}%", dd_level, "error" if current_dd > 10 else "warning" if current_dd > 5 else "success", "primary", "📉")
 
         with risk_col3:
             risk_regime = risk_summary.get('risk_regime', 'normal').upper()
@@ -2143,6 +2155,18 @@ with tab6:
         with risk_col4:
             protection_level = dd_summary.get('protection_level', 'normal').upper()
             create_metric_card("PROTECTION LEVEL", protection_level, "Drawdown Protection", "success" if protection_level == "NORMAL" else "warning", "secondary", "🛡️")
+
+        with risk_col5:
+            volatility = risk_summary.get('volatility', 0.0) * 100
+            vol_level = "🔴 HIGH" if volatility > 25 else "🟡 MEDIUM" if volatility > 15 else "🟢 LOW"
+            create_metric_card(
+                "ANNUALIZED VOL", 
+                f"{volatility:.1f}%", 
+                vol_level, 
+                "error" if volatility > 25 else "warning" if volatility > 15 else "success", 
+                "secondary", 
+                "⚡"
+            )
 
         st.markdown("---")
         st.markdown("#### ⚙️ Dynamic Adjustments")
