@@ -13,7 +13,8 @@ logger = logging.getLogger("Supervisor")
 
 # Commands to run
 PROCESSES = {
-    "bot": ["python", "-u", "-m", "bot.main"],
+    # 🔧 FIX: Add -X utf8 to force UTF-8 encoding on Windows for emoji support
+    "bot": ["python", "-X", "utf8", "-u", "-m", "bot.main"],
     "dashboard": ["streamlit", "run", "dashboard_modern.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.enableCORS", "false"]
 }
 
