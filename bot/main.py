@@ -13,7 +13,7 @@ from alpaca.trading.client import TradingClient
 from .auto_tuner import tune_risk_parameters
 from .config import settings
 from .data import fetch_bars, fetch_all_bars
-from .strategy_optimizer import run_advanced_optimization, OptimizationResult
+# from .strategy_optimizer import run_advanced_optimization, OptimizationResult
 from .features import make_features
 from .strategy import load_trading_model, hybrid_signal, reset_signal_memory, reset_model_cache
 from .advanced_ml import auto_load_ml_models, load_optimized_params
