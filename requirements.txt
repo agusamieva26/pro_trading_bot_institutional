@@ -1,72 +1,82 @@
-# Core dependencies
+# -----------------------------------------------------------------
+# CORE & UTILITIES
+# Librerías esenciales para el funcionamiento básico del bot.
+# -----------------------------------------------------------------
 pandas>=2.2
 numpy>=1.26
-scikit-learn>=1.4
-joblib>=1.4
 python-dotenv>=1.0
 requests>=2.32
 pydantic>=2.8
 tenacity>=8.2
 loguru>=0.7
-tabulate>=0.9
 pytz
+schedule
+psutil
+tabulate>=0.9 # Para logs y reportes en formato tabla
 
-# Trading & APIs
+# -----------------------------------------------------------------
+# TRADING & DATA
+# Conexión con brokers y APIs de datos.
+# -----------------------------------------------------------------
 alpaca-py>=0.21
 
-# ML & Analytics
-vectorbt>=0.26
-optuna>=3.6
+# -----------------------------------------------------------------
+# MACHINE LEARNING & AI (CPU)
+# Librerías para los modelos de predicción y sistemas de IA.
+# -----------------------------------------------------------------
+scikit-learn>=1.4
 tensorflow>=2.15
 xgboost>=2.0
-
-# Dashboard (optional)
-streamlit>=1.35
-streamlit-autorefresh>=1.0
-plotly>=5.22.0
-tornado>=6.5.2
-
-# Data handling
-openpyxl
-schedule
-openai
-trafilatura
-beautifulsoup4
-requests
 torch
 transformers
-aiohttp
-joblib
-psutil
-scikit-learn
+openai
+optuna>=3.6
+joblib>=1.4
+scipy
+
+# --- Dependencia especial para Indicadores Técnicos ---
+# NOTA: 'ta-lib' requiere la instalación previa de la librería C.
+# Windows: Descargar wheel desde https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib
+# Linux: sudo apt-get install libta-lib-dev
+# MacOS: brew install ta-lib
+TA-Lib
+
+# -----------------------------------------------------------------
+# ADVANCED AI & RAG (Retrieval-Augmented Generation)
+# Para el sistema de memoria y conocimiento avanzado (AGUS 2.0).
+# -----------------------------------------------------------------
 aiohttp
 beautifulsoup4
 html5lib
 lxml
 trafilatura
-lightgbm
-optuna
-scikit-learn
-scipy
-ta-lib
-tensorflow
-xgboost
 chromadb
 faiss-cpu
 langchain
 langchain-community
-pytest
 sentence-transformers
 tiktoken
-psycopg2-binary
+# --- Opcionales para optimización de Transformers (pueden ser difíciles de instalar) ---
 accelerate
 bitsandbytes
 sentencepiece
-torch
-transformers
-xformers
+# xformers # Comentado por defecto, puede causar problemas de instalación.
+
+# -----------------------------------------------------------------
+# DASHBOARD & API
+# Para la interfaz web (Streamlit) y el servidor de salud (FastAPI).
+# -----------------------------------------------------------------
+streamlit>=1.35
+streamlit-autorefresh>=1.0
+plotly>=5.22.0
+tornado<6.4 # Se fija la versión de Tornado para máxima compatibilidad con Streamlit
+openpyxl # Para exportar reportes a Excel
 fastapi
-python-multipart
 uvicorn
-psutil
-alpaca-trade-api
+python-multipart
+
+# -----------------------------------------------------------------
+# DEVELOPMENT & TESTING
+# Se recomienda mover a un archivo 'requirements-dev.txt' para producción.
+# -----------------------------------------------------------------
+# pytest
