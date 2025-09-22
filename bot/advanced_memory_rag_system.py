@@ -27,18 +27,13 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 from loguru import logger
+import httpx
 
 # Vector embeddings and search (conditional imports to avoid Keras 3 compatibility issues)
-try:
-    import sentence_transformers
-    from sentence_transformers import SentenceTransformer, util
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-except (ImportError, ValueError, AttributeError) as e:
-    # Handle Keras 3 compatibility issues and other import errors
-    print(f"⚠️ sentence_transformers not available: {e} - Using fallback mode")
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
-    SentenceTransformer = None
-    logger.warning("sentence_transformers not available")
+# Reemplazado por API
+EMBEDDINGS_API_BASE_URL = os.environ.get("QWEN_API_BASE_URL", "https://api.together.xyz/v1")
+EMBEDDINGS_API_KEY = os.environ.get("QWEN_API_KEY")
+EMBEDDINGS_MODEL_NAME = os.environ.get("EMBEDDINGS_MODEL_NAME", "togethercomputer/m2-bert-80M-8k-retrieval")
 
 try:
     import faiss
@@ -168,69 +163,13 @@ class AdvancedEmbeddingEngine:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        # Initialize models
-        self.models = {}
-        self.model_configs = {
-            EmbeddingModel.SENTENCE_TRANSFORMER: {
-                "model_name": "sentence-transformers/all-MiniLM-L6-v2",
-                "dimension": 384,
-                "max_length": 512,
-                "use_for": ["general", "strategy", "analysis"]
-            },
-            EmbeddingModel.MULTI_QA: {
-                "model_name": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1", 
-                "dimension": 384,
-                "max_length": 512,
-                "use_for": ["questions", "queries", "troubleshooting"]
-            }
-        }
-        
-        # Load models
-        self._load_models()
+        self.api_available = bool(EMBEDDINGS_API_KEY)
+        self.dimension = 768 # Dimensión para m2-bert-80M-8k-retrieval
         
         # Embedding cache
         self.embedding_cache = {}
         self.cache_hits = 0
         self.cache_misses = 0
-        
-        # Trading-specific preprocessing
-        self.trading_keywords = {
-            "bullish", "bearish", "uptrend", "downtrend", "resistance", "support",
-            "breakout", "breakdown", "volume", "volatility", "rsi", "macd", "sma", "ema",
-            "fibonacci", "candlestick", "doji", "hammer", "engulfing", "momentum",
-            "divergence", "overbought", "oversold", "consolidation", "accumulation"
-        }
-    
-    def _load_models(self):
-        """Load embedding models"""
-        if not SENTENCE_TRANSFORMERS_AVAILABLE or SentenceTransformer is None:
-            logger.warning("⚠️ sentence_transformers not available - embedding functionality disabled")
-            return
-            
-        try:
-            # Load primary sentence transformer
-            self.models[EmbeddingModel.SENTENCE_TRANSFORMER] = SentenceTransformer(
-                self.model_configs[EmbeddingModel.SENTENCE_TRANSFORMER]["model_name"]
-            )
-            logger.info("✅ Loaded primary sentence transformer model")
-            
-            # Load multi-QA model for question answering
-            self.models[EmbeddingModel.MULTI_QA] = SentenceTransformer(
-                self.model_configs[EmbeddingModel.MULTI_QA]["model_name"]
-            )
-            logger.info("✅ Loaded multi-QA model")
-            
-        except Exception as e:
-            logger.error(f"❌ Error loading embedding models: {e}")
-            # Fallback to basic model
-            try:
-                if SentenceTransformer is not None:
-                    self.models[EmbeddingModel.SENTENCE_TRANSFORMER] = SentenceTransformer(
-                        "sentence-transformers/all-MiniLM-L6-v2"
-                    )
-                    logger.info("✅ Loaded fallback sentence transformer")
-            except Exception as fe:
-                logger.error(f"❌ Failed to load any embedding model: {fe}")
     
     def preprocess_text(self, text: str, knowledge_type: KnowledgeType) -> str:
         """Preprocess text for better embeddings"""
@@ -238,12 +177,7 @@ class AdvancedEmbeddingEngine:
         text = text.strip()
         
         # Trading-specific enhancement
-        if knowledge_type in [KnowledgeType.TRADING_STRATEGY, KnowledgeType.MARKET_ANALYSIS]:
-            # Enhance with trading context markers
-            if any(keyword in text.lower() for keyword in self.trading_keywords):
-                text = f"[TRADING_CONTEXT] {text}"
-        
-        elif knowledge_type == KnowledgeType.TRADING_DECISION:
+        if knowledge_type == KnowledgeType.TRADING_DECISION:
             text = f"[DECISION] {text}"
             
         elif knowledge_type == KnowledgeType.ERROR_PATTERN:
@@ -257,13 +191,11 @@ class AdvancedEmbeddingEngine:
     def generate_embedding(self, text: str, knowledge_type: KnowledgeType, 
                           model: EmbeddingModel = EmbeddingModel.SENTENCE_TRANSFORMER) -> np.ndarray:
         """Generate embedding for text content"""
-        # Fallback if sentence_transformers not available
-        if not SENTENCE_TRANSFORMERS_AVAILABLE:
+        if not self.api_available:
             # Return a simple hash-based embedding as fallback
             text_hash = hashlib.md5(text.encode()).hexdigest()
-            # Convert hex to numeric array (384 dims to match sentence transformer)
-            embedding = np.array([int(text_hash[i:i+2], 16) / 255.0 for i in range(0, min(len(text_hash), 96), 2)] + [0.0] * (384 - 48))
-            return embedding[:384]
+            embedding = np.array([int(text_hash[i:i+2], 16) / 255.0 for i in range(0, min(len(text_hash), 192), 2)] + [0.0] * (self.dimension - 96))
+            return embedding[:self.dimension]
         
         # Check cache first
         cache_key = hashlib.md5(f"{text}:{knowledge_type.value}:{model.value}".encode()).hexdigest()
@@ -278,25 +210,30 @@ class AdvancedEmbeddingEngine:
             # Preprocess text
             processed_text = self.preprocess_text(text, knowledge_type)
             
-            # Select appropriate model
-            if model not in self.models:
-                model = EmbeddingModel.SENTENCE_TRANSFORMER
+            headers = {
+                "Authorization": f"Bearer {EMBEDDINGS_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": EMBEDDINGS_MODEL_NAME,
+                "input": [processed_text]
+            }
             
-            embedding_model = self.models[model]
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(f"{EMBEDDINGS_API_BASE_URL}/embeddings", headers=headers, json=payload)
+                response.raise_for_status()
+                result = response.json()
             
-            # Generate embedding
-            embedding = embedding_model.encode(processed_text, convert_to_numpy=True)
+            embedding = np.array(result['data'][0]['embedding'])
             
             # Cache result
             self.embedding_cache[cache_key] = embedding
             
             return embedding
-            
         except Exception as e:
             logger.error(f"❌ Error generating embedding: {e}")
             # Return zero vector as fallback
-            dimension = self.model_configs[model]["dimension"]
-            return np.zeros(dimension)
+            return np.zeros(self.dimension)
     
     def batch_generate_embeddings(self, texts: List[str], knowledge_types: List[KnowledgeType],
                                  model: EmbeddingModel = EmbeddingModel.SENTENCE_TRANSFORMER) -> List[np.ndarray]:
@@ -308,26 +245,32 @@ class AdvancedEmbeddingEngine:
                 for text, ktype in zip(texts, knowledge_types)
             ]
             
-            # Select model
-            if model not in self.models:
-                model = EmbeddingModel.SENTENCE_TRANSFORMER
+            headers = {
+                "Authorization": f"Bearer {EMBEDDINGS_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": EMBEDDINGS_MODEL_NAME,
+                "input": processed_texts
+            }
             
-            embedding_model = self.models[model]
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(f"{EMBEDDINGS_API_BASE_URL}/embeddings", headers=headers, json=payload)
+                response.raise_for_status()
+                result = response.json()
             
-            # Generate batch embeddings
-            embeddings = embedding_model.encode(processed_texts, convert_to_numpy=True)
+            embeddings = [np.array(item['embedding']) for item in result['data']]
             
             # Cache results
             for i, (text, ktype) in enumerate(zip(texts, knowledge_types)):
                 cache_key = hashlib.md5(f"{text}:{ktype.value}:{model.value}".encode()).hexdigest()
                 self.embedding_cache[cache_key] = embeddings[i]
             
-            return list(embeddings)
+            return embeddings
             
         except Exception as e:
             logger.error(f"❌ Error in batch embedding generation: {e}")
-            dimension = self.model_configs[model]["dimension"]
-            return [np.zeros(dimension) for _ in texts]
+            return [np.zeros(self.dimension) for _ in texts]
     
     def compute_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
         """Compute cosine similarity between embeddings"""
@@ -346,8 +289,7 @@ class AdvancedEmbeddingEngine:
             "cache_size": len(self.embedding_cache),
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
-            "hit_rate": hit_rate,
-            "models_loaded": list(self.models.keys())
+            "hit_rate": hit_rate
         }
 
 class VectorKnowledgeBase:

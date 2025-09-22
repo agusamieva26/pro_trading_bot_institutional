@@ -942,7 +942,7 @@ class AutoRevertSystem:
 class SelfHealingOrchestrator:
     """🎯 Main self-healing system coordinator"""
     
-    def __init__(self, agus_orchestrator: Optional[AGUSOrchestrator] = None):
+    def __init__(self, agus_orchestrator: AGUSOrchestrator):
         self.agus_orchestrator = agus_orchestrator
         self.is_running = False
         self.enabled = True  # Kill switch

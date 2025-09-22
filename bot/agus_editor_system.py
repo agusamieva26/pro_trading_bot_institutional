@@ -181,7 +181,7 @@ except Exception as e:
             for cmd in commands:
                 try:
                     result = subprocess.run(cmd, shell=True, capture_output=True, text=True, 
-                                         cwd="/home/runner/workspace", timeout=10)
+                                         timeout=10)
                     results.append(result.stdout)
                 except Exception as e:
                     results.append(f"Command error: {e}")

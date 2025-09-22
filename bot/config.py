@@ -46,6 +46,12 @@ class Settings(BaseModel):
     min_pnl_keep_long: float = Field(default_factory=lambda: float(os.getenv("MIN_PNL_KEEP_LONG","0.012")))  # 1.2% mínimo para mantener en cierre forzado
     stagnant_pnl_min: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MIN","-0.003")))  # -0.3% límite inferior estancamiento
     stagnant_pnl_max: float = Field(default_factory=lambda: float(os.getenv("STAGNANT_PNL_MAX","0.007")))  # +0.7% límite superior estancamiento
+
+    # 🎯 DYNAMIC DAILY TARGET
+    dynamic_target_enabled: bool = Field(default_factory=lambda: os.getenv("DYNAMIC_TARGET_ENABLED","true").lower() in ("1","true","yes"))
+    initial_target_capital: float = Field(default_factory=lambda: float(os.getenv("INITIAL_TARGET_CAPITAL", "30000.0")))
+    initial_daily_target_usd: float = Field(default_factory=lambda: float(os.getenv("INITIAL_DAILY_TARGET_USD", "1000.0")))
+    min_daily_target_usd: float = Field(default_factory=lambda: float(os.getenv("MIN_DAILY_TARGET_USD", "100.0"))) # Mínimo de $100
     
     # 🏛️ ARBITRAGE SYSTEM CONFIGURATION (CRITICAL SAFETY)
     arbitrage_mode: str = Field(default_factory=lambda: os.getenv("ARBITRAGE_MODE","simulate"))  # "simulate" or "real" - SAFETY FIRST
@@ -61,6 +67,9 @@ class Settings(BaseModel):
     model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
     state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))
+    
+    # 🧠 PARÁMETROS DE ENTRENAMIENTO
+    training_data_days: int = Field(default_factory=lambda: int(os.getenv("TRAINING_DATA_DAYS", "365")))
     wfo_train_window: str = Field(default_factory=lambda: os.getenv("WFO_TRAIN_WINDOW","365D"))
     wfo_test_window: str = Field(default_factory=lambda: os.getenv("WFO_TEST_WINDOW","90D"))
     class Config:
@@ -75,4 +84,3 @@ try:
     settings = apply_optimized_config(settings)
 except ImportError:
     pass  # Si no existe optuna_config, usar valores por defecto
-

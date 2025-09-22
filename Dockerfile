@@ -19,15 +19,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
-# Create directories for data and logs
-RUN mkdir -p data_cache models logs
-
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Expose port (not needed for worker but good practice)
+# Expose ports for the dashboard and the health server
+EXPOSE 8501
 EXPOSE 8080
 
-# Run the trading bot
-CMD ["python", "-u", "-m", "bot.main"]
+# Command to start the process supervisor, which handles the bot and dashboard
+CMD ["python", "-u", "start_and_monitor.py"]

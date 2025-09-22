@@ -13,18 +13,19 @@ from alpaca.trading.client import TradingClient
 from .auto_tuner import tune_risk_parameters
 from .config import settings
 from .data import fetch_bars, fetch_all_bars
+from .strategy_optimizer import run_advanced_optimization, OptimizationResult
 from .features import make_features
-from .strategy import load_trading_model, hybrid_signal, reset_signal_memory
+from .strategy import load_trading_model, hybrid_signal, reset_signal_memory, reset_model_cache
 from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
 from .execution import place_order, close_position
 from .state import BotState
-from .exposure import get_total_exposure
-from .telegram import alert_risk_stop, alert_error
+from .exposure import get_total_exposure 
+from .telegram import alert_risk_stop, alert_error, send_telegram
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
 from .profit_management import profit_manager
-from .dynamic_shorts import dynamic_short_manager
+from .dynamic_shorts import dynamic_short_manager 
 from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
 from .multi_timeframe import enhance_signals_with_multi_tf
 from .risk_management_v2 import AdvancedRiskManager, analyze_risk_environment
@@ -37,22 +38,22 @@ from .advanced_features import advanced_feature_generator
 from .ai_system_simple import get_ai_adjusted_signal, get_ai_system_status
 from .ai_news_simple import get_ai_sentiment_adjustment  # 🤖 AI HÍBRIDA REAL
 from .intelligent_monitor import IntelligentMonitor  # 🤖 SISTEMA DE MONITOREO INTELIGENTE 24/7
-from .util import logger
-import datetime as dt
+from .util import logger 
+from health_server import start_health_server
+from datetime import datetime, timedelta
 import pytz
 import os
 import sys
 from pathlib import Path
 import subprocess
 
-
-logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
+from datetime import datetime, timedelta
 
 
 def is_stock_market_open() -> bool:
     """Devuelve True si el mercado de acciones de EE.UU. está abierto ahora."""
     eastern = pytz.timezone("US/Eastern")
-    now = dt.datetime.now(eastern)
+    now = datetime.now(eastern)
 
     # Días hábiles: lunes(0) a viernes(4)
     if now.weekday() > 4:
@@ -851,8 +852,178 @@ def run_once(state: BotState, clf):
 
     return  # ✅ Único punto de salida
 
+def _apply_live_parameters(best_params: Dict[str, Any]):
+    """
+    Aplica los nuevos parámetros optimizados a la configuración en vivo del bot,
+    sin necesidad de reiniciar.
+    """
+    from .config import settings
+    logger.info("🚀 Aplicando nuevos parámetros de Optuna en vivo...")
+    
+    for key, value in best_params.items():
+        if hasattr(settings, key):
+            old_value = getattr(settings, key)
+            setattr(settings, key, value)
+            logger.info(f"   🔧 Parámetro '{key}' actualizado: {old_value} → {value}")
+        else:
+            logger.warning(f"   ⚠️ Parámetro '{key}' no encontrado en la configuración actual. Omitiendo.")
+            
+    logger.info("✅ Nuevos parámetros aplicados. El bot operará con la configuración optimizada.")
+
+def _update_optuna_config_file(best_params: Dict[str, Any]):
+    """
+    Genera y escribe el archivo bot/optuna_config.py con los nuevos parámetros optimizados.
+    Esto permite que el bot los cargue en el próximo reinicio.
+    """
+    config_path = Path("bot/optuna_config.py")
+    
+    content = "# Este archivo es generado automáticamente por el optimizador de Optuna.\n"
+    content += "# NO EDITAR MANUALMENTE.\n\n"
+    content += "from .config import Settings\n\n"
+    content += "def apply_optimized_config(settings: Settings) -> Settings:\n"
+    content += "    # Parámetros optimizados por Optuna\n"
+    content += "    print('⚙️ Aplicando configuración optimizada por Optuna...')\n"
+    
+    for key, value in best_params.items():
+        if isinstance(value, str):
+            content += f"    settings.{key} = '{value}'\n"
+        else:
+            content += f"    settings.{key} = {value}\n"
+    
+    content += "\n    return settings\n"
+    
+    try:
+        with open(config_path, "w") as f:
+            f.write(content)
+        logger.info(f"✅ Archivo de configuración de Optuna actualizado: {config_path}")
+    except Exception as e:
+        logger.error(f"❌ No se pudo actualizar el archivo de configuración de Optuna: {e}")
+
+def run_periodic_optimization(state: BotState):
+    """
+    Ejecuta la optimización de hiperparámetros con Optuna periódicamente.
+    """
+    from .strategy_optimizer import run_advanced_optimization
+    from .config import settings
+    
+    optimize_interval_days = 14 # Re-optimizar cada 14 días (dos semanas)
+    
+    while True:
+        try:
+            last_optimization_str = state.state.get("last_optimization_date")
+            should_optimize = True
+            
+            if last_optimization_str:
+                last_optimization_date = datetime.fromisoformat(last_optimization_str)
+                if (datetime.now() - last_optimization_date).days < optimize_interval_days:
+                    should_optimize = False
+            
+            if should_optimize:
+                logger.info("🧠 OPTUNA: Iniciando optimización de hiperparámetros periódica...")
+                
+                # Ejecutar optimización con un número razonable de trials
+                # Usar un subconjunto de símbolos para no tardar demasiado
+                symbols_to_optimize = settings.symbols[:10] # Optimizar con los 10 primeros símbolos
+                
+                optimization_results = run_advanced_optimization(
+                    symbols=symbols_to_optimize,
+                    n_trials=50 # Número de trials razonable para ejecución periódica
+                )
+                
+                if optimization_results and not optimization_results.get('error'):
+                    best_params = optimization_results.get('best_params')
+                    logger.info("✅ OPTUNA: Optimización periódica completada.")
+                    logger.info(f"🏆 Mejores parámetros encontrados: {best_params}")
+                    
+                    # 1. Persistir para futuros reinicios
+                    _update_optuna_config_file(best_params)
+                    
+                    # 2. 🚀 AUTO-APLICACIÓN EN VIVO: Actualizar configuración sin reiniciar
+                    _apply_live_parameters(best_params)
+                    
+                    # 📱 NOTIFICACIÓN TELEGRAM
+                    try:
+                        param_str = "\n".join([f"• {k}: {v:.4f}" if isinstance(v, float) else f"• {k}: {v}" for k, v in best_params.items()])
+                        msg = f"🧠 OPTUNA COMPLETADO\n\n🏆 Nuevos parámetros aplicados en vivo:\n{param_str}"
+                        send_telegram(msg)
+                    except Exception as e:
+                        logger.error(f"❌ Error enviando Telegram de Optuna: {e}")
+                    
+                    state.state["last_optimization_date"] = datetime.now().isoformat()
+                    state.save()
+                else:
+                    logger.error("❌ OPTUNA: Optimización periódica falló.")
+            
+            # Esperar 24 horas para la próxima verificación
+            time.sleep(86400) 
+            
+        except Exception as e:
+            logger.error(f"💥 Error en optimización periódica: {e}")
+            time.sleep(3600) # Esperar una hora en caso de error
+
+def run_periodic_retraining(state: BotState):
+    """
+    Ejecuta el re-entrenamiento del modelo periódicamente.
+    """
+    from .model_training import train_all_models
+    from .data import fetch_all_bars
+    from .config import settings
+    
+    retrain_interval_days = 7 # Re-entrenar cada 7 días
+    
+    while True:
+        try:
+            last_training_str = state.state.get("last_retraining_date")
+            should_retrain = True
+            
+            if last_training_str:
+                last_training_date = datetime.fromisoformat(last_training_str)
+                if (datetime.now() - last_training_date).days < retrain_interval_days:
+                    should_retrain = False
+            
+            if should_retrain:
+                logger.info("🔄 INICIANDO RE-ENTRENAMIENTO PERIÓDICO...")
+                
+                # Fetch data for training
+                end_date = datetime.now()
+                start_date = end_date - timedelta(days=settings.training_data_days)
+                
+                training_data = fetch_all_bars(
+                    settings.symbols, 
+                    start=start_date.strftime('%Y-%m-%d'), 
+                    end=end_date.strftime('%Y-%m-%d')
+                )
+                
+                if training_data:
+                    train_results = train_all_models(training_data)
+                    if train_results:
+                        logger.info("✅ RE-ENTRENAMIENTO PERIÓDICO COMPLETADO.")
+                        state.state["last_retraining_date"] = datetime.now().isoformat()
+                        state.save()
+                        reset_model_cache() # Reset cache to load new model
+                        
+                        # 📱 NOTIFICACIÓN TELEGRAM
+                        try:
+                            msg = f"🔄 RE-ENTRENAMIENTO COMPLETADO\n\n✅ El modelo de trading ha sido actualizado con los últimos datos del mercado."
+                            send_telegram(msg)
+                        except Exception as e:
+                            logger.error(f"❌ Error enviando Telegram de re-entrenamiento: {e}")
+                            
+            
+            # Wait for next check (1 day)
+            time.sleep(86400) 
+            
+        except Exception as e:
+            logger.error(f"💥 Error en re-entrenamiento periódico: {e}")
+            time.sleep(3600) # Wait an hour on error
 
 def main():
+    # 🧠 INICIAR ORQUESTADOR CENTRAL
+    orchestrator = AGUSOrchestrator()
+    asyncio.run(orchestrator.start())
+    logger.info("✅ AGUS Orchestrator iniciado")
+    
+    send_telegram("🚀 Bot de trading institucional INICIADO (modo paper).")
     logger.info("🚀 Bot de trading institucional iniciado (modo paper). Ctrl+C para detener.")
     state = BotState()
 
@@ -939,8 +1110,7 @@ def main():
     # 🔧 INICIAR SELF-HEALING SYSTEM EN THREAD SEPARADO
     logger.info("🔧 Iniciando Self-Healing System en thread separado...")
     try:
-        import asyncio
-        from .agus_self_healing import initialize_self_healing
+        from .agus_self_healing import initialize_self_healing, get_self_healing
         from .agus_self_healing_integration import AGUSSelfHealingBridge
         
         # Create and start the self-healing system
@@ -948,8 +1118,8 @@ def main():
             """Run self-healing in its own event loop"""
             async def init_system():
                 try:
-                    # Initialize the self-healing system
-                    self_healing = await initialize_self_healing()
+                    # Initialize the self-healing system with the central orchestrator
+                    self_healing = await initialize_self_healing(orchestrator)
                     logger.info("✅ Self-Healing initialized and monitoring started")
                     
                     # Keep system running
@@ -985,21 +1155,47 @@ def main():
     )
     monitor_intelligence_thread.start()
     logger.info("✅ Intelligent Monitor 24/7 activo con AGUS - auto-diagnosis y auto-correction habilitados")
+    
+    # 🔄 INICIAR RE-ENTRENAMIENTO PERIÓDICO
+    logger.info("🔄 Iniciando Re-entrenamiento Periódico en thread separado...")
+    retrain_thread = threading.Thread(
+        target=run_periodic_retraining,
+        args=(state,),
+        daemon=True,
+        name="PeriodicRetrainer"
+    )
+    retrain_thread.start()
+    logger.info("✅ Re-entrenamiento Periódico activo")
+    
+    # 🧠 INICIAR OPTIMIZACIÓN PERIÓDICA CON OPTUNA
+    logger.info("🧠 Iniciando Optuna Periodic Optimizer en thread separado...")
+    optimization_thread = threading.Thread(
+        target=run_periodic_optimization,
+        args=(state,),
+        daemon=True,
+        name="PeriodicOptimizer"
+    )
+    optimization_thread.start()
+    logger.info("✅ Optuna Periodic Optimizer activo")
 
-    while True:
-        try:
-            result = run_once(state, clf)
-            if result == "STOP":
-                logger.critical("🛑 Bot detenido por stop diario.")
+    try:
+        while True:
+            try:
+                result = run_once(state, clf)
+                if result == "STOP":
+                    logger.critical("🛑 Bot detenido por stop diario.")
+                    break
+            except KeyboardInterrupt:
+                logger.info("🛑 Bot detenido por el usuario.")
                 break
-        except KeyboardInterrupt:
-            logger.info("🛑 Bot detenido por el usuario.")
-            break
-        except Exception as e:
-            logger.exception("💥 Error en el loop principal")
-            alert_error("Error en loop principal", str(e))
-        logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
-        time.sleep(8)   # 🔥 ULTRA-VELOCIDAD: 8 segundos para máxima frecuencia
+            except Exception as e:
+                logger.exception("💥 Error en el loop principal")
+                alert_error("Error en loop principal", str(e))
+            logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
+            time.sleep(8)   # 🔥 ULTRA-VELOCIDAD: 8 segundos para máxima frecuencia
+    finally:
+        send_telegram("🛑 Bot de trading institucional DETENIDO.")
+        logger.info("🛑 Bot de trading detenido.")
 
 
 if __name__ == "__main__":

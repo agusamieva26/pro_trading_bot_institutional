@@ -477,7 +477,7 @@ for file, errors in diagnostics.items():
             # Check workflow logs for errors
             try:
                 import os
-                log_dir = "/tmp/logs"
+                log_dir = "logs" # Usar una ruta relativa es más portable
                 recent_logs = []
                 if os.path.exists(log_dir):
                     for file in os.listdir(log_dir):

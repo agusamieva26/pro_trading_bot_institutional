@@ -30,6 +30,7 @@ import sqlite3
 import psutil
 import statistics
 from collections import defaultdict, deque
+import glob
 
 # Imports for integrations
 try:
@@ -466,9 +467,9 @@ class IntelligentRoutingEngine:
         """Check if provider is available and responsive"""
         try:
             if provider == AIProvider.LOCAL_AI:
-                # Check LocalAI endpoint
-                response = requests.get("http://localhost:8080/v1/models", timeout=2)
-                return 1.0 if response.status_code == 200 else 0.0
+                # The LOCAL_AI provider has been re-routed to use an external API.
+                # Availability is now determined by the presence of the QWEN_API_KEY.
+                return 1.0 if os.environ.get("QWEN_API_KEY") else 0.0
                 
             elif provider == AIProvider.AGUS_CLOUD:
                 # Check if OpenAI API key is available
@@ -907,11 +908,18 @@ class AdvancedReasoningEngine:
             raise e
     
     async def _localai_request(self, prompt: str) -> str:
-        """Make request to LocalAI"""
+        """Make request to the configured API endpoint (formerly LocalAI)."""
         try:
+            api_key = os.environ.get("QWEN_API_KEY")
+            if not api_key:
+                raise Exception("QWEN_API_KEY not configured for LOCAL_AI provider.")
+
+            api_base_url = os.environ.get("QWEN_API_BASE_URL", "https://api.together.xyz/v1")
+            model_name = os.environ.get("QWEN_MODEL_NAME", "Qwen/Qwen1.5-7B-Chat")
+
             async with aiohttp.ClientSession() as session:
                 payload = {
-                    "model": "microsoft/DialoGPT-large",
+                    "model": model_name,
                     "messages": [
                         {"role": "system", "content": "You are AGUS 2.0, an advanced AI trading assistant."},
                         {"role": "user", "content": prompt}
@@ -919,20 +927,26 @@ class AdvancedReasoningEngine:
                     "max_tokens": 800,
                     "temperature": 0.7
                 }
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
                 
                 async with session.post(
-                    "http://localhost:8080/v1/chat/completions",
+                    f"{api_base_url}/chat/completions",
                     json=payload,
+                    headers=headers,
                     timeout=aiohttp.ClientTimeout(total=30)
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
                         return result["choices"][0]["message"]["content"]
                     else:
-                        raise Exception(f"LocalAI returned status {response.status}")
+                        error_text = await response.text()
+                        raise Exception(f"API provider for LOCAL_AI returned status {response.status}: {error_text[:200]}")
                         
         except Exception as e:
-            logger.error(f"LocalAI request failed: {e}")
+            logger.error(f"API request for LOCAL_AI provider failed: {e}")
             raise e
     
     async def _fallback_processing(self, query: str) -> str:
@@ -1813,9 +1827,9 @@ class AGUS2HybridSystem:
         try:
             response = "🔧 **AGUS - DEBUG AUTOMÁTICO**\n\n"
             
-            # Revisar logs recientes
+            # Revisar logs recientes en el directorio local de logs
             try:
-                logs_result = self.editor_tools.execute_command("ls -la /tmp/")
+                logs_result = self.editor_tools.execute_command("ls -la logs/")
                 response += "📁 **ARCHIVOS DE LOG DISPONIBLES:**\n```\n" + logs_result + "\n```\n\n"
             except:
                 response += "📊 **ESTADO DEL SISTEMA:**\n"
@@ -2103,64 +2117,6 @@ if __name__ == "__main__":
         
         return issues
     
-    def _generate_function_from_query(self, query: str) -> str:
-        """Genera código de función basado en la query"""
-        function_name = "custom_function"
-        
-        # Extraer nombre de función si está especificado
-        if "función" in query:
-            words = query.split()
-            for i, word in enumerate(words):
-                if "función" in word and i + 1 < len(words):
-                    function_name = words[i + 1].replace('"', '').replace("'", '')
-                    break
-        
-        return f'''def {function_name}(data: Dict = None) -> Dict:
-    """
-    {function_name} - Función generada por AGUS
-    Implementación automática según solicitud del usuario
-    """
-    try:
-        logger.info(f"Ejecutando {function_name}")
-        
-        # Implementación básica
-        result = {{
-            "function": "{function_name}",
-            "executed_at": datetime.now(),
-            "status": "success",
-            "data": data or {{}}
-        }}
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error en {function_name}: {{e}}")
-        return {{"error": str(e), "status": "failed"}}
-'''
-    
-    def _analyze_config_needs(self, query: str) -> str:
-        """Analiza necesidades de configuración"""
-        suggestions = []
-        
-        if "trading" in query.lower() or "bot" in query.lower():
-            suggestions.append("• Configuración de símbolos de trading")
-            suggestions.append("• Parámetros de riesgo y gestión de capital")
-            suggestions.append("• Configuración de horarios de trading")
-        
-        if "ai" in query.lower() or "agus" in query.lower():
-            suggestions.append("• Configuración de respuestas en español")
-            suggestions.append("• Activación de implementación automática")
-            suggestions.append("• Configuración de proveedores de IA")
-        
-        if not suggestions:
-            suggestions = [
-                "• Configuración general del sistema",
-                "• Parámetros de logging y monitoreo",
-                "• Variables de entorno necesarias"
-            ]
-        
-        return "\n".join(suggestions)
-    
     def _generate_general_implementation(self, query: str) -> str:
         """Genera implementación general"""
         return f'''```python
@@ -2446,10 +2402,54 @@ INSTRUCCIONES CRÍTICAS PARA AGUS:
         logger.error(f"❌ Error en análisis AGUS 2.0: {e}")
         return f"❌ AGUS 2.0 encontró un error: {e}"
 
+async def _analyze_code_with_ai(file_path: str, content: str) -> str:
+    """Usa la IA para analizar el código y sugerir mejoras."""
+    prompt = f"""
+Eres un experto en revisión de código Python para bots de trading.
+Revisa el siguiente código del archivo `{file_path}`.
+
+CÓDIGO:
+```python
+{content}
+```
+
+Identifica problemas de:
+1.  Errores lógicos o bugs.
+2.  Malas prácticas (ej. `print` en lugar de `logger`).
+3.  Código ineficiente o que pueda causar cuellos de botella.
+4.  Potenciales vulnerabilidades de seguridad.
+
+Proporciona un resumen de los problemas y, si es posible, el código corregido en formato JSON.
+Formato de salida esperado:
+{{
+  "summary": "Resumen de los problemas encontrados.",
+  "issues": [
+    {{
+      "line": "<numero_linea>",
+      "description": "Descripción del problema.",
+      "suggestion": "Sugerencia de corrección."
+    }}
+  ]
+}}
+"""
+    # Usar el reasoning_engine para llamar a la IA
+    response = await agus_2_system.reasoning_engine._openai_request(prompt)
+    return response
+
 def _detect_user_intent(query: str) -> str:
     """Detecta la intención del usuario para determinar el tipo de acción"""
     query_lower = query.lower()
     
+    # Nuevo intent para análisis de rendimiento
+    performance_keywords = [
+        "entrenamiento", "training", "optuna", "rendimiento", "performance",
+        "resultados", "results", "accuracy", "precisión", "modelo", "model"
+    ]
+    if any(keyword in query_lower for keyword in performance_keywords):
+        # Evitar conflicto con "analiza el bot"
+        if "analiza el bot" not in query_lower and "estado del bot" not in query_lower:
+             return "performance_analysis"
+
     # PRIORIDAD ALTA: Detectar análisis de bot primero (antes que code_review)
     if any(word in query_lower for word in ["analiza el bot", "analiza bot", "análisis del bot", "estado del bot", "bot analysis", "analyze bot"]):
         return "bot_analysis"
@@ -2474,92 +2474,49 @@ def _detect_user_intent(query: str) -> str:
 
 async def _execute_automatic_code_review(query: str) -> str:
     """Ejecuta revisión automática de código y corrige errores encontrados"""
+    """Ejecuta revisión automática de código usando la IA."""
     try:
         editor_tools = agus_2_system.editor_tools
         
-        # Buscar archivos Python principales
-        python_files = [f for f in editor_tools.list_files() if f.endswith('.py') and not f.startswith('.')]
+        # Extraer nombre de archivo si se especifica, si no, revisar archivos clave
+        file_to_review = agus_2_system._extract_filename_from_query(query)
+        files_to_check = [file_to_review] if file_to_review else [
+            'bot/main.py', 'bot/strategy.py', 'bot/position_monitor.py'
+        ]
         
-        issues_found = []
-        fixes_applied = []
+        full_report = "🔍 **AGUS - REVISIÓN DE CÓDIGO CON IA**\n\n"
         
-        # Revisar archivos principales del bot
-        important_files = [f for f in python_files if any(keyword in f for keyword in ['main.py', 'config.py', 'strategy.py', 'execution.py'])]
-        
-        for file_path in important_files[:5]:  # Limitar a 5 archivos más importantes
+        for file_path in files_to_check:
             content = editor_tools.read_file(file_path)
-            if not content.startswith("❌"):
-                # Buscar problemas comunes
-                issues = _analyze_code_issues(content, file_path)
-                if issues:
-                    issues_found.extend(issues)
-                    
-                    # Aplicar fixes automáticos
-                    for issue in issues:
-                        if issue["fixable"]:
-                            fix_result = editor_tools.edit_file(file_path, issue["old_code"], issue["new_code"])
-                            if "✅" in fix_result:
-                                fixes_applied.append(f"✅ {file_path}: {issue['description']}")
-        
-        # Preparar respuesta en español
-        response = "🔍 **AGUS - REVISIÓN AUTOMÁTICA DE CÓDIGO COMPLETADA**\n\n"
-        
-        if fixes_applied:
-            response += "🔧 **CORRECCIONES APLICADAS:**\n"
-            for fix in fixes_applied:
-                response += f"  {fix}\n"
-            response += "\n"
-        
-        if issues_found and not fixes_applied:
-            response += "⚠️ **PROBLEMAS DETECTADOS:**\n"
-            for issue in issues_found[:5]:
-                response += f"  • {issue['file']}: {issue['description']}\n"
-            response += "\n"
-        
-        if not issues_found:
-            response += "✅ **CÓDIGO EN BUEN ESTADO** - No se encontraron problemas críticos\n\n"
-        
-        response += "🧠 *AGUS ha analizado y corregido tu código automáticamente*"
-        
-        return response
+            if content.startswith("❌"):
+                full_report += f"⚠️ No se pudo leer el archivo: {file_path}\n\n"
+                continue
+            
+            # Analizar el código con la IA
+            ai_analysis_json = await _analyze_code_with_ai(file_path, content)
+            
+            try:
+                analysis = json.loads(ai_analysis_json)
+                full_report += f"### 📄 Análisis de `{file_path}`\n"
+                full_report += f"**Resumen IA:** {analysis.get('summary', 'N/A')}\n"
+                
+                if analysis.get('issues'):
+                    full_report += "**Problemas encontrados:**\n"
+                    for issue in analysis['issues']:
+                        full_report += f"- **Línea {issue.get('line', 'N/A')}:** {issue.get('description', 'N/A')}\n"
+                        full_report += f"  - **Sugerencia:** `{issue.get('suggestion', 'N/A')}`\n"
+                else:
+                    full_report += "✅ ¡No se encontraron problemas significativos!\n"
+                full_report += "\n---\n"
+            except (json.JSONDecodeError, TypeError):
+                full_report += f"### 📄 Análisis de `{file_path}`\n"
+                full_report += "**Respuesta de la IA (formato no JSON):**\n"
+                full_report += f"```\n{ai_analysis_json}\n```\n\n---\n"
+
+        return full_report
         
     except Exception as e:
-        return f"❌ Error en revisión de código: {e}"
-
-def _analyze_code_issues(content: str, file_path: str) -> List[Dict]:
-    """Analiza problemas comunes en el código"""
-    issues = []
-    lines = content.split('\n')
-    
-    for i, line in enumerate(lines):
-        line_num = i + 1
-        
-        # Detectar imports no utilizados
-        if line.strip().startswith('import ') and 'logger' not in line:
-            # Simplificado: solo detectar algunos casos obvios
-            if line.count('import') > 1 and ',' in line:
-                issues.append({
-                    "file": file_path,
-                    "line": line_num,
-                    "description": "Import múltiple detectado",
-                    "fixable": False,
-                    "old_code": line,
-                    "new_code": line
-                })
-        
-        # Detectar print statements (deberían ser logger)
-        if 'print(' in line and 'logger' not in line:
-            new_line = line.replace('print(', 'logger.info(')
-            issues.append({
-                "file": file_path,
-                "line": line_num,
-                "description": "Cambio print() por logger.info()",
-                "fixable": True,
-                "old_code": line,
-                "new_code": new_line
-            })
-    
-    return issues
+        return f"❌ Error en revisión de código con IA: {e}"
 
 async def _execute_file_operation(query: str) -> str:
     """Ejecuta operaciones de archivo basadas en la consulta"""
@@ -2918,10 +2875,12 @@ async def _auto_detect_code_issues() -> str:
     """Detecta automáticamente problemas en el código del bot"""
     try:
         issues_found = []
-        
-        # Simular análisis de logs para detectar errores
+
+        # Analizar logs para detectar errores de forma dinámica
         import os
-        log_files = ['bot/trading.log', 'bot/errors.log', '/tmp/logs/Trading_Bot_latest.log']
+        log_dir = "logs/"
+        log_files = [os.path.join(log_dir, f) for f in os.listdir(log_dir) if f.endswith('.log')] if os.path.exists(log_dir) else []
+        log_files.extend(['bot/trading.log', 'bot/errors.log']) # Añadir logs antiguos para compatibilidad
         
         critical_patterns = [
             "ERROR", "CRITICAL", "EXCEPTION", "FAILED", "TIMEOUT", 
@@ -3022,30 +2981,25 @@ async def _execute_automatic_strategy_corrections(bot_context: Dict) -> str:
 async def _apply_emergency_corrections() -> str:
     """Aplica correcciones de emergencia cuando el bot está en crisis"""
     try:
+        import re
         editor_tools = agus_2_system.editor_tools
         
         # Leer configuración actual
         config_content = editor_tools.read_file("bot/config.py")
         if "❌" in config_content:
             return "⚠️ No se pudo leer config.py"
-        
+
         # Aplicar configuración ultra-conservadora
         new_config = config_content
         
         # Reducir riesgo por trade drásticamente
-        if "risk_per_trade" in new_config:
-            new_config = new_config.replace("risk_per_trade = 0.013", "risk_per_trade = 0.005")
-            new_config = new_config.replace("risk_per_trade=0.013", "risk_per_trade=0.005")
+        new_config = re.sub(r"risk_per_trade\s*=\s*0.013", "risk_per_trade = 0.005", new_config)
         
         # Stop loss más agresivo
-        if "stop_loss" in new_config:
-            new_config = new_config.replace("stop_loss = 0.007", "stop_loss = 0.004")
-            new_config = new_config.replace("stop_loss=0.007", "stop_loss=0.004")
+        new_config = re.sub(r"stop_loss_pct\s*=\s*0.007", "stop_loss_pct = 0.004", new_config)
         
         # Take profit más conservador
-        if "take_profit" in new_config:
-            new_config = new_config.replace("take_profit = 0.015", "take_profit = 0.008")
-            new_config = new_config.replace("take_profit=0.015", "take_profit=0.008")
+        new_config = re.sub(r"take_profit_pct\s*=\s*0.015", "take_profit_pct = 0.008", new_config)
         
         # Solo si se hicieron cambios
         if new_config != config_content:

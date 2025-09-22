@@ -637,5 +637,6 @@ def get_monitoring_system(dry_run: bool = False) -> AGUSMonitoringSystem:
     """Get or create the global monitoring system instance"""
     global _monitoring_system
     if _monitoring_system is None:
-        _monitoring_system = AGUSMonitoringSystem(dry_run=dry_run)
+        orchestrator = get_orchestrator(dry_run=dry_run)
+        _monitoring_system = AGUSMonitoringSystem(orchestrator, dry_run=dry_run)
     return _monitoring_system

@@ -244,7 +244,7 @@ sys.path.append('.')
 from tools.lsp_tools import get_latest_lsp_diagnostics
 diagnostics = get_latest_lsp_diagnostics()
 print(diagnostics)
-"""], capture_output=True, text=True, cwd='/home/runner/workspace')
+"""], capture_output=True, text=True)
             
             if result.returncode == 0 and "error" in result.stdout.lower():
                 logger.info("🔧 AGUS aplicando correcciones LSP automáticas...")
@@ -492,7 +492,7 @@ try:
     print("Sistema de protección reiniciado")
 except Exception as e:
     print(f"Error: {e}")
-"""], cwd='/home/runner/workspace', capture_output=True)
+"""], capture_output=True)
                 actions.append("Sistema de protección reiniciado")
             except Exception as e:
                 actions.append(f"Error reiniciando protección: {e}")
@@ -538,7 +538,7 @@ for f in cache_files:
     if os.path.exists(f):
         os.remove(f)
 print("Cache de señales limpiado")
-"""], cwd='/home/runner/workspace', capture_output=True)
+"""], capture_output=True)
                 actions.append("Cache limpiado")
             except Exception as e:
                 actions.append(f"Error limpiando cache: {e}")

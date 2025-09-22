@@ -505,22 +505,20 @@ def monitor_closed_positions(clf):
                 # A) CIERRE FORZADO (2-4 horas para crypto, 75min para stocks): Timing inteligente
                 # 🚀 CRYPTO 24/7: 24 horas para permitir movimientos nocturnos y recuperación
                 # 📈 STOCKS: 75min durante horario de mercado
-                is_crypto_position = "/" in symbol or (symbol.endswith("USD") and len(symbol) <= 6)
-                
-                if is_crypto_position:
+                if symbol_manager.is_crypto(symbol):
                     # Crypto: 24 horas para permitir recuperación completa
-                    max_time_crypto = 1440  # 24 horas (1440 minutos)
+                    max_time_force = 1440  # 24 horas (1440 minutos)
                 else:
                     # Stocks: mantener 75min original
-                    max_time_crypto = settings.max_position_time_force
+                    max_time_force = settings.max_position_time_force
                 
-                if position_age_minutes >= max_time_crypto:
+                if position_age_minutes >= max_time_force:
                     # EXCEPCIÓN: Mantener si P&L > 1.2% Y señal ML sigue fuerte
                     keep_position = False
                     if pnl_pct > settings.min_pnl_keep_long:
                         try:
                             # Verificar si la señal ML sigue fuerte
-                            df = fetch_bars(symbol, start="2023-01-01")
+                            df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                             if not df.empty and len(df) >= 100:
                                 feats = make_features(df, symbol=symbol)
                                 latest = feats.iloc[-1]
@@ -540,11 +538,11 @@ def monitor_closed_positions(clf):
                     
                     if not keep_position:
                         should_close = True
-                        if is_crypto_position:
-                            hours = max_time_crypto / 60
-                            reason = f"🕐 CIERRE FORZADO CRYPTO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min ({hours:.1f}h)"
+                        if symbol_manager.is_crypto(symbol):
+                            hours = max_time_force / 60
+                            reason = f"🕐 CIERRE FORZADO CRYPTO: {position_age_minutes:.0f}min ≥ {max_time_force}min ({hours:.1f}h)"
                         else:
-                            reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min"
+                            reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {max_time_force}min"
                     else:
                         logger.info(f"⚡ {symbol}: MANTENIDO tras {position_age_minutes:.0f}min (P&L: {pnl_pct:+.2%}, señal fuerte)")
                 
@@ -556,7 +554,7 @@ def monitor_closed_positions(clf):
                     # Condición 2: Señal ML se debilitó significativamente
                     ml_weakened = False
                     try:
-                        df = fetch_bars(symbol, start="2023-01-01")
+                        df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                         if not df.empty and len(df) >= 100:
                             feats = make_features(df, symbol=symbol)
                             latest = feats.iloc[-1]
@@ -595,7 +593,7 @@ def monitor_closed_positions(clf):
                     # 3. REVERSIÓN DE SEÑAL ML (solo si NO se activó TP/SL)
                     else:
                         try:
-                            df = fetch_bars(symbol, start="2023-01-01")
+                            df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                             if not df.empty and len(df) >= 100:
                                 feats = make_features(df, symbol=symbol)
                                 latest = feats.iloc[-1]

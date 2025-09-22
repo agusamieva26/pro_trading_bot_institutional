@@ -136,15 +136,13 @@ refresh_all_logs()
                 logger.error(f"❌ Error refreshing logs: {stderr.decode().strip()}")
                 # Continúa para analizar logs existentes aunque el refresco falle
             
-            # Read latest log files
-            log_files = [
-                '/tmp/logs/Trading_Bot_latest.log',
-                '/tmp/logs/Dashboard_latest.log'
-            ]
-            
-            # Check all log files in /tmp/logs/
+            # Escanear dinámicamente todos los archivos de log
             import glob
-            all_log_files = glob.glob('/tmp/logs/*.log')
+            log_dir = "/tmp/logs"
+            if not os.path.exists(log_dir):
+                log_dir = "logs" # Fallback al directorio local
+            
+            all_log_files = glob.glob(f'{log_dir}/*.log')
             
             for log_file in all_log_files:
                 if os.path.exists(log_file):
@@ -303,10 +301,26 @@ print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
     
     async def _fix_workflow_crashed(self, issue: SystemAlert):
         """Reinicia workflows crasheados"""
+        """Reinicia workflows crasheados de forma selectiva."""
+        target_workflow = None
+        if 'dashboard' in issue.message.lower():
+            target_workflow = 'Dashboard'
+        elif 'trading_bot' in issue.message.lower():
+            target_workflow = 'Trading Bot'
+
+        if not target_workflow:
+            logger.warning(f"No se pudo determinar el workflow específico a reiniciar desde el mensaje: '{issue.message}'. Reiniciando todos.")
+            workflows_to_restart = ['Trading Bot', 'Dashboard']
+        else:
+            workflows_to_restart = [target_workflow]
+
         try:
             # Restart workflows
             proc = await asyncio.create_subprocess_exec(
                 'python', '-c', """
+            for wf in workflows_to_restart:
+                logger.info(f"Intentando reiniciar el workflow: {wf}")
+                script = f"""
 import sys
 sys.path.append('.')
 from tools.workflow_tools import restart_workflow
@@ -320,6 +334,19 @@ restart_workflow('Dashboard')
             await proc.communicate()
             if proc.returncode == 0:
                 logger.info("✅ Workflows restarted")
+restart_workflow('{wf}')
+"""
+                proc = await asyncio.create_subprocess_exec(
+                    'python', '-c', script,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=self._workspace_path
+                )
+                _stdout, stderr = await proc.communicate()
+                if proc.returncode == 0:
+                    logger.info(f"✅ Comando de reinicio para '{wf}' enviado correctamente.")
+                else:
+                    logger.error(f"❌ Falló el envío del comando de reinicio para '{wf}': {stderr.decode().strip()}")
             
         except Exception as e:
             logger.error(f"❌ Failed to restart workflows: {e}")

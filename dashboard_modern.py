@@ -1430,12 +1430,14 @@ create_professional_header()
 # PROFESSIONAL TABS SYSTEM
 # ===============================
 
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs([
     "📊 OVERVIEW", 
     "💼 PORTFOLIO", 
     "📈 PERFORMANCE", 
     "⚡ TRADES", 
     "📱 REPORTS",
+    "🛡️ RISK",
+    "🤖 MODELS",
     "🔍 AGUS MONITOR",
     "🧠 AI CHAT",
     "🔍 AI HEALTH", 
@@ -2085,10 +2087,101 @@ with tab5:
     st.markdown(info_html, unsafe_allow_html=True)
 
 # ===============================
+# TAB 6: RISK DASHBOARD
+# ===============================
+with tab6:
+    st.markdown("### 🛡️ Risk Management Dashboard")
+    st.markdown("Real-time analysis of portfolio risk and system-wide exposure.")
+    
+    try:
+        from bot.dynamic_risk_manager import dynamic_risk_manager
+        from bot.drawdown_protector import drawdown_protector
+        RISK_MODULES_AVAILABLE = True
+    except ImportError:
+        RISK_MODULES_AVAILABLE = False
+
+    if RISK_MODULES_AVAILABLE:
+        # Get a sample assessment
+        risk_summary = dynamic_risk_manager.get_risk_metrics_summary()
+        dd_summary = drawdown_protector.get_protection_summary()
+
+        st.markdown("#### 📊 Key Risk Metrics")
+        risk_col1, risk_col2, risk_col3, risk_col4 = st.columns(4)
+        
+        with risk_col1:
+            risk_score = risk_summary.get('risk_score', 0.5)
+            risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
+            create_metric_card("RISK SCORE", f"{risk_score:.2f}", risk_level, "error" if risk_score > 0.7 else "warning", "primary", "🔥")
+
+        with risk_col2:
+            current_dd = dd_summary.get('current_drawdown', 0.0) * 100
+            dd_level = "🔴 SEVERE" if current_dd > 10 else "🟡 MODERATE" if current_dd > 5 else "🟢 MINIMAL"
+            create_metric_card("CURRENT DRAWDOWN", f"{current_dd:.2f}%", dd_level, "error" if current_dd > 10 else "warning", "primary", "📉")
+
+        with risk_col3:
+            risk_regime = risk_summary.get('risk_regime', 'normal').upper()
+            create_metric_card("RISK REGIME", risk_regime, "Market Volatility State", "neutral", "secondary", "🌪️")
+
+        with risk_col4:
+            protection_level = dd_summary.get('protection_level', 'normal').upper()
+            create_metric_card("PROTECTION LEVEL", protection_level, "Drawdown Protection", "success" if protection_level == "NORMAL" else "warning", "secondary", "🛡️")
+
+        st.markdown("---")
+        st.markdown("#### ⚙️ Dynamic Adjustments")
+        
+        adj_col1, adj_col2, adj_col3 = st.columns(3)
+        
+        with adj_col1:
+            risk_multiplier = dynamic_risk_manager.get_current_risk_multiplier()
+            st.metric("Risk Multiplier", f"{risk_multiplier:.2f}x")
+            st.caption("Adjusts position size based on overall risk.")
+
+        with adj_col2:
+            sl_adj = drawdown_protector.get_stop_loss_adjustment()
+            st.metric("Stop-Loss Adjustment", f"{sl_adj:.2f}x")
+            st.caption("Tightens/widens stops based on drawdown.")
+
+        with adj_col3:
+            allow_new = drawdown_protector.should_allow_new_position()
+            st.metric("New Positions", "✅ ALLOWED" if allow_new else "❌ BLOCKED")
+            st.caption("Determines if new trades can be opened.")
+
+    else:
+        st.warning("⚠️ Risk management modules not available.")
+
+# ===============================
+# TAB 7: MODEL PERFORMANCE
+# ===============================
+with tab7:
+    st.markdown("### 🤖 Model Performance Dashboard")
+    st.markdown("Live performance tracking of all ML models in the ensemble.")
+
+    try:
+        from bot.model_selection import advanced_model_selector
+        from bot.prediction_metrics import prediction_tracker
+        MODELS_MODULES_AVAILABLE = True
+    except ImportError:
+        MODELS_MODULES_AVAILABLE = False
+
+    if MODELS_MODULES_AVAILABLE:
+        # Get model rankings
+        rankings = advanced_model_selector.performance_tracker.get_model_rankings()
+        
+        st.markdown("#### 🏆 Model Rankings (by recent performance)")
+        if rankings:
+            df_rankings = pd.DataFrame(list(rankings.items()), columns=['Model', 'Performance Score'])
+            st.dataframe(df_rankings, use_container_width=True)
+        else:
+            st.info("No performance data available yet.")
+
+    else:
+        st.warning("⚠️ Model performance modules not available.")
+
+# ===============================
 # TAB 6: PROFESSIONAL AI CHAT
 # ===============================
 
-with tab6:
+with tab8:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 1])
@@ -2252,7 +2345,7 @@ with tab6:
 # TAB 7: AI CHAT INTERFACE
 # ===============================
 
-with tab7:
+with tab9:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
     # Call the chat interface function
@@ -2264,7 +2357,7 @@ with tab7:
 # TAB 8: AI HEALTH MONITOR
 # ===============================
 
-with tab8:
+with tab10:
     st.markdown("# 🔍 AI System Health Monitor")
     
     # System status overview
@@ -2396,7 +2489,7 @@ with tab8:
 # TAB 9: ORCHESTRATOR CONTROL
 # ===============================
 
-with tab9:
+with tab11:
     st.markdown("# 🎭 Multi-Model Orchestrator")
     
     if not ORCHESTRATOR_AVAILABLE:
@@ -2556,7 +2649,7 @@ with tab9:
 # TAB 10: RAG KNOWLEDGE BROWSER
 # ===============================
 
-with tab10:
+with tab12:
     st.markdown("# 📚 Advanced Memory RAG Browser")
     
     if not RAG_AVAILABLE:
@@ -2710,7 +2803,7 @@ with tab10:
 # TAB 11: STRATEGY GENERATOR
 # ===============================
 
-with tab11:
+with tab13:
     st.markdown("# 🧬 AI Strategy Generator")
     
     if not STRATEGY_GEN_AVAILABLE:

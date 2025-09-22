@@ -5,7 +5,7 @@ Sistema de próxima generación para predicciones de alta precisión en mercados
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 import joblib
 from pathlib import Path
 import warnings
@@ -197,150 +197,6 @@ class LSTMPredictor:
         
         return np.array(signals)
 
-
-class TransformerPredictor:
-    """
-    Transformer network para análisis de patrones complejos en datos financieros.
-    """
-    
-    def __init__(self, sequence_length=60, features_dim=None, num_heads=8):
-        self.sequence_length = sequence_length
-        self.features_dim = features_dim
-        self.num_heads = num_heads
-        self.model = None
-        self.scaler = None
-        self.is_trained = False
-        
-        if not TENSORFLOW_AVAILABLE:
-            logger.warning("⚠️ TensorFlow no disponible - Transformer deshabilitado")
-            return
-        
-        # Modelo se creará cuando se entrene (necesitamos conocer features_dim)
-        if self.features_dim:
-            self.model = self._build_transformer_model()
-    
-    def _build_transformer_model(self):
-        """Construye arquitectura Transformer para trading."""
-        if not TENSORFLOW_AVAILABLE:
-            return None
-        
-        # Input layer
-        inputs = tf.keras.Input(shape=(self.sequence_length, self.features_dim))
-        
-        # Positional encoding (simplificado)
-        x = inputs
-        
-        # Multi-head attention block  
-        key_dim = max(1, self.features_dim//self.num_heads)  # Asegurar key_dim >= 1
-        attention_output = MultiHeadAttention(
-            num_heads=self.num_heads, 
-            key_dim=key_dim
-        )(x, x)
-        
-        # Add & Norm
-        x = LayerNormalization()(x + attention_output)
-        
-        # Feed Forward Network
-        ffn = Sequential([
-            Dense(128, activation='relu'),
-            Dropout(0.1),
-            Dense(self.features_dim)
-        ])
-        
-        ffn_output = ffn(x)
-        x = LayerNormalization()(x + ffn_output)
-        
-        # Global pooling y clasificación
-        x = tf.keras.layers.GlobalAveragePooling1D()(x)
-        x = Dense(64, activation='relu')(x)
-        x = Dropout(0.3)(x)
-        outputs = Dense(3, activation='softmax')(x)
-        
-        model = Model(inputs, outputs)
-        model.compile(
-            optimizer=Adam(learning_rate=0.0001),
-            loss='sparse_categorical_crossentropy',
-            metrics=['accuracy']
-        )
-        
-        return model
-    
-    def train(self, data: pd.DataFrame, target_col: str = 'target', epochs: int = 30):
-        """Entrena el modelo Transformer."""
-        if not TENSORFLOW_AVAILABLE:
-            return False
-        
-        # Detectar dimensiones de features automáticamente
-        feature_cols = [col for col in data.columns if col != target_col]
-        if self.features_dim is None:
-            self.features_dim = len(feature_cols)
-            logger.info(f"🔧 Transformer: Auto-detectado {self.features_dim} features")
-        
-        # Construir modelo si no existe
-        if self.model is None:
-            self.model = self._build_transformer_model()
-        
-        # Reutilizar lógica de LSTM para preparar secuencias
-        lstm_helper = LSTMPredictor(self.sequence_length, self.features_dim)
-        X_seq, y_seq = lstm_helper.prepare_sequences(data, target_col)
-        
-        if len(X_seq) == 0:
-            return False
-        
-        # Split y entrenar igual que LSTM
-        split_idx = int(len(X_seq) * 0.8)
-        X_train, X_val = X_seq[:split_idx], X_seq[split_idx:]
-        y_train, y_val = y_seq[:split_idx], y_seq[split_idx:]
-        
-        callbacks = [
-            EarlyStopping(patience=8, restore_best_weights=True),
-            ReduceLROnPlateau(factor=0.7, patience=4)
-        ]
-        
-        history = self.model.fit(
-            X_train, y_train,
-            validation_data=(X_val, y_val),
-            epochs=epochs,
-            batch_size=16,
-            callbacks=callbacks,
-            verbose=0
-        )
-        
-        self.is_trained = True
-        val_loss, val_acc = self.model.evaluate(X_val, y_val, verbose=0)
-        logger.info(f"✅ Transformer entrenado: Accuracy={val_acc:.3f}, Loss={val_loss:.3f}")
-        
-        return True
-    
-    def predict(self, data: pd.DataFrame) -> Optional[np.ndarray]:
-        """Predice usando Transformer."""
-        if not self.is_trained or not TENSORFLOW_AVAILABLE:
-            return None
-        
-        lstm_helper = LSTMPredictor(self.sequence_length, self.features_dim)
-        X_seq, _ = lstm_helper.prepare_sequences(data, target_col='dummy')
-        
-        if len(X_seq) == 0:
-            return None
-        
-        predictions = self.model.predict(X_seq, verbose=0)
-        
-        # Convertir a señales igual que LSTM
-        signals = []
-        for pred in predictions:
-            class_pred = np.argmax(pred)
-            confidence = np.max(pred)
-            
-            if class_pred == 0:
-                signals.append(-confidence)
-            elif class_pred == 2:
-                signals.append(confidence)
-            else:
-                signals.append(0.0)
-        
-        return np.array(signals)
-
-
 class EnsembleModel:
     """
     Ensemble que combina RandomForest, XGBoost, LSTM y Transformer.
@@ -371,7 +227,8 @@ class EnsembleModel:
         
         if TENSORFLOW_AVAILABLE:
             self.models['lstm'] = LSTMPredictor()
-            self.models['transformer'] = TransformerPredictor()
+            # Transformer is too heavy for now
+            # self.models['transformer'] = TransformerPredictor()
     
     def train(self, data: pd.DataFrame, target_col: str = 'target'):
         """Entrena todos los modelos del ensemble."""
@@ -640,27 +497,6 @@ def auto_load_ml_models(model_dir: str = "models"):
                 logger.error(f"❌ Error cargando Ensemble: {e}")
         else:
             logger.info("ℹ️ Ensemble Model no encontrado - se entrenará cuando sea necesario")
-        
-        # 2. Cargar Reinforcement Learning
-        try:
-            from .reinforcement_learning import rl_trading_system
-            rl_file = model_path / "rl_model.pkl" 
-            if rl_file.exists():
-                rl_data = joblib.load(rl_file)
-                if rl_data.get('is_trained', False):
-                    # Restaurar estado del RL
-                    if hasattr(rl_trading_system, 'agent'):
-                        rl_trading_system.agent = rl_data.get('agent')
-                        rl_trading_system.is_trained = True
-                        logger.info("🤖 Reinforcement Learning cargado exitosamente")
-                        models_loaded += 1
-                    else:
-                        logger.warning("⚠️ RL encontrado pero no se puede cargar")
-            else:
-                logger.info("ℹ️ Reinforcement Learning no encontrado - se entrenará cuando sea necesario")
-                
-        except Exception as e:
-            logger.warning(f"⚠️ Error cargando RL: {e}")
         
         # Resultado final
         if models_loaded > 0:
