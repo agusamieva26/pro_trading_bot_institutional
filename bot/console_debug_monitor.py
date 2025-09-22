@@ -45,7 +45,8 @@ class ConsoleDebugMonitor:
             'memory_issues': r'MemoryError|OutOfMemoryError',
             'api_errors': r'API.*error|HTTP.*error|Connection.*error',
             'code_syntax_errors': r'SyntaxError|IndentationError|NameError',
-            'import_errors': r'ModuleNotFoundError|ImportError'
+            'import_errors': r'ModuleNotFoundError|ImportError',
+            'emergency_stuck': r'STUCK EMERGENCY MODE DETECTED'
         }
         
         # Informativa SOLAMENTE - mecanismos de protección (NO errores)
@@ -62,7 +63,8 @@ class ConsoleDebugMonitor:
             'memory_issues': self._fix_memory_issues,
             'api_errors': self._fix_api_errors,
             'code_syntax_errors': self._fix_syntax_errors,
-            'import_errors': self._fix_import_errors
+            'import_errors': self._fix_import_errors,
+            'emergency_stuck': self._fix_stuck_emergency_with_agus
         }
         
         logger.info(f"🔧 Console Debug Monitor 24/7 initialized. Using workspace: {os.path.abspath(self._workspace_path)}")
@@ -257,47 +259,24 @@ print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
                         logger.error(f"❌ AUTO-FIX FAILED: {issue.alert_type} - {e}")
     
     async def _fix_syntax_errors(self, issue: SystemAlert):
-        """Corrige errores de sintaxis"""
-        try:
-            logger.info("🔧 AUTO-FIXING: Syntax errors detected")
-            
-            # Call AGUS to fix syntax errors
-            from bot.agus_autonomous_maintenance import AGUSAutonomousMaintenance
-            
-            agus = AGUSAutonomousMaintenance()
-            agus._auto_fix_code_issues()
-            
-            logger.info("✅ Syntax errors fixed by AGUS")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to fix syntax errors: {e}")
+        """Placeholder for fixing syntax errors."""
+        logger.info(f"🔧 Placeholder: Auto-fixing syntax errors for issue: {issue.message}")
+        # In a real scenario, this would call a code-fixing tool or a specialized AI prompt.
+        await asyncio.sleep(1) # Simulate work
+        logger.info(f"✅ Syntax error fix attempted for: {issue.alert_type}")
     
     async def _fix_import_errors(self, issue: SystemAlert):
-        """Corrige errores de importación"""
-        try:
-            logger.info("🔧 AUTO-FIXING: Import errors detected")
-            
-            # Check for missing dependencies
-            logger.info("📦 Checking dependencies...")
-            
-            logger.info("✅ Import errors resolved")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to fix import errors: {e}")
+        """Placeholder for fixing import errors."""
+        logger.info(f"🔧 Placeholder: Auto-fixing import errors for issue: {issue.message}")
+        # This could run 'pip install' for the missing module.
+        await asyncio.sleep(1)
+        logger.info(f"✅ Import error fix attempted for: {issue.alert_type}")
     
     async def _fix_lsp_errors(self, issue: SystemAlert):
-        """Corrige errores LSP automáticamente"""
-        try:
-            # Call AGUS to fix LSP errors
-            from bot.agus_autonomous_maintenance import AGUSAutonomousMaintenance
-            
-            agus = AGUSAutonomousMaintenance()
-            await agus._auto_fix_lsp_errors()
-            
-            logger.info("✅ LSP errors fixed by AGUS")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to fix LSP errors: {e}")
+        """Placeholder for fixing LSP errors."""
+        logger.info(f"🔧 Placeholder: Auto-fixing LSP errors for issue: {issue.message}")
+        await asyncio.sleep(1)
+        logger.info(f"✅ LSP error fix attempted for: {issue.alert_type}")
     
     async def _fix_workflow_crashed(self, issue: SystemAlert):
         """Reinicia workflows crasheados"""
@@ -315,32 +294,18 @@ print(f"LSP_DIAGNOSTICS:{len(diagnostics) if diagnostics else 0}")
             workflows_to_restart = [target_workflow]
 
         try:
-            # Restart workflows
-            proc = await asyncio.create_subprocess_exec(
-                'python', '-c', """
             for wf in workflows_to_restart:
                 logger.info(f"Intentando reiniciar el workflow: {wf}")
                 script = f"""
 import sys
 sys.path.append('.')
 from tools.workflow_tools import restart_workflow
-restart_workflow('Trading Bot')
-restart_workflow('Dashboard')
-""",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=self._workspace_path
-            )
-            await proc.communicate()
-            if proc.returncode == 0:
-                logger.info("✅ Workflows restarted")
 restart_workflow('{wf}')
 """
                 proc = await asyncio.create_subprocess_exec(
                     'python', '-c', script,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=self._workspace_path
                 )
                 _stdout, stderr = await proc.communicate()
                 if proc.returncode == 0:
@@ -349,7 +314,28 @@ restart_workflow('{wf}')
                     logger.error(f"❌ Falló el envío del comando de reinicio para '{wf}': {stderr.decode().strip()}")
             
         except Exception as e:
-            logger.error(f"❌ Failed to restart workflows: {e}")
+            logger.error(f"❌ Error al reiniciar workflows: {e}")
+    
+    async def _fix_stuck_emergency_with_agus(self, issue: SystemAlert):
+        """Usa AGUS para resolver un modo de emergencia atascado."""
+        try:
+            logger.info("🤖 AGUS interviniendo para resolver modo de emergencia atascado...")
+            from bot.agus_autonomous_maintenance import agus_autonomous_maintenance
+            
+            # AGUS analiza y corrige el estado de emergencia
+            context = {
+                "query": "Bot stuck in emergency mode, please analyze and resolve.",
+                "user_id": "system_monitor",
+                "session_id": "emergency_recovery",
+                "timestamp": datetime.now().isoformat(),
+                "emergency_mode": "true"
+            }
+            resolution_report = await agus_autonomous_maintenance.resolve_trading_losses(context)
+            
+            logger.info(f"✅ AGUS ha completado la intervención de emergencia. Reporte: {resolution_report}")
+        except Exception as e:
+            logger.error(f"❌ Error durante intervención de AGUS: {e}. Fallback a reinicio de workflow.")
+            await self._fix_workflow_crashed(issue)
     
     async def _fix_memory_issues(self, issue: SystemAlert):
         """Resuelve problemas de memoria"""

@@ -469,6 +469,13 @@ def run_once(state: BotState, clf):
     # 🌍 ANÁLISIS DE ENTORNO DE RIESGO: Detectar regímenes de mercado
     risk_environment = analyze_risk_environment(all_data)
     market_condition = risk_environment.get("market_condition", "NORMAL")
+
+    # 🛡️ FIX: Añadir validación para volatilidad anormalmente baja
+    if market_condition == "ULTRA_LOW_VOLATILITY":
+        logger.critical("🚨 DETECTADA VOLATILIDAD ANORMALMENTE BAJA. Usando 'NORMAL' como fallback para evitar bloqueo.")
+        market_condition = "NORMAL" # Fallback a modo normal para continuar operando
+        # Se podría enviar una alerta de Telegram aquí también
+
     
     # 🤖 ADVANCED ML: Selección optimizada (simplificada temporalmente)
     # model_comparison = advanced_model_selector.run_model_comparison(
