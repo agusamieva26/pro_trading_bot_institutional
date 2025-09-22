@@ -47,6 +47,8 @@ import os
 import sys
 from pathlib import Path
 import subprocess
+import asyncio
+from .agus_core import AGUSOrchestrator
 
 from datetime import datetime, timedelta
 
@@ -1025,6 +1027,20 @@ def run_periodic_retraining(state: BotState):
             logger.error(f"💥 Error en re-entrenamiento periódico: {e}")
             time.sleep(3600) # Wait an hour on error
 
+def run_orchestrator_async(orchestrator: AGUSOrchestrator):
+    """Helper function to run the async orchestrator in a dedicated thread."""
+    try:
+        logger.info("🧠 AGUS Orchestrator event loop starting...")
+        # Create and set a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(orchestrator.start())
+        logger.info("🧠 AGUS Orchestrator event loop finished.")
+    except asyncio.CancelledError:
+        logger.info("🧠 AGUS Orchestrator event loop cancelled.")
+    except Exception as e:
+        logger.error(f"❌ AGUS Orchestrator thread failed critically: {e}", exc_info=True)
+
 def main():
     # ☁️ INICIAR SERVIDOR DE SALUD PARA LA NUBE (FLY.IO)
     start_health_server()
@@ -1032,8 +1048,10 @@ def main():
 
     # 🧠 INICIAR ORQUESTADOR CENTRAL
     orchestrator = AGUSOrchestrator()
-    asyncio.run(orchestrator.start())
-    logger.info("✅ AGUS Orchestrator iniciado")
+    # 🚀 FIX: Run the orchestrator in a background thread to prevent blocking the main trading loop.
+    orchestrator_thread = threading.Thread(target=run_orchestrator_async, args=(orchestrator,), daemon=True, name="AGUSOrchestrator")
+    orchestrator_thread.start()
+    logger.info("✅ AGUS Orchestrator starting in a background thread...")
     
     send_telegram("🚀 Bot de trading institucional INICIADO (modo paper).")
     logger.info("🚀 Bot de trading institucional iniciado (modo paper). Ctrl+C para detener.")
