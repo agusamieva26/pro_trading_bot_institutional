@@ -24,7 +24,7 @@ def main():
     Restarts them if they crash.
     """
     procs = {}
-    logger.info("🚀 Starting process supervisor...")
+    logger.info("🚀 Starting Process Supervisor v2.0...")
 
     while True:
         for name, command in PROCESSES.items():
