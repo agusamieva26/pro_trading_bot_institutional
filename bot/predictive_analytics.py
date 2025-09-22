@@ -126,7 +126,7 @@ class LSTMPredictor:
             logger.warning("⚠️ TensorFlow not available - LSTM disabled")
             return
             
-    def _build_model(self) -> Optional[tf.keras.Model]:
+    def _build_model(self) -> "Optional[tf.keras.Model]":
         """Build optimized LSTM architecture."""
         if not TENSORFLOW_AVAILABLE or not self.features_dim:
             return None
