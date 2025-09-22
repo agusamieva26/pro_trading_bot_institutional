@@ -69,18 +69,27 @@ def main():
         for name, proc in procs.items():
             if proc.poll() is None: # If process is still running
                 logger.info(f"Terminating process '{name}' (PID: {proc.pid})...")
-                # Send a signal that can be caught as KeyboardInterrupt
+                # Send a graceful shutdown signal.
                 if sys.platform == "win32":
-                    os.kill(proc.pid, signal.CTRL_BREAK_EVENT)
+                    # On Windows, CTRL_BREAK_EVENT is a reliable way to interrupt
+                    # a console process group. Using proc.send_signal is preferred.
+                    proc.send_signal(signal.CTRL_BREAK_EVENT)
                 else:
+                    # On Unix, SIGTERM is the standard graceful shutdown signal.
                     proc.terminate() # Sends SIGTERM on Unix
                 
                 try:
+                    # Wait for the process to terminate gracefully.
                     proc.wait(timeout=15)
-                    logger.info(f"✅ Process '{name}' terminated.")
+                    logger.info(f"✅ Process '{name}' terminated gracefully.")
                 except subprocess.TimeoutExpired:
+                    # If it doesn't respond, force kill it and its children.
                     logger.warning(f"⚠️ Process '{name}' did not terminate in time. Forcing kill...")
-                    proc.kill()
+                    if sys.platform == "win32":
+                        subprocess.run(['taskkill', '/F', '/T', '/PID', str(proc.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    else:
+                        proc.kill() # Sends SIGKILL on Unix
+                    logger.info(f"✅ Process '{name}' killed.")
         logger.info("All processes shut down. Exiting.")
 
 if __name__ == "__main__":

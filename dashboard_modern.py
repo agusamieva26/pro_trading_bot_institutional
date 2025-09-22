@@ -122,6 +122,14 @@ except ImportError as e:
     get_monitoring_system = None
     get_job_scheduler = None
 
+# Performance Adapter Integration
+try:
+    from bot.performance_adapter import performance_adapter
+    PERFORMANCE_ADAPTER_AVAILABLE = True
+except ImportError as e:
+    PERFORMANCE_ADAPTER_AVAILABLE = False
+    performance_adapter = None
+
 # ===============================
 # INITIALIZE SESSION STATE
 # ===============================
@@ -1453,6 +1461,16 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13
 with tab1:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
+    # ⚠️ NEW: Intervention Mode Status Display
+    if PERFORMANCE_ADAPTER_AVAILABLE and performance_adapter:
+        perf_summary = performance_adapter.get_performance_summary()
+        intervention_mode = perf_summary.get('intervention_mode', False)
+        if intervention_mode:
+            st.warning("⚠️ **INTERVENTION MODE ACTIVE:** The system has automatically reduced risk due to recent performance degradation. Position sizes will be smaller and entry criteria stricter.")
+        else:
+            st.success("✅ **Normal Operation:** Performance metrics are within acceptable ranges.")
+        st.markdown("---")
+
     # Get account data
     account_info = get_account_info()
     daily_change, daily_change_pct = calculate_daily_change(account_info)
@@ -1692,7 +1710,7 @@ with tab2:
                 df_display['market_value'] = df_display['market_value'].apply(lambda x: f"${x:,.2f}")
                 df_display['qty'] = df_display['qty'].apply(lambda x: f"{x:.6f}")
                 
-                st.dataframe(df_display, width="stretch")
+                st.dataframe(df_display, use_container_width=True)
         
         # Portfolio composition chart
         st.markdown("### 🥧 Portfolio Composition")
@@ -1734,7 +1752,7 @@ with tab2:
             margin=dict(l=60, r=60, t=80, b=60)
         )
         
-        st.plotly_chart(fig_pie, width="stretch")
+        st.plotly_chart(fig_pie, use_container_width=True)
         
     else:
         st.info("💼 No open positions currently. Ready to deploy capital.")
@@ -1753,7 +1771,7 @@ with tab2:
                 ]
             }
             df_account = pd.DataFrame(account_data)
-            st.dataframe(df_account, width="stretch", hide_index=True)
+            st.dataframe(df_account, use_container_width=True, hide_index=True)
 
 # ===============================
 # TAB 3: PERFORMANCE ANALYTICS
@@ -1881,7 +1899,7 @@ with tab3:
                 margin=dict(l=60, r=60, t=80, b=60)
             )
             
-            st.plotly_chart(fig_hist, width="stretch")
+            st.plotly_chart(fig_hist, use_container_width=True)
     
     else:
         st.info("📊 No trading data available for performance analysis.")
@@ -1899,7 +1917,7 @@ with tab4:
     
     if orders:
         df_orders = pd.DataFrame(orders)
-        st.dataframe(df_orders, width="stretch")
+        st.dataframe(df_orders, use_container_width=True)
     else:
         st.success("✅ No pending orders. All executions complete.")
     
@@ -1963,7 +1981,7 @@ with tab4:
         # Display filtered results
         if len(filtered_df) > 0:
             display_df = filtered_df.head(max_rows) if len(filtered_df) > max_rows else filtered_df
-            st.dataframe(display_df, width="stretch")
+            st.dataframe(display_df, use_container_width=True)
             st.caption(f"📊 Showing {len(display_df)} of {len(filtered_df)} total trades")
         else:
             st.info("🔍 No trades match the selected filters.")
@@ -2036,11 +2054,11 @@ with tab5:
                     
                     with col1:
                         st.markdown("##### 📋 Executive Summary")
-                        st.dataframe(df_summary, width="stretch")
+                        st.dataframe(df_summary, use_container_width=True)
                     
                     with col2:
                         st.markdown("##### ⚡ Recent Trades")
-                        st.dataframe(df_trades_report.head(10), width="stretch")
+                        st.dataframe(df_trades_report.head(10), use_container_width=True)
                         if len(df_trades_report) > 10:
                             st.caption(f"📊 Showing 10 of {len(df_trades_report)} trades")
                     
@@ -2195,7 +2213,17 @@ with tab8:
             st.session_state.agus_monitoring_initialized = False
     
     # Initialize AGUS monitoring if available
-    if AGUS_MONITORING_AVAILABLE and get_monitoring_system and get_orchestrator and get_job_scheduler:
+    # 🔧 FIX: Added explicit checks for function existence to prevent NameError.
+    # This handles cases where AGUS_MONITORING_AVAILABLE is True but some functions
+    # were not imported correctly due to refactoring or partial implementation.
+    agus_components_ready = (
+        AGUS_MONITORING_AVAILABLE and
+        'get_monitoring_system' in globals() and get_monitoring_system and
+        'get_orchestrator' in globals() and get_orchestrator and
+        'get_job_scheduler' in globals() and get_job_scheduler
+    )
+
+    if agus_components_ready:
         try:
             # Get system status (with None checks)
             monitoring_system = get_monitoring_system()
@@ -3007,7 +3035,7 @@ with tab13:
                     margin=dict(l=60, r=60, t=80, b=60)
                 )
                 
-                st.plotly_chart(fig_evolution, width="stretch")
+                st.plotly_chart(fig_evolution, use_container_width=True)
         
         # Strategy library
         st.markdown("---")
@@ -3026,7 +3054,7 @@ with tab13:
                 })
             
             df_strategies = pd.DataFrame(strategies_data)
-            st.dataframe(df_strategies, width="stretch")
+            st.dataframe(df_strategies, use_container_width=True)
 
 # ===============================
 # PROFESSIONAL SIDEBAR

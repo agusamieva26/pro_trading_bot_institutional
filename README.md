@@ -43,23 +43,38 @@ Para que el bot funcione correctamente, necesitas configurar las siguientes clav
 
 El bot está configurado para usar un proveedor de API compatible con OpenAI. Por defecto, usa **Together.ai**, pero puedes cambiarlo fácilmente.
 
+> **Nota Importante:** Aunque el modelo (Qwen) se encuentra en Hugging Face, el bot **no usa la API de Hugging Face directamente**. Se conecta a un proveedor como Together.ai que ofrece una API compatible con el formato de OpenAI. Por lo tanto, necesitas una clave de API de uno de estos proveedores, no de Hugging Face.
+
 **Cómo conseguirla (Ejemplo con Together.ai):**
 1.  Regístrate en Together.ai.
 2.  Una vez dentro, ve a la sección "API Keys" en el menú de la izquierda.
 3.  Copia tu clave y pégala en el valor de `QWEN_API_KEY`.
 
-#### Usar otro proveedor (Ejemplo: Groq)
+**¿Tiene costo?**
+No, **obtener la clave de API es gratis**. Al registrarte, Together.ai te da **créditos gratuitos** (generalmente $25 USD) para que puedas probar la API. Una vez que se agotan los créditos, el servicio funciona con un modelo de "pago por uso" (pay-as-you-go), que suele ser muy económico para los modelos que usa este bot. Los créditos iniciales son más que suficientes para configurar y probar todo.
 
-Puedes usar cualquier proveedor compatible, como Groq, que es conocido por su alta velocidad.
+### 2.1. Alternativas a Together.ai
+
+¡Sí! Puedes usar cualquier proveedor que ofrezca una API compatible con OpenAI. Aquí tienes algunas alternativas populares:
+
+-   **Groq**: Famoso por su **velocidad extremadamente alta**. A menudo tiene un generoso nivel gratuito.
+-   **Anyscale**: Ofrece acceso a modelos de código abierto y es conocido por su fiabilidad.
+-   **Perplexity Labs**: Proporciona acceso a modelos populares a través de una API compatible.
+-   **Fireworks.ai**: Otra plataforma optimizada para servir modelos de código abierto.
+
+#### Ejemplo: Cómo configurar Groq
+
+Groq es una excelente opción si buscas respuestas casi instantáneas.
 
 1.  Regístrate en Groq.
-2.  Obtén tu API Key.
-3.  Modifica tu archivo `.env` o exporta las siguientes variables de entorno:
+2.  Obtén tu API Key en la sección correspondiente.
+3.  Modifica tu archivo `.env` con las siguientes variables:
 
 ```bash
-export QWEN_API_KEY="tu-api-key-de-groq"
-export QWEN_API_BASE_URL="https://api.groq.com/openai/v1"
-export QWEN_MODEL_NAME="llama3-8b-8192" # O el modelo que prefieras de Groq
+# .env
+QWEN_API_KEY="tu-api-key-de-groq"
+QWEN_API_BASE_URL="https://api.groq.com/openai/v1"
+QWEN_MODEL_NAME="llama3-8b-8192" # O el modelo que prefieras de Groq
 ```
 
 ### 3. OpenAI (Opcional, para IA secundaria)
