@@ -16,6 +16,7 @@ from .telegram import alert_trade_exit, alert_risk_stop
 from .util import logger, should_skip_realtime_pricing, get_cache_ttl_for_symbol
 from .symbol_manager import symbol_manager
 from .data import fetch_bars
+from .symbol_configs import get_symbol_config
 from .features import make_features
 from .liquidity_unlocker import liquidity_unlocker
 
@@ -480,6 +481,9 @@ def monitor_closed_positions(clf):
                 # Obtener edad de la posición
                 position_age_minutes = _get_position_age_minutes(symbol, position_times)
                 
+                # 💎 OBTENER CONFIGURACIÓN PERSONALIZADA PARA EL SÍMBOLO
+                symbol_config = get_symbol_config(symbol)
+                
                 # --- PRIORITY 0: TRAILING STOPS & PARTIAL PROFIT (nocturnal optimization) ---
                 trailing_info = _update_position_state(symbol, current_price, position_states)
                 
@@ -580,15 +584,18 @@ def monitor_closed_positions(clf):
                 # --- PRIORITY 2: TRADITIONAL TP/SL/ML (solo si NO hay cierre por tiempo) ---
                 if not should_close:
                     
-                    # 1. TAKE PROFIT: Cerrar si ganancia >= 1.5%
-                    if pnl_pct >= settings.take_profit_pct:
-                        should_close = True
-                        reason = f"TAKE PROFIT alcanzado: {pnl_pct:.2%} >= {settings.take_profit_pct:.2%}"
+                    # 1. TAKE PROFIT: Usar TP/SL específico del símbolo
+                    take_profit_pct = symbol_config.take_profit_pct
+                    stop_loss_pct = symbol_config.stop_loss_pct
                     
-                    # 2. STOP LOSS: Cerrar si pérdida >= 0.7%
-                    elif pnl_pct <= -settings.stop_loss_pct:
+                    if pnl_pct >= take_profit_pct:
                         should_close = True
-                        reason = f"STOP LOSS activado: {pnl_pct:.2%} <= -{settings.stop_loss_pct:.2%}"
+                        reason = f"TAKE PROFIT ({symbol}) alcanzado: {pnl_pct:.2%} >= {take_profit_pct:.2%}"
+                    
+                    # 2. STOP LOSS: Usar TP/SL específico del símbolo
+                    elif pnl_pct <= -stop_loss_pct:
+                        should_close = True
+                        reason = f"STOP LOSS ({symbol}) activado: {pnl_pct:.2%} <= -{stop_loss_pct:.2%}"
                     
                     # 3. REVERSIÓN DE SEÑAL ML (solo si NO se activó TP/SL)
                     else:
