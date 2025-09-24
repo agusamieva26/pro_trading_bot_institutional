@@ -1,8 +1,12 @@
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from pathlib import Path
 load_dotenv()
 import os
 
+# 💾 RUTA DE ALMACENAMIENTO PERSISTENTE (para la nube)
+PERSISTENT_STORAGE_PATH = os.getenv("PERSISTENT_STORAGE_PATH")
+BASE_PATH = Path(PERSISTENT_STORAGE_PATH) if PERSISTENT_STORAGE_PATH and Path(PERSISTENT_STORAGE_PATH).exists() else Path(".")
 
 class Settings(BaseModel):
     alpaca_api_key: str = Field(default_factory=lambda: os.getenv("ALPACA_API_KEY",""))
@@ -64,8 +68,10 @@ class Settings(BaseModel):
     risk_management_test_mode: bool = Field(default_factory=lambda: os.getenv("RISK_MANAGEMENT_TEST_MODE","false").lower() in ("1","true","yes"))  # Bypass kill switch for testing
     disable_kill_switch: bool = Field(default_factory=lambda: os.getenv("DISABLE_KILL_SWITCH","false").lower() in ("1","true","yes"))  # Emergency bypass for testing
     
-    model_path: str = Field(default_factory=lambda: os.getenv("MODEL_PATH","models/rf_clf.pkl"))
-    state_path: str = Field(default_factory=lambda: os.getenv("STATE_PATH","bot/state.json"))
+    # 💾 Rutas de archivos ahora usan BASE_PATH para persistencia
+    model_path: str = Field(default_factory=lambda: str(BASE_PATH / os.getenv("MODEL_PATH","models/rf_clf.pkl")))
+    state_path: str = Field(default_factory=lambda: str(BASE_PATH / os.getenv("STATE_PATH","bot/state.json")))
+
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))
     
     # 🧠 PARÁMETROS DE ENTRENAMIENTO
