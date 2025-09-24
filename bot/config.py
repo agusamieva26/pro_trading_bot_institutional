@@ -71,12 +71,6 @@ class Settings(BaseModel):
     # 💾 Rutas de archivos ahora usan BASE_PATH para persistencia
     model_path: str = Field(default_factory=lambda: str(BASE_PATH / os.getenv("MODEL_PATH","models/rf_clf.pkl")))
     state_path: str = Field(default_factory=lambda: str(BASE_PATH / os.getenv("STATE_PATH","bot/state.json")))
-    # 💾 Rutas de archivos persistentes
-    model_path: str = Field(default_factory=lambda: str(BASE_PATH / "models/rf_clf.pkl"))
-    state_path: str = Field(default_factory=lambda: str(BASE_PATH / "bot/state.json"))
-    # Añadir otras rutas importantes para que sean persistentes
-    trades_log_path: str = Field(default_factory=lambda: str(BASE_PATH / "trades_log.csv"))
-    reports_dir: str = Field(default_factory=lambda: str(BASE_PATH / "reports"))
 
     log_level: str = Field(default_factory=lambda: os.getenv("LOG_LEVEL","INFO"))
     
