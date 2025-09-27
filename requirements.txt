@@ -77,6 +77,13 @@ uvicorn
 python-multipart
 
 # -----------------------------------------------------------------
+# GOOGLE & CLOUD SERVICES
+# Para la integración con servicios de Google como Drive.
+# -----------------------------------------------------------------
+google-api-python-client>=2.80
+google-auth-oauthlib>=1.2
+
+# -----------------------------------------------------------------
 # DEVELOPMENT & TESTING
 # Se recomienda mover a un archivo 'requirements-dev.txt' para producción.
 # -----------------------------------------------------------------

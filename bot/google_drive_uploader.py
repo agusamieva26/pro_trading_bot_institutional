@@ -2,15 +2,17 @@
 import os
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from .util import logger
 
 # Si modificas estos SCOPES, borra el archivo token.json
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-CREDENTIALS_FILE = 'credentials.json'
-TOKEN_FILE = 'token.json'
+
+# Construir rutas absolutas a la raíz del proyecto para los archivos de credenciales
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CREDENTIALS_FILE = os.path.join(PROJECT_ROOT, 'credentials.json')
+TOKEN_FILE = os.path.join(PROJECT_ROOT, 'token.json')
 
 def get_drive_service():
     """Crea y retorna un servicio de Google Drive autenticado."""
