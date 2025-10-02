@@ -1,4 +1,8 @@
 # dashboard_modern.py - Professional Trading Dashboard
+import os
+# 🧠 Force TensorFlow/PyTorch to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -117,6 +121,14 @@ except ImportError as e:
     get_orchestrator = None
     get_monitoring_system = None
     get_job_scheduler = None
+
+# Performance Adapter Integration
+try:
+    from bot.performance_adapter import performance_adapter
+    PERFORMANCE_ADAPTER_AVAILABLE = True
+except ImportError as e:
+    PERFORMANCE_ADAPTER_AVAILABLE = False
+    performance_adapter = None
 
 # ===============================
 # INITIALIZE SESSION STATE
@@ -1426,12 +1438,14 @@ create_professional_header()
 # PROFESSIONAL TABS SYSTEM
 # ===============================
 
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs([
     "📊 OVERVIEW", 
     "💼 PORTFOLIO", 
     "📈 PERFORMANCE", 
     "⚡ TRADES", 
     "📱 REPORTS",
+    "🛡️ RISK",
+    "🤖 MODELS",
     "🔍 AGUS MONITOR",
     "🧠 AI CHAT",
     "🔍 AI HEALTH", 
@@ -1447,6 +1461,25 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
 with tab1:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
+    # ⚠️ NEW: Intervention Mode Status Display
+    if PERFORMANCE_ADAPTER_AVAILABLE and performance_adapter:
+        perf_summary = performance_adapter.get_performance_summary()
+        intervention_mode = perf_summary.get('intervention_mode', False)
+        
+        if intervention_mode:
+            reasons = perf_summary.get('degradation_reasons', [])
+            reasons_md = "\n".join([f"- {reason}" for reason in reasons])
+            warning_message = (
+                "**INTERVENTION MODE ACTIVE:** The system has automatically reduced risk due to recent performance degradation. "
+                "Position sizes will be smaller and entry criteria stricter."
+            )
+            if reasons_md:
+                warning_message += f"\n\n**Detected Issues:**\n{reasons_md}"
+            st.warning(warning_message, icon="🛡️")
+        else:
+            st.success("✅ **Normal Operation:** Performance metrics are within acceptable ranges.")
+        st.markdown("---")
+
     # Get account data
     account_info = get_account_info()
     daily_change, daily_change_pct = calculate_daily_change(account_info)
@@ -1686,7 +1719,7 @@ with tab2:
                 df_display['market_value'] = df_display['market_value'].apply(lambda x: f"${x:,.2f}")
                 df_display['qty'] = df_display['qty'].apply(lambda x: f"{x:.6f}")
                 
-                st.dataframe(df_display, width="stretch")
+                st.dataframe(df_display, use_container_width=True)
         
         # Portfolio composition chart
         st.markdown("### 🥧 Portfolio Composition")
@@ -1728,7 +1761,7 @@ with tab2:
             margin=dict(l=60, r=60, t=80, b=60)
         )
         
-        st.plotly_chart(fig_pie, width="stretch")
+        st.plotly_chart(fig_pie, use_container_width=True)
         
     else:
         st.info("💼 No open positions currently. Ready to deploy capital.")
@@ -1747,7 +1780,7 @@ with tab2:
                 ]
             }
             df_account = pd.DataFrame(account_data)
-            st.dataframe(df_account, width="stretch", hide_index=True)
+            st.dataframe(df_account, use_container_width=True, hide_index=True)
 
 # ===============================
 # TAB 3: PERFORMANCE ANALYTICS
@@ -1875,7 +1908,7 @@ with tab3:
                 margin=dict(l=60, r=60, t=80, b=60)
             )
             
-            st.plotly_chart(fig_hist, width="stretch")
+            st.plotly_chart(fig_hist, use_container_width=True)
     
     else:
         st.info("📊 No trading data available for performance analysis.")
@@ -1893,7 +1926,7 @@ with tab4:
     
     if orders:
         df_orders = pd.DataFrame(orders)
-        st.dataframe(df_orders, width="stretch")
+        st.dataframe(df_orders, use_container_width=True)
     else:
         st.success("✅ No pending orders. All executions complete.")
     
@@ -1957,7 +1990,7 @@ with tab4:
         # Display filtered results
         if len(filtered_df) > 0:
             display_df = filtered_df.head(max_rows) if len(filtered_df) > max_rows else filtered_df
-            st.dataframe(display_df, width="stretch")
+            st.dataframe(display_df, use_container_width=True)
             st.caption(f"📊 Showing {len(display_df)} of {len(filtered_df)} total trades")
         else:
             st.info("🔍 No trades match the selected filters.")
@@ -2030,11 +2063,11 @@ with tab5:
                     
                     with col1:
                         st.markdown("##### 📋 Executive Summary")
-                        st.dataframe(df_summary, width="stretch")
+                        st.dataframe(df_summary, use_container_width=True)
                     
                     with col2:
                         st.markdown("##### ⚡ Recent Trades")
-                        st.dataframe(df_trades_report.head(10), width="stretch")
+                        st.dataframe(df_trades_report.head(10), use_container_width=True)
                         if len(df_trades_report) > 10:
                             st.caption(f"📊 Showing 10 of {len(df_trades_report)} trades")
                     
@@ -2081,10 +2114,116 @@ with tab5:
     st.markdown(info_html, unsafe_allow_html=True)
 
 # ===============================
+# TAB 6: RISK DASHBOARD
+# ===============================
+with tab6:
+    st.markdown("### 🛡️ Risk Management Dashboard")
+    st.markdown("Real-time analysis of portfolio risk and system-wide exposure.")
+    
+    try:
+        from bot.dynamic_risk_manager import dynamic_risk_manager
+        from bot.drawdown_protector import drawdown_protector
+        RISK_MODULES_AVAILABLE = True
+    except ImportError:
+        RISK_MODULES_AVAILABLE = False
+
+    if RISK_MODULES_AVAILABLE:
+        # Get a sample assessment
+        risk_summary = dynamic_risk_manager.get_risk_metrics_summary()
+        dd_summary = drawdown_protector.get_protection_summary()
+
+        st.markdown("#### 📊 Key Risk Metrics")
+        risk_col1, risk_col2, risk_col3, risk_col4 = st.columns(4)
+        risk_col1, risk_col2, risk_col3, risk_col4, risk_col5 = st.columns(5)
+        
+        with risk_col1:
+            risk_score = risk_summary.get('risk_score', 0.5)
+            risk_level = "🔴 HIGH" if risk_score > 0.7 else "🟡 MEDIUM" if risk_score > 0.4 else "🟢 LOW"
+            create_metric_card("RISK SCORE", f"{risk_score:.2f}", risk_level, "error" if risk_score > 0.7 else "warning", "primary", "🔥")
+            create_metric_card("RISK SCORE", f"{risk_score:.2f}", risk_level, "error" if risk_score > 0.7 else "warning" if risk_score > 0.4 else "success", "primary", "🔥")
+
+        with risk_col2:
+            current_dd = dd_summary.get('current_drawdown', 0.0) * 100
+            dd_level = "🔴 SEVERE" if current_dd > 10 else "🟡 MODERATE" if current_dd > 5 else "🟢 MINIMAL"
+            create_metric_card("CURRENT DRAWDOWN", f"{current_dd:.2f}%", dd_level, "error" if current_dd > 10 else "warning", "primary", "📉")
+            create_metric_card("CURRENT DRAWDOWN", f"{current_dd:.2f}%", dd_level, "error" if current_dd > 10 else "warning" if current_dd > 5 else "success", "primary", "📉")
+
+        with risk_col3:
+            risk_regime = risk_summary.get('risk_regime', 'normal').upper()
+            create_metric_card("RISK REGIME", risk_regime, "Market Volatility State", "neutral", "secondary", "🌪️")
+
+        with risk_col4:
+            protection_level = dd_summary.get('protection_level', 'normal').upper()
+            create_metric_card("PROTECTION LEVEL", protection_level, "Drawdown Protection", "success" if protection_level == "NORMAL" else "warning", "secondary", "🛡️")
+
+        with risk_col5:
+            volatility = risk_summary.get('volatility', 0.0) * 100
+            vol_level = "🔴 HIGH" if volatility > 25 else "🟡 MEDIUM" if volatility > 15 else "🟢 LOW"
+            create_metric_card(
+                "ANNUALIZED VOL", 
+                f"{volatility:.1f}%", 
+                vol_level, 
+                "error" if volatility > 25 else "warning" if volatility > 15 else "success", 
+                "secondary", 
+                "⚡"
+            )
+
+        st.markdown("---")
+        st.markdown("#### ⚙️ Dynamic Adjustments")
+        
+        adj_col1, adj_col2, adj_col3 = st.columns(3)
+        
+        with adj_col1:
+            risk_multiplier = dynamic_risk_manager.get_current_risk_multiplier()
+            st.metric("Risk Multiplier", f"{risk_multiplier:.2f}x")
+            st.caption("Adjusts position size based on overall risk.")
+
+        with adj_col2:
+            sl_adj = drawdown_protector.get_stop_loss_adjustment()
+            st.metric("Stop-Loss Adjustment", f"{sl_adj:.2f}x")
+            st.caption("Tightens/widens stops based on drawdown.")
+
+        with adj_col3:
+            allow_new = drawdown_protector.should_allow_new_position()
+            st.metric("New Positions", "✅ ALLOWED" if allow_new else "❌ BLOCKED")
+            st.caption("Determines if new trades can be opened.")
+
+    else:
+        st.warning("⚠️ Risk management modules not available.")
+
+# ===============================
+# TAB 7: MODEL PERFORMANCE
+# ===============================
+with tab7:
+    st.markdown("### 🤖 Model Performance Dashboard")
+    st.markdown("Live performance tracking of all ML models in the ensemble.")
+
+    try:
+        from bot.model_selection import advanced_model_selector
+        from bot.prediction_metrics import prediction_tracker
+        MODELS_MODULES_AVAILABLE = True
+    except ImportError:
+        MODELS_MODULES_AVAILABLE = False
+
+    if MODELS_MODULES_AVAILABLE:
+        # Get model rankings
+        rankings = advanced_model_selector.performance_tracker.get_model_rankings()
+        
+        st.markdown("#### 🏆 Model Rankings (by recent performance)")
+        if rankings:
+            df_rankings = pd.DataFrame(list(rankings.items()), columns=['Model', 'Performance Score'])
+            st.dataframe(df_rankings, use_container_width=True)
+        else:
+            st.info("No performance data available yet.")
+
+    else:
+        st.warning("⚠️ Model performance modules not available.")
+
+# ===============================
 # TAB 6: PROFESSIONAL AI CHAT
 # ===============================
 
-with tab6:
+with tab8:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 1])
@@ -2098,7 +2237,17 @@ with tab6:
             st.session_state.agus_monitoring_initialized = False
     
     # Initialize AGUS monitoring if available
-    if AGUS_MONITORING_AVAILABLE and get_monitoring_system and get_orchestrator and get_job_scheduler:
+    # 🔧 FIX: Added explicit checks for function existence to prevent NameError.
+    # This handles cases where AGUS_MONITORING_AVAILABLE is True but some functions
+    # were not imported correctly due to refactoring or partial implementation.
+    agus_components_ready = (
+        AGUS_MONITORING_AVAILABLE and
+        'get_monitoring_system' in globals() and get_monitoring_system and
+        'get_orchestrator' in globals() and get_orchestrator and
+        'get_job_scheduler' in globals() and get_job_scheduler
+    )
+
+    if agus_components_ready:
         try:
             # Get system status (with None checks)
             monitoring_system = get_monitoring_system()
@@ -2248,7 +2397,7 @@ with tab6:
 # TAB 7: AI CHAT INTERFACE
 # ===============================
 
-with tab7:
+with tab9:
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
     
     # Call the chat interface function
@@ -2260,7 +2409,7 @@ with tab7:
 # TAB 8: AI HEALTH MONITOR
 # ===============================
 
-with tab8:
+with tab10:
     st.markdown("# 🔍 AI System Health Monitor")
     
     # System status overview
@@ -2392,7 +2541,7 @@ with tab8:
 # TAB 9: ORCHESTRATOR CONTROL
 # ===============================
 
-with tab9:
+with tab11:
     st.markdown("# 🎭 Multi-Model Orchestrator")
     
     if not ORCHESTRATOR_AVAILABLE:
@@ -2552,7 +2701,7 @@ with tab9:
 # TAB 10: RAG KNOWLEDGE BROWSER
 # ===============================
 
-with tab10:
+with tab12:
     st.markdown("# 📚 Advanced Memory RAG Browser")
     
     if not RAG_AVAILABLE:
@@ -2706,7 +2855,7 @@ with tab10:
 # TAB 11: STRATEGY GENERATOR
 # ===============================
 
-with tab11:
+with tab13:
     st.markdown("# 🧬 AI Strategy Generator")
     
     if not STRATEGY_GEN_AVAILABLE:
@@ -2910,7 +3059,7 @@ with tab11:
                     margin=dict(l=60, r=60, t=80, b=60)
                 )
                 
-                st.plotly_chart(fig_evolution, width="stretch")
+                st.plotly_chart(fig_evolution, use_container_width=True)
         
         # Strategy library
         st.markdown("---")
@@ -2929,7 +3078,7 @@ with tab11:
                 })
             
             df_strategies = pd.DataFrame(strategies_data)
-            st.dataframe(df_strategies, width="stretch")
+            st.dataframe(df_strategies, use_container_width=True)
 
 # ===============================
 # PROFESSIONAL SIDEBAR

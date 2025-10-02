@@ -1,94 +1,96 @@
-#!/usr/bin/env python3
-"""
-🚀 INICIAR Y MONITOREAR EL BOT DE TRADING
-Script que inicia el bot y luego activa el monitoreo
-"""
-
 import subprocess
 import time
-import threading
-import signal
+import logging
 import sys
-from datetime import datetime
-from loguru import logger
- 
-def stream_output(process):
-    """Lee y muestra la salida de un proceso en tiempo real."""
-    def read_stream(stream, log_func):
-        for line in iter(stream.readline, ''):
-            log_func(f"[BOT] {line.strip()}")
-        stream.close()
- 
-    stdout_thread = threading.Thread(target=read_stream, args=(process.stdout, logger.info))
-    stderr_thread = threading.Thread(target=read_stream, args=(process.stderr, logger.error))
-    stdout_thread.start()
-    stderr_thread.start()
- 
-def start_bot():
-    """Inicia el bot de trading"""
-    try:
-        logger.info("🚀 Iniciando bot de trading...")
-        # Ejecutar el bot en segundo plano
-        process = subprocess.Popen([sys.executable, "run.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
-        stream_output(process) # Iniciar el streaming de logs
-        
-        logger.info(f"✅ Bot iniciado con PID: {process.pid}")
-        return process
-    except Exception as e:
-        logger.error(f"❌ Error iniciando bot: {e}")
-        return None
+import threading
+import os
+import signal
+import webbrowser
+from typing import Dict
 
-def start_monitor():
-    """Inicia el monitor del sistema"""
+# Configure logging to see the monitor's output
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+    stream=sys.stdout
+)
+logger = logging.getLogger("Supervisor")
+
+# Commands to run
+PROCESSES = {
+    # Use sys.executable to ensure the correct Python interpreter from the virtual environment is used.
+    "bot": [sys.executable, "-X", "utf8", "-u", "-m", "bot.main"],
+    "dashboard": [sys.executable, "-m", "streamlit", "run", "dashboard_modern.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
+}
+
+def open_dashboard():
+    """Waits a few seconds and opens the dashboard in the browser."""
+    time.sleep(5)  # Give Streamlit time to start
+    url = "http://localhost:8501"
     try:
-        logger.info("📊 Iniciando monitor del sistema en 20 segundos (dando tiempo al bot para arrancar)...")
-        # Esperar un tiempo prudencial para que todos los servicios del bot se inicien
-        time.sleep(20)
-        
-        # Ejecutar el monitor
-        subprocess.run([sys.executable, "monitor_system.py"])
+        webbrowser.open(url)
+        logger.info(f"🌐 Dashboard abierto en el navegador en: {url}")
     except Exception as e:
-        logger.error(f"❌ Error iniciando monitor: {e}")
+        logger.warning(f"⚠️ No se pudo abrir el navegador automáticamente. Accede manualmente a: {url}. Error: {e}")
 
 def main():
-    """Función principal"""
-    print("🚀 INICIANDO BOT DE TRADING CON MONITOREO")
-    print("=" * 50)
-    
-    # Iniciar el bot
-    bot_process = start_bot()
-    if not bot_process:
-        print("❌ No se pudo iniciar el bot")
-        return
-    
-    print("✅ Bot iniciado correctamente")
-    print("📊 Iniciando monitor en 5 segundos...")
-    print("🌐 Dashboard estará disponible en: http://localhost:8501")
-    print("=" * 50)
-    
-    # Iniciar el monitor en un thread separado
-    monitor_thread = threading.Thread(target=start_monitor, daemon=True)
-    monitor_thread.start()
-    
-    try:
-        # Mantener el proceso principal vivo
-        while True:
-            time.sleep(1)
-            
-            # Verificar si el bot sigue corriendo
-            if bot_process.poll() is not None:
-                logger.warning("⚠️ El bot se detuvo inesperadamente")
-                break
+    """
+    Starts and monitors the bot and dashboard processes.
+    Restarts them if they crash.
+    """
+    threading.Thread(target=open_dashboard, daemon=True).start()
+    procs: Dict[str, subprocess.Popen] = {}
+    logger.info("🚀 Starting Process Supervisor v2.0...")
 
+    try:
+        while True:
+            for name, command in PROCESSES.items():
+                # Check if the process is running
+                if name not in procs or procs[name].poll() is not None:
+                    if name in procs:
+                        logger.warning(f"Process '{name}' terminated with code {procs[name].returncode}. Restarting...")
+                    else:
+                        logger.info(f"Starting process '{name}' for the first time.")
+
+                    # Start the process with flags for graceful shutdown
+                    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
+                    procs[name] = subprocess.Popen(
+                        command, 
+                        stdout=sys.stdout, 
+                        stderr=sys.stderr,
+                        creationflags=creationflags
+                    )
+                    logger.info(f"✅ Process '{name}' started with PID: {procs[name].pid}")
+
+            time.sleep(15)
     except KeyboardInterrupt:
-        print("\n🛑 Deteniendo sistema... (Enviando señal de interrupción al bot)")
-        bot_process.send_signal(signal.SIGINT)
-        try:
-            bot_process.wait(timeout=15) # Esperar 15 segundos para un cierre limpio
-            logger.info("✅ Proceso del bot detenido limpiamente.")
-        except subprocess.TimeoutExpired:
-            logger.warning("⚠️ El bot no se detuvo a tiempo, forzando terminación.")
-            bot_process.terminate()
+        logger.info("🛑 User interrupt detected. Shutting down all processes gracefully...")
+    finally:
+        for name, proc in procs.items():
+            if proc.poll() is None: # If process is still running
+                logger.info(f"Terminating process '{name}' (PID: {proc.pid})...")
+                # Send a graceful shutdown signal.
+                if sys.platform == "win32":
+                    # On Windows, CTRL_BREAK_EVENT is a reliable way to interrupt
+                    # a console process group. Using proc.send_signal is preferred.
+                    proc.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    # On Unix, SIGTERM is the standard graceful shutdown signal.
+                    proc.terminate() # Sends SIGTERM on Unix
+                
+                try:
+                    # Wait for the process to terminate gracefully.
+                    proc.wait(timeout=15)
+                    logger.info(f"✅ Process '{name}' terminated gracefully.")
+                except subprocess.TimeoutExpired:
+                    # If it doesn't respond, force kill it and its children.
+                    logger.warning(f"⚠️ Process '{name}' did not terminate in time. Forcing kill...")
+                    if sys.platform == "win32":
+                        subprocess.run(['taskkill', '/F', '/T', '/PID', str(proc.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    else:
+                        proc.kill() # Sends SIGKILL on Unix
+                    logger.info(f"✅ Process '{name}' killed.")
+        logger.info("All processes shut down. Exiting.")
 
 if __name__ == "__main__":
     main()

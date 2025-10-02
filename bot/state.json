@@ -1,12 +1,7 @@
 {
-  "equity": 16693.14,
-  "daily_pnl": -4919.450470922242,
-  "trades_today": 0,
-  "last_reset": "2025-09-10",
-  "trading_enabled": true,
-  "daily_start_equity": 23823.67,
-  "last_reset_date": "2025-09-10T08:30:00.000000+02:00",
-  "last_equity": 21612.59047092224,
-  "notified_250": true,
-  "notified_500": true
+  "equity": 29145.55,
+  "daily_start_equity": 30000.0,
+  "last_reset_date": "2025-09-22T15:34:33.987922+02:00",
+  "daily_pnl": -680.1393690989134,
+  "last_equity": 29825.689369098913
 }

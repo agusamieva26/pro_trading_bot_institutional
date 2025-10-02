@@ -858,7 +858,7 @@ CONTEXTO DEL BOT DEL USUARIO:
             elif question_type == "recommendations":
                 return await self._answer_recommendations_question(question, snapshot, metrics)
             else:
-                return await self._answer_general_question(question, user_context)
+                return await self._answer_general_question(question, user_context, snapshot)
             
         except Exception as e:
             logger.error(f"❌ Error respondiendo pregunta: {e}")
@@ -886,138 +886,143 @@ CONTEXTO DEL BOT DEL USUARIO:
             return "general"
     
     async def _answer_portfolio_question(self, question: str, snapshot: PortfolioSnapshot, metrics: PerformanceMetrics) -> str:
-        """💰 Responde preguntas sobre el estado del portafolio"""
-        return f"""
-💰 **ESTADO ACTUAL DE TU PORTAFOLIO**
+        """💰 Responde preguntas sobre el estado del portafolio usando Qwen para un tono más natural"""
+        prompt = f"""
+Eres AGUS, el asesor de IA de un bot de trading. Responde en español.
+La pregunta del usuario es: "{question}"
 
-**Capital Actual**: ${snapshot.total_equity:,.2f}
-**Cambio Diario**: ${snapshot.daily_pnl:+,.2f} ({snapshot.daily_pnl_pct:+.1f}%)
-**Cambio Total**: ${snapshot.total_pnl:+,.2f} ({snapshot.total_pnl_pct:+.1f}%)
+Usa los siguientes datos REALES del portafolio del usuario para dar una respuesta personalizada, conversacional y experta. No uses un tono robótico ni una lista de viñetas.
 
-Tu bot comenzó con $30,000 y actualmente tiene ${snapshot.total_equity:,.2f}. 
-{'📉 Estás en drawdown' if snapshot.total_pnl < 0 else '📈 Estás en ganancia'}, 
-pero el sistema de gestión de riesgo está protegiendo tu capital.
+DATOS DEL PORTAFOLIO:
+- Capital Actual: ${snapshot.total_equity:,.2f}
+- Cambio Diario: ${snapshot.daily_pnl:+,.2f} ({snapshot.daily_pnl_pct:+.1f}%)
+- Cambio Total (desde $30,000): ${snapshot.total_pnl:+,.2f} ({snapshot.total_pnl_pct:+.1f}%)
+- Posiciones Activas: {len(snapshot.positions)}
+- Efectivo Disponible: ${snapshot.cash:,.2f}
+- Poder de Compra: ${snapshot.buying_power:,.2f}
+- Estado del Sistema: {'EMERGENCIA (drawdown significativo)' if snapshot.total_equity < 20000 else 'NORMAL'}
 
-**Posiciones Activas**: {len(snapshot.positions)} trades
-**Efectivo Disponible**: ${snapshot.cash:,.2f}
-**Poder de Compra**: ${snapshot.buying_power:,.2f}
-
-{'🚨 Tu bot está en modo emergencia debido al drawdown significativo.' if snapshot.total_equity < 20000 else '✅ Tu bot está operando en modo normal.'}
+INSTRUCCIONES:
+1. Empieza saludando y reconociendo la pregunta sobre el portafolio.
+2. Presenta los datos clave de forma fluida y natural. Por ejemplo: "Actualmente, tu capital total es de...".
+3. Explica qué significan los números. Si el P&L diario es negativo, menciónalo como un día difícil pero normal en el trading.
+4. Ofrece un breve insight o conclusión sobre el estado general (ej. "Aunque hoy ha sido un día de retroceso, el sistema de riesgo está activo...").
+5. Termina de forma proactiva, preguntando si quiere analizar algo en más detalle, como las posiciones activas.
 """
+        return await self._generate_qwen_response(prompt, question)
     
     async def _answer_performance_question(self, question: str, metrics: PerformanceMetrics) -> str:
-        """📈 Responde preguntas sobre rendimiento"""
+        """📈 Responde preguntas sobre rendimiento usando Qwen."""
         performance_grade = "A" if metrics.win_rate > 60 and metrics.profit_factor > 1.2 else \
                            "B" if metrics.win_rate > 50 and metrics.profit_factor > 1 else \
                            "C" if metrics.win_rate > 40 else "D"
         
-        return f"""
-📈 **ANÁLISIS DE RENDIMIENTO DE TU BOT**
+        prompt = f"""
+Eres AGUS, el asesor de IA de un bot de trading. Responde en español.
+La pregunta del usuario es: "{question}"
 
-**Calificación General**: {performance_grade}
+Usa las siguientes métricas de rendimiento para dar un análisis conversacional y experto. No te limites a listar los datos.
 
-**Métricas Clave**:
-• Win Rate: {metrics.win_rate:.1f}% ({'Excelente' if metrics.win_rate > 60 else 'Bueno' if metrics.win_rate > 50 else 'Mejorable'})
-• Profit Factor: {metrics.profit_factor:.2f} ({'Positivo' if metrics.profit_factor > 1 else 'Negativo'})
-• Sharpe Ratio: {metrics.sharpe_ratio:.2f}
+MÉTRICAS DE RENDIMIENTO:
+- Calificación General: {performance_grade}
+- Win Rate: {metrics.win_rate:.1f}%
+- Profit Factor: {metrics.profit_factor:.2f}
+- Sharpe Ratio: {metrics.sharpe_ratio:.2f}
+- Total de Trades: {metrics.trades_count}
+- Mejor Trade: {metrics.best_trade_pct:+.1f}%
+- Peor Trade: {metrics.worst_trade_pct:+.1f}%
+- Racha ganadora máxima: {metrics.consecutive_wins}
+- Racha perdedora máxima: {metrics.consecutive_losses}
 
-**Estadísticas de Trading**:
-• Total de Trades: {metrics.trades_count}
-• Mejor Trade: {metrics.best_trade_pct:+.1f}%
-• Peor Trade: {metrics.worst_trade_pct:+.1f}%
-• Duración Promedio: {metrics.avg_trade_duration:.0f} minutos
-
-**Rachas**:
-• Mejor racha ganadora: {metrics.consecutive_wins} trades consecutivos
-• Peor racha perdedora: {metrics.consecutive_losses} trades consecutivos
-
-{f'Tu bot está atravesando una mala racha, pero esto es normal en el trading.' if metrics.consecutive_losses > 3 else 'El rendimiento del bot está dentro de los parámetros esperados.'}
+INSTRUCCIONES:
+1. Comienza abordando la pregunta del usuario sobre el rendimiento.
+2. Otorga la calificación general ({performance_grade}) y explica brevemente por qué.
+3. Analiza el Win Rate y el Profit Factor juntos. Si el profit factor es < 1, explica que las pérdidas superan a las ganancias en magnitud.
+4. Comenta sobre las rachas. Si la racha perdedora es alta, normaliza la situación ("es normal tener malas rachas...").
+5. Ofrece una conclusión sobre qué área necesita más atención (ej. "El win rate es decente, pero necesitamos mejorar el tamaño de las ganancias respecto a las pérdidas.").
+6. Termina de forma proactiva.
 """
+        return await self._generate_qwen_response(prompt, question)
     
     async def _answer_risk_question(self, question: str, snapshot: PortfolioSnapshot, metrics: PerformanceMetrics) -> str:
-        """⚠️ Responde preguntas sobre riesgo"""
+        """⚠️ Responde preguntas sobre riesgo usando Qwen."""
         risk_status = "🚨 ALTO" if metrics.current_drawdown_pct > 30 else \
                      "⚠️ MODERADO" if metrics.current_drawdown_pct > 15 else \
                      "✅ BAJO"
         
-        return f"""
-⚠️ **EVALUACIÓN DE RIESGO DE TU BOT**
+        recovery_needed = (1/(1-metrics.current_drawdown_pct/100)-1)*100 if metrics.current_drawdown_pct < 100 else float('inf')
 
-**Nivel de Riesgo Actual**: {risk_status}
+        prompt = f"""
+Eres AGUS, el asesor de IA de un bot de trading. Responde en español.
+La pregunta del usuario es: "{question}"
 
-**Drawdown**: {metrics.current_drawdown_pct:.1f}%
-• Tu bot ha perdido {metrics.current_drawdown_pct:.1f}% desde el capital inicial
-• Para recuperar el break-even necesita {(1/(1-metrics.current_drawdown_pct/100)-1)*100:.1f}% de ganancia
+Usa los siguientes datos de riesgo para dar una evaluación experta y tranquilizadora.
 
-**Protecciones Activas**:
-• ✅ Stop Loss automático en todas las posiciones
-• ✅ Límites de exposición máxima
-• ✅ Sistema de gestión de drawdown
-• {'🚨 Modo emergencia activado' if snapshot.total_equity < 20000 else '✅ Sistema operando normalmente'}
+DATOS DE RIESGO:
+- Nivel de Riesgo Actual: {risk_status}
+- Drawdown Actual: {metrics.current_drawdown_pct:.1f}%
+- Ganancia necesaria para recuperar: {recovery_needed:.1f}%
+- Protecciones Activas: Stop Loss, Límites de exposición, Gestión de drawdown.
+- Modo Emergencia: {'ACTIVADO' if snapshot.total_equity < 20000 else 'INACTIVO'}
 
-**Recomendaciones**:
-{f'• 🚨 Considera reducir el tamaño de posición temporalmente' if metrics.current_drawdown_pct > 25 else ''}
-{f'• 💰 Mantener más efectivo disponible' if snapshot.cash / snapshot.total_equity < 0.1 else ''}
-{f'• 🛑 Evaluar pausa temporal si las pérdidas continúan' if metrics.consecutive_losses > 5 else ''}
-{f'• ✅ Continuar con el plan actual - el riesgo está controlado' if metrics.current_drawdown_pct < 15 else ''}
-
-Tu capital está protegido por múltiples sistemas de seguridad. El drawdown es parte normal del trading.
+INSTRUCCIONES:
+1. Responde directamente a la pregunta del usuario sobre el riesgo.
+2. Informa el nivel de riesgo actual ({risk_status}) y explica qué significa el drawdown del {metrics.current_drawdown_pct:.1f}%.
+3. Es crucial que transmitas calma: enfatiza que las protecciones automáticas están activas para gestionar la situación.
+4. Menciona la ganancia necesaria para recuperar, para dar una perspectiva clara del desafío.
+5. Termina con una nota de confianza en los sistemas de seguridad del bot.
 """
+        return await self._generate_qwen_response(prompt, question)
     
     async def _answer_recommendations_question(self, question: str, snapshot: PortfolioSnapshot, metrics: PerformanceMetrics) -> str:
-        """💡 Responde preguntas sobre recomendaciones"""
+        """💡 Responde preguntas sobre recomendaciones usando Qwen."""
         recommendations = []
         
-        # Recomendaciones basadas en métricas
         if metrics.current_drawdown_pct > 30:
-            recommendations.append("🚨 CRÍTICO: Reduce la exposición inmediatamente")
+            recommendations.append("CRÍTICO: Reducir la exposición inmediatamente y pausar la apertura de nuevas posiciones.")
         elif metrics.current_drawdown_pct > 20:
-            recommendations.append("⚠️ Reduce el tamaño de posiciones en 30-50%")
+            recommendations.append("ACCIÓN URGENTE: Reducir el tamaño de las nuevas posiciones en un 50% hasta que el drawdown baje del 15%.")
         
         if metrics.win_rate < 45:
-            recommendations.append("🎯 Revisa los criterios de entrada - win rate bajo")
+            recommendations.append("MEJORAR ESTRATEGIA: Revisar los criterios de entrada del modelo, el win rate es bajo y está afectando la rentabilidad.")
         
         if metrics.profit_factor < 1:
-            recommendations.append("💰 Ajusta los profit targets y stop losses")
+            recommendations.append("AJUSTAR PARÁMETROS: Optimizar la relación take-profit/stop-loss. Las pérdidas son mayores que las ganancias.")
         
         if len(snapshot.positions) > 15:
-            recommendations.append("📊 Considera consolidar posiciones")
+            recommendations.append("DIVERSIFICACIÓN: Considerar consolidar posiciones para no dispersar demasiado el capital.")
         
         if metrics.consecutive_losses > 5:
-            recommendations.append("🛑 Pausa temporal de 24-48 horas recomendada")
+            recommendations.append("PAUSA DE SISTEMA: Recomiendo una pausa temporal de 24 horas para re-evaluar la estrategia y evitar mayores pérdidas en racha.")
         
         if not recommendations:
-            recommendations.append("✅ Tu bot está operando bien - mantén la estrategia actual")
-        
-        return f"""
-💡 **RECOMENDACIONES PERSONALIZADAS PARA TU BOT**
+            recommendations.append("MANTENER ESTRATEGIA: El bot está operando dentro de los parámetros de riesgo esperados. Mantener la configuración actual y seguir monitoreando.")
 
-Basado en tu situación actual (${snapshot.total_equity:,.2f}, {metrics.current_drawdown_pct:.1f}% drawdown):
+        prompt = f"""
+Eres AGUS, el asesor de IA de un bot de trading. Responde en español.
+La pregunta del usuario es: "{question}"
 
-{chr(10).join([f'**{i+1}.** {rec}' for i, rec in enumerate(recommendations)])}
+Has analizado la situación del bot y has generado las siguientes recomendaciones internas. Tu tarea es comunicarlas al usuario de forma clara, profesional y accionable.
 
-**Plan de Acción Inmediato**:
-• 📊 Monitorear el bot cada 2-4 horas
-• 💰 Mantener al menos 10% en efectivo
-• 🎯 Foco en preservar capital durante esta fase
-• 📈 Prepararse para incrementar exposición cuando mejoren las métricas
+DATOS DEL BOT:
+- Capital: ${snapshot.total_equity:,.2f}
+- Drawdown: {metrics.current_drawdown_pct:.1f}%
 
-**Métricas a Vigilar**:
-• Win Rate (actual: {metrics.win_rate:.1f}%) - objetivo > 50%
-• Drawdown (actual: {metrics.current_drawdown_pct:.1f}%) - mantener < 25%
-• Rachas perdedoras - máximo 5 trades consecutivos
+RECOMENDACIONES INTERNAS:
+{chr(10).join([f'- {rec}' for rec in recommendations])}
 
-¿Te gustaría que profundice en alguna recomendación específica?
+INSTRUCCIONES:
+1.  Comienza reconociendo la petición de consejo o estrategia.
+2.  Presenta las recomendaciones más importantes de forma ordenada. No uses la palabra "internas".
+3.  Para cada recomendación, explica brevemente el "porqué" (ej. "Recomiendo reducir la exposición PORQUE el drawdown actual es crítico").
+4.  Define un "Plan de Acción Inmediato" con 2-3 pasos concretos que el usuario (o el bot) debería tomar.
+5.  Finaliza indicando qué métricas clave se deben vigilar para saber si las acciones están funcionando.
 """
+        return await self._generate_qwen_response(prompt, question)
     
-    async def _answer_general_question(self, question: str, user_context: str) -> str:
-        """🤖 Responde preguntas generales usando Qwen 2.5"""
-        if not QWEN_AVAILABLE or qwen_generate_response is None:
-            return "❌ Lo siento, el sistema AI no está disponible en este momento."
-        
-        try:
-            # Preparar prompt contextual
-            prompt = f"""
+    async def _answer_general_question(self, question: str, user_context: str, snapshot: PortfolioSnapshot) -> str:
+        """🤖 Responde preguntas generales usando Qwen 2.5 a través del helper."""
+        prompt = f"""
 Eres AGUS, el asistente inteligente del bot de trading del usuario. 
 Responde en español de manera específica y práctica.
 
@@ -1028,27 +1033,32 @@ PREGUNTA DEL USUARIO: {question}
 Proporciona una respuesta específica basada en la situación actual del bot del usuario.
 Mantén el tono profesional pero amigable. Incluye datos concretos cuando sea relevante.
 """
-            
-            # Generar respuesta con Qwen
+        return await self._generate_qwen_response(prompt, question)
+
+    async def _generate_qwen_response(self, prompt: str, original_question: str) -> str:
+        """Genera una respuesta usando Qwen y maneja fallbacks."""
+        if not QWEN_AVAILABLE or qwen_generate_response is None:
+            return "❌ Lo siento, el sistema AI no está disponible en este momento."
+        
+        try:
+            # Usar una temperatura ligeramente más alta para respuestas más naturales
             response = qwen_generate_response(
                 prompt,
-                temperature=0.3,
+                temperature=0.4,
                 max_tokens=800
             )
             
-            # Agregar al historial
             self.conversation_history.append({
                 "timestamp": datetime.now(),
-                "question": question,
+                "question": original_question,
                 "response": response,
-                "context": user_context
+                "ai_model": "qwen-2.5-advisory"
             })
             
             return response
-            
         except Exception as e:
-            logger.error(f"❌ Error con Qwen 2.5: {e}")
-            return f"❌ Error procesando tu pregunta con AI: {e}"
+            logger.error(f"❌ Error con Qwen 2.5 en Advisory: {e}")
+            return f"❌ Error procesando tu pregunta con la IA: {e}"
 
 
 class AGUSAdvisorySystem:

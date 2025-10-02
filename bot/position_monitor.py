@@ -16,6 +16,7 @@ from .telegram import alert_trade_exit, alert_risk_stop
 from .util import logger, should_skip_realtime_pricing, get_cache_ttl_for_symbol
 from .symbol_manager import symbol_manager
 from .data import fetch_bars
+from .symbol_configs import get_symbol_config
 from .features import make_features
 from .liquidity_unlocker import liquidity_unlocker
 
@@ -224,6 +225,179 @@ def _execute_partial_close(pos, symbol: str, qty: float, current_price: float, p
             
     except Exception as e:
         logger.error(f"❌ Error ejecutando cierre parcial {symbol}: {e}")
+
+
+def _intelligent_crypto_closure(positions, exposure_ratio: float):
+    """
+    🚨 CRISIS MODE: Cierre selectivo inteligente de posiciones crypto.
+    Evalúa potencial y cierra las peores primero para reducir exposición.
+    """
+    try:
+        # Filtrar solo posiciones crypto
+        crypto_positions = []
+        for pos in positions:
+            symbol = normalize_symbol(getattr(pos, 'symbol', ''))
+            if symbol_manager.is_crypto(symbol):
+                crypto_positions.append((pos, symbol))
+        
+        if not crypto_positions:
+            return
+        
+        from .config import settings
+        logger.critical(f"🚨 CRISIS MODE: Exposición {exposure_ratio:.1%} ≥ {settings.max_gross_exposure:.0%} - evaluando {len(crypto_positions)} cryptos")
+        
+        # Evaluar cada posición crypto
+        crypto_evaluations = []
+        for pos, symbol in crypto_positions:
+            try:
+                evaluation = _evaluate_crypto_position(pos, symbol)
+                if evaluation:
+                    crypto_evaluations.append(evaluation)
+            except Exception as e:
+                logger.error(f"❌ Error evaluando {symbol}: {e}")
+        
+        if not crypto_evaluations:
+            return
+        
+        # Ordenar por score (peores primero)
+        crypto_evaluations.sort(key=lambda x: x['score'])
+        
+        # Cerrar posiciones de peor performance hasta salir de Crisis Mode
+        target_exposure = 0.45  # Reducir a 45%
+        closed_count = 0
+        
+        for evaluation in crypto_evaluations:
+            symbol = evaluation['symbol']
+            score = evaluation['score']
+            pnl_pct = evaluation['pnl_pct']
+            
+            # Verificar si aún estamos en Crisis Mode
+            from .exposure import get_total_exposure_ratio
+            current_exposure = get_total_exposure_ratio()
+            
+            if current_exposure < target_exposure:
+                logger.info(f"✅ Crisis Mode resuelto: Exposición reducida a {current_exposure:.1%}")
+                break
+            
+            # Criterio de cierre: Score bajo O pérdidas significativas
+            should_close = (
+                score < 0.3 or  # Score muy bajo
+                pnl_pct < -0.02 or  # Perdiendo >2%
+                (pnl_pct < 0.005 and score < 0.5)  # Poco profit y score medio
+            )
+            
+            if should_close:
+                logger.critical(f"⚡ CIERRE SELECTIVO: {symbol} | Score: {score:.2f}, P&L: {pnl_pct:+.2%}")
+                
+                from .execution import close_position
+                success = close_position(symbol, force_close=False)
+                
+                if success:
+                    closed_count += 1
+                    logger.info(f"✅ {symbol} cerrado exitosamente ({closed_count}/{len(crypto_evaluations)})")
+                else:
+                    logger.warning(f"⚠️ {symbol}: Fallo al cerrar")
+            else:
+                logger.info(f"🔒 MANTENIDO: {symbol} | Score: {score:.2f}, P&L: {pnl_pct:+.2%} (buen potencial)")
+        
+        if closed_count > 0:
+            logger.critical(f"🎯 Crisis Mode: {closed_count} posiciones crypto cerradas selectivamente")
+        else:
+            logger.warning(f"⚠️ Crisis Mode: Todas las cryptos tienen buen potencial - esperando")
+    
+    except Exception as e:
+        logger.error(f"❌ Error en intelligent crypto closure: {e}")
+
+
+def _evaluate_crypto_position(pos, symbol: str) -> dict:
+    """
+    Evalúa el potencial de una posición crypto basado en:
+    - P&L actual
+    - Momentum de precio
+    - Tiempo de holding
+    - Valor de la posición
+    """
+    try:
+        qty = float(getattr(pos, 'qty', 0))
+        entry_price = float(getattr(pos, 'avg_entry_price', 0))
+        market_value = abs(float(getattr(pos, 'market_value', 0)))
+        
+        # Obtener precio actual
+        current_price = _get_current_price(symbol)
+        if not current_price:
+            return None
+        
+        # Calcular P&L
+        if qty > 0:  # LONG
+            pnl = (current_price - entry_price) * qty
+            pnl_pct = (current_price - entry_price) / entry_price
+        else:  # SHORT
+            pnl = (entry_price - current_price) * abs(qty)
+            pnl_pct = (entry_price - current_price) / entry_price
+        
+        # Calcular score compuesto (0.0 = peor, 1.0 = mejor)
+        score = 0.0
+        
+        # 1. P&L Component (50% del score)
+        if pnl_pct > 0.02:  # >2% profit
+            pnl_score = 1.0
+        elif pnl_pct > 0.01:  # 1-2% profit
+            pnl_score = 0.8
+        elif pnl_pct > 0:  # Small profit
+            pnl_score = 0.6
+        elif pnl_pct > -0.01:  # Small loss
+            pnl_score = 0.4
+        elif pnl_pct > -0.02:  # Medium loss
+            pnl_score = 0.2
+        else:  # Big loss
+            pnl_score = 0.0
+        
+        score += pnl_score * 0.5
+        
+        # 2. Position Size Component (20% del score)
+        # Posiciones más grandes tienen más impacto en exposure
+        if market_value > 100:  # >$100
+            size_score = 0.3  # Más propensas a cerrar
+        elif market_value > 50:  # $50-100
+            size_score = 0.5
+        else:  # <$50
+            size_score = 0.8  # Menos propensas a cerrar
+        
+        score += size_score * 0.2
+        
+        # 3. Momentum Component (30% del score)
+        # Simple momentum basado en cambio de precio reciente
+        try:
+            momentum_score = 0.5  # Default neutral
+            
+            # Si hay mucho profit, asumir momentum positivo
+            if pnl_pct > 0.015:
+                momentum_score = 0.9
+            elif pnl_pct > 0.005:
+                momentum_score = 0.7
+            elif pnl_pct < -0.015:
+                momentum_score = 0.1
+            elif pnl_pct < -0.005:
+                momentum_score = 0.3
+            
+            score += momentum_score * 0.3
+            
+        except Exception:
+            score += 0.5 * 0.3  # Default momentum
+        
+        return {
+            'symbol': symbol,
+            'score': min(1.0, max(0.0, score)),  # Clamp entre 0-1
+            'pnl': pnl,
+            'pnl_pct': pnl_pct,
+            'market_value': market_value,
+            'current_price': current_price,
+            'entry_price': entry_price
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Error evaluando posición {symbol}: {e}")
+        return None
         return False
 
 def normalize_symbol(symbol: str) -> str:
@@ -480,6 +654,9 @@ def monitor_closed_positions(clf):
                 # Obtener edad de la posición
                 position_age_minutes = _get_position_age_minutes(symbol, position_times)
                 
+                # 💎 OBTENER CONFIGURACIÓN PERSONALIZADA PARA EL SÍMBOLO
+                symbol_config = get_symbol_config(symbol)
+                
                 # --- PRIORITY 0: TRAILING STOPS & PARTIAL PROFIT (nocturnal optimization) ---
                 trailing_info = _update_position_state(symbol, current_price, position_states)
                 
@@ -503,24 +680,32 @@ def monitor_closed_positions(clf):
                 # --- PRIORITY 1: TIME-BASED EXIT SYSTEM (antes que TP/SL tradicional) ---
                 
                 # A) CIERRE FORZADO (2-4 horas para crypto, 75min para stocks): Timing inteligente
+                # 🛡️ PDT CHECK: Antes de cualquier cierre, verificar si es una acción abierta hoy
+                is_stock_opened_today = False
+                if not symbol_manager.is_crypto(symbol):
+                    # Asumimos que la posición se abrió hoy si está en el tracking de tiempos
+                    # y tiene menos de 1 día de antigüedad.
+                    # Una lógica más robusta podría usar la API de Alpaca para obtener la fecha de apertura.
+                    if position_age_minutes > 0 and position_age_minutes < (60 * 16): # Menos de 16 horas de mercado
+                        is_stock_opened_today = True
+
+
                 # 🚀 CRYPTO 24/7: 24 horas para permitir movimientos nocturnos y recuperación
                 # 📈 STOCKS: 75min durante horario de mercado
-                is_crypto_position = "/" in symbol or (symbol.endswith("USD") and len(symbol) <= 6)
-                
-                if is_crypto_position:
+                if symbol_manager.is_crypto(symbol):
                     # Crypto: 24 horas para permitir recuperación completa
-                    max_time_crypto = 1440  # 24 horas (1440 minutos)
+                    max_time_force = 1440  # 24 horas (1440 minutos)
                 else:
                     # Stocks: mantener 75min original
-                    max_time_crypto = settings.max_position_time_force
+                    max_time_force = settings.max_position_time_force
                 
-                if position_age_minutes >= max_time_crypto:
+                if not is_stock_opened_today and position_age_minutes >= max_time_force:
                     # EXCEPCIÓN: Mantener si P&L > 1.2% Y señal ML sigue fuerte
                     keep_position = False
                     if pnl_pct > settings.min_pnl_keep_long:
                         try:
                             # Verificar si la señal ML sigue fuerte
-                            df = fetch_bars(symbol, start="2023-01-01")
+                            df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                             if not df.empty and len(df) >= 100:
                                 feats = make_features(df, symbol=symbol)
                                 latest = feats.iloc[-1]
@@ -540,23 +725,23 @@ def monitor_closed_positions(clf):
                     
                     if not keep_position:
                         should_close = True
-                        if is_crypto_position:
-                            hours = max_time_crypto / 60
-                            reason = f"🕐 CIERRE FORZADO CRYPTO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min ({hours:.1f}h)"
+                        if symbol_manager.is_crypto(symbol):
+                            hours = max_time_force / 60
+                            reason = f"🕐 CIERRE FORZADO CRYPTO: {position_age_minutes:.0f}min ≥ {max_time_force}min ({hours:.1f}h)"
                         else:
-                            reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {max_time_crypto}min"
+                            reason = f"🕐 CIERRE FORZADO: {position_age_minutes:.0f}min ≥ {max_time_force}min"
                     else:
                         logger.info(f"⚡ {symbol}: MANTENIDO tras {position_age_minutes:.0f}min (P&L: {pnl_pct:+.2%}, señal fuerte)")
                 
                 # B) CIERRE ESTANCADO (30-45 minutos): Posiciones que no van a ningún lado
-                elif position_age_minutes >= settings.max_position_time_normal:
+                elif not is_stock_opened_today and position_age_minutes >= settings.max_position_time_normal:
                     # Condición 1: P&L estancado (-0.3% a +0.7%)
                     is_stagnant = settings.stagnant_pnl_min <= pnl_pct <= settings.stagnant_pnl_max
                     
                     # Condición 2: Señal ML se debilitó significativamente
                     ml_weakened = False
                     try:
-                        df = fetch_bars(symbol, start="2023-01-01")
+                        df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                         if not df.empty and len(df) >= 100:
                             feats = make_features(df, symbol=symbol)
                             latest = feats.iloc[-1]
@@ -580,22 +765,25 @@ def monitor_closed_positions(clf):
                         reason = f"🕐 CIERRE POR TIEMPO: {position_age_minutes:.0f}min, {condition}"
                 
                 # --- PRIORITY 2: TRADITIONAL TP/SL/ML (solo si NO hay cierre por tiempo) ---
-                if not should_close:
+                if not should_close and not is_stock_opened_today:
                     
-                    # 1. TAKE PROFIT: Cerrar si ganancia >= 1.5%
-                    if pnl_pct >= settings.take_profit_pct:
-                        should_close = True
-                        reason = f"TAKE PROFIT alcanzado: {pnl_pct:.2%} >= {settings.take_profit_pct:.2%}"
+                    # 1. TAKE PROFIT: Usar TP/SL específico del símbolo
+                    take_profit_pct = symbol_config.take_profit_pct
+                    stop_loss_pct = symbol_config.stop_loss_pct
                     
-                    # 2. STOP LOSS: Cerrar si pérdida >= 0.7%
-                    elif pnl_pct <= -settings.stop_loss_pct:
+                    if pnl_pct >= take_profit_pct:
                         should_close = True
-                        reason = f"STOP LOSS activado: {pnl_pct:.2%} <= -{settings.stop_loss_pct:.2%}"
+                        reason = f"TAKE PROFIT ({symbol}) alcanzado: {pnl_pct:.2%} >= {take_profit_pct:.2%}"
+                    
+                    # 2. STOP LOSS: Usar TP/SL específico del símbolo
+                    elif pnl_pct <= -stop_loss_pct:
+                        should_close = True
+                        reason = f"STOP LOSS ({symbol}) activado: {pnl_pct:.2%} <= -{stop_loss_pct:.2%}"
                     
                     # 3. REVERSIÓN DE SEÑAL ML (solo si NO se activó TP/SL)
                     else:
                         try:
-                            df = fetch_bars(symbol, start="2023-01-01")
+                            df = fetch_bars(symbol, limit=200) # 🚀 FIX: Fetch only recent data
                             if not df.empty and len(df) >= 100:
                                 feats = make_features(df, symbol=symbol)
                                 latest = feats.iloc[-1]
@@ -617,6 +805,10 @@ def monitor_closed_positions(clf):
                                     logger.debug(f"⚠️ Features faltantes para {symbol}: {missing[:3]}... (TP/SL aún evalúa)")
                         except Exception as e:
                             logger.debug(f"⚠️ Error ML para {symbol}: {e} (TP/SL aún funciona)")
+                
+                elif is_stock_opened_today:
+                    logger.debug(f"🚫 PDT HOLD: {symbol} se abrió hoy. Cierre pospuesto para evitar restricción PDT.")
+
 
                 # EJECUTAR CIERRE si cualquier condición se cumplió
                 if should_close:

@@ -12,8 +12,6 @@ import asyncio
 import concurrent.futures
 from dataclasses import dataclass
 
-# the newest OpenAI model is "gpt-5" which was released August 7, 2025.
-# do not change this unless explicitly requested by the user
 from openai import OpenAI
 import trafilatura
 
@@ -55,7 +53,7 @@ class AITradingAssistant:
             api_key = os.environ.get("OPENAI_API_KEY")
             if api_key:
                 self.openai_client = OpenAI(api_key=api_key)
-                logger.info("🧠 IA Personal inicializada con OpenAI GPT-5")
+                logger.info("🧠 IA Personal inicializada con OpenAI")
             else:
                 logger.warning("⚠️ OPENAI_API_KEY no configurado - funciones de IA limitadas")
         except Exception as e:
@@ -144,7 +142,7 @@ class AITradingAssistant:
             combined_text = " ".join(news_articles)[:4000]  # Limitar tokens
             
             response = self.openai_client.chat.completions.create(
-                model="gpt-5",  # the newest OpenAI model is "gpt-5"
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",
@@ -210,7 +208,7 @@ class AITradingAssistant:
             """
             
             response = self.openai_client.chat.completions.create(
-                model="gpt-5",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",

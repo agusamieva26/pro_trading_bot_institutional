@@ -1,7 +1,6 @@
 # fly.toml app configuration file generated for ai-trading-bot
 app = "ai-trading-bot"
 primary_region = "iad"
-console_command = "/app/bin/console"
 
 [build]
   dockerfile = "Dockerfile"
@@ -12,26 +11,21 @@ console_command = "/app/bin/console"
   MODE = "paper"
   LOG_LEVEL = "INFO"
 
-[[services]]
-  protocol = "tcp"
-  internal_port = 8080
-  processes = ["app"]
-
-[[services.ports]]
-  port = 80
-  handlers = ["http"]
-
-[[services.ports]]
-  port = 443
-  handlers = ["tls", "http"]
-
 [http_service]
-  internal_port = 8080
+  internal_port = 8501 # Puerto del dashboard Streamlit
   force_https = true
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
   processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health"
+    port = 8080 # Puerto del health_server.py
+    grace_period = "30s"
 
 # Resource allocation for trading bot
 [[vm]]
@@ -40,15 +34,5 @@ console_command = "/app/bin/console"
   memory_mb = 2048
 
 # Keep the bot running 24/7
-[[processes]]
-  [processes.app]
-    cmd = ["python", "-u", "-m", "bot.main"]
-    entrypoint = []
-
-# Health checks
-[[http_service.checks]]
-  grace_period = "10s"
-  interval = "30s"
-  method = "GET"
-  timeout = "5s"
-  path = "/health"
+[processes]
+  app = "python -u start_and_monitor.py"

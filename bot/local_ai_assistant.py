@@ -32,25 +32,28 @@ class LocalAITradingAssistant:
     """
     
     def __init__(self):
-        self.local_api_url = "http://localhost:8080/v1"  # LocalAI endpoint
-        self.model_name = "microsoft/DialoGPT-large"  # Modelo por defecto
+        # Usar la misma configuración de API que Qwen para consistencia
+        self.api_base_url = os.environ.get("QWEN_API_BASE_URL", "https://api.together.xyz/v1")
+        self.api_key = os.environ.get("QWEN_API_KEY")
+        self.model_name = os.environ.get("QWEN_MODEL_NAME", "Qwen/Qwen1.5-7B-Chat")
+        
         self.available = self._check_availability()
         
         if self.available:
-            logger.info("🤖 IA Local GRATUITA activada - ¡Sin límites ni costos!")
+            logger.info(f"🤖 IA basada en API activada ({self.model_name})")
         else:
             logger.info("💤 IA Local no iniciada - usando análisis básico")
     
     def _check_availability(self) -> bool:
         """Verifica si LocalAI está corriendo"""
         try:
-            response = requests.get(f"{self.local_api_url}/models", timeout=3)
-            return response.status_code == 200
+            # Verificar si la API key está configurada
+            return bool(self.api_key)
         except:
             return False
     
     def _local_ai_request(self, prompt: str, system_prompt: str = "") -> str:
-        """Hace request a LocalAI (compatible con OpenAI API)"""
+        """Hace request a la API configurada (compatible con OpenAI)"""
         try:
             messages = []
             if system_prompt:
@@ -58,14 +61,19 @@ class LocalAITradingAssistant:
             messages.append({"role": "user", "content": prompt})
             
             payload = {
-                "model": self.model_name,
+                "model": self.model_name, # Usar el modelo configurado
                 "messages": messages,
                 "temperature": 0.7,
                 "max_tokens": 300
             }
             
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
             response = requests.post(
-                f"{self.local_api_url}/chat/completions",
+                f"{self.api_base_url}/chat/completions",
                 json=payload,
                 timeout=30
             )
@@ -77,7 +85,7 @@ class LocalAITradingAssistant:
                 return f"Error: {response.status_code}"
                 
         except Exception as e:
-            return f"Error local AI: {e}"
+            return f"Error en API request: {e}"
     
     async def analyze_trading_sentiment(self, symbol: str, market_data: str) -> Dict:
         """
@@ -227,31 +235,20 @@ Mantén un tono profesional y directo."""
         """
         🚀 Instrucciones para instalar LocalAI
         """
-        setup_commands = '''
-🤖 INSTALACIÓN IA LOCAL GRATUITA:
+        setup_instructions = '''
+🤖 CONFIGURACIÓN DE IA POR API:
 
-1. Si tienes Docker:
-   docker run -p 8080:8080 localai/localai:latest-cpu
+Este bot ahora usa una API externa para la inteligencia artificial, en lugar de un modelo local.
 
-2. Sin Docker (Alternativa Ollama):
-   curl -fsSL https://ollama.com/install.sh | sh
-   ollama run microsoft/DialoGPT-large
-   
-3. Verificación:
-   Visita: http://localhost:8080/v1/models
-   
-4. Activación automática:
-   El bot detectará y usará la IA local automáticamente
-   
-💡 VENTAJAS:
-✅ 100% Gratuito forever
-✅ Completamente privado
-✅ Sin límites de uso
-✅ Compatible con OpenAI API
-✅ Miles de modelos disponibles
+1.  **Obtén una API Key**: Regístrate en un proveedor como Together.ai, Groq, o usa OpenAI.
+2.  **Configura las Variables de Entorno**:
+    export QWEN_API_KEY="tu-api-key-aqui"
+    # Opcional, si usas un proveedor diferente a Together.ai:
+    # export QWEN_API_BASE_URL="https://api.tuproveedor.com/v1"
+    # export QWEN_MODEL_NAME="nombre-del-modelo"
         '''
         
-        logger.info(setup_commands)
+        logger.info(setup_instructions)
         return True
 
 # Instancia global de IA local gratuita

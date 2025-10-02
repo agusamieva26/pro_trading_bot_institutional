@@ -4,6 +4,10 @@ Sistema de Entrenamiento y Optimización Automática
 Máquina evolutiva que se entrena y optimiza automáticamente con triggers inteligentes
 """
 
+import os
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import schedule
 import time
 import sys

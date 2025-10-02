@@ -5,6 +5,10 @@ Integra todos los componentes del sistema AI Hybrid para visualización en tiemp
 """
 
 import streamlit as st
+import os
+# 🧠 Force TensorFlow/PyTorch to use CPU only to avoid CUDA errors
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go

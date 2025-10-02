@@ -121,6 +121,14 @@ def generate_daily_report():
 
     logger.info(f"✅ Reporte diario generado: {filename}")
 
+    # ☁️ NUEVO: Subir a Google Drive
+    try:
+        from .google_drive_uploader import upload_report_to_drive
+        if settings.telegram_enabled: # Usar como flag para activar subida
+            upload_report_to_drive(filename)
+    except Exception as e:
+        logger.warning(f"❌ No se pudo subir a Google Drive: {e}")
+
     # 9. Enviar por Telegram (opcional)
     try:
         from .telegram import send_telegram

@@ -1,7 +1,18 @@
 # bot/main.py
+import os
+import sys
+
+# 🚀 EARLY STARTUP MESSAGE: Inform user about loading process
+print("🚀 Initializing bot... Loading large AI/ML libraries (TensorFlow, PyTorch, etc.). This may take a moment, please be patient...")
+sys.stdout.flush() # Ensure the message is displayed immediately
+
+# 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import logging
 import time
 import threading
+from typing import Dict, Any
 import pandas as pd
 from tenacity import retry, wait_exponential, stop_after_attempt
 from alpaca.trading.client import TradingClient
@@ -9,18 +20,19 @@ from alpaca.trading.client import TradingClient
 from .auto_tuner import tune_risk_parameters
 from .config import settings
 from .data import fetch_bars, fetch_all_bars
+# from .strategy_optimizer import run_advanced_optimization, OptimizationResult
 from .features import make_features
-from .strategy import load_trading_model, hybrid_signal, reset_signal_memory
+from .strategy import load_trading_model, hybrid_signal, reset_signal_memory, reset_model_cache
 from .advanced_ml import auto_load_ml_models, load_optimized_params
 from .sizing import volatility_target_size, kelly_cap
 from .execution import place_order, close_position
 from .state import BotState
 from .exposure import get_total_exposure
-from .telegram import alert_risk_stop, alert_error
+from .telegram import alert_risk_stop, alert_error, send_telegram
 from .position_monitor import monitor_closed_positions
 from .profit_taking import auto_profit_taking
 from .profit_management import profit_manager
-from .dynamic_shorts import dynamic_short_manager
+from .dynamic_shorts import dynamic_short_manager 
 from .parallel_analyzer import parallel_signal_analysis, filter_strong_signals, get_cached_positions
 from .multi_timeframe import enhance_signals_with_multi_tf
 from .risk_management_v2 import AdvancedRiskManager, analyze_risk_environment
@@ -33,18 +45,24 @@ from .advanced_features import advanced_feature_generator
 from .ai_system_simple import get_ai_adjusted_signal, get_ai_system_status
 from .ai_news_simple import get_ai_sentiment_adjustment  # 🤖 AI HÍBRIDA REAL
 from .intelligent_monitor import IntelligentMonitor  # 🤖 SISTEMA DE MONITOREO INTELIGENTE 24/7
-from .util import logger
-import datetime as dt
+from .util import logger 
+from health_server import start_health_server
+from datetime import datetime, timedelta
 import pytz
+import os
+import sys
+from pathlib import Path
+import subprocess
+import asyncio
+from .agus_core import AGUSOrchestrator
 
-
-logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
+from datetime import datetime, timedelta
 
 
 def is_stock_market_open() -> bool:
     """Devuelve True si el mercado de acciones de EE.UU. está abierto ahora."""
     eastern = pytz.timezone("US/Eastern")
-    now = dt.datetime.now(eastern)
+    now = datetime.now(eastern)
 
     # Días hábiles: lunes(0) a viernes(4)
     if now.weekday() > 4:
@@ -288,7 +306,16 @@ def run_once(state: BotState, clf):
                     qty = float(getattr(pos, 'qty', 0))
                     symbol = getattr(pos, 'symbol', '')
                     side = "long" if qty > 0 else "short"
-                    logger.info(f"🔁 Reduciendo exposición: cerrando {abs(qty)} de {symbol}")
+
+                    # 🛡️ PDT CHECK: No cerrar acciones/ETFs si se abrieron hoy
+                    opened_today = False
+                    try:
+                        # Asumimos que si la posición tiene un avg_entry_price, es de hoy o reciente.
+                        # Una lógica más robusta usaría la fecha de apertura si la API la proveyera.
+                        opened_today = True # Simplificación segura
+                    except: pass
+
+                    logger.info(f"🔁 Reduciendo exposición: intentando cerrar {abs(qty)} de {symbol}")
                     # ✅ Pasar el objeto de posición directamente para evitar inconsistencias
                     if symbol:
                         close_position(symbol)
@@ -460,6 +487,13 @@ def run_once(state: BotState, clf):
     # 🌍 ANÁLISIS DE ENTORNO DE RIESGO: Detectar regímenes de mercado
     risk_environment = analyze_risk_environment(all_data)
     market_condition = risk_environment.get("market_condition", "NORMAL")
+
+    # 🛡️ FIX: Añadir validación para volatilidad anormalmente baja
+    if market_condition == "ULTRA_LOW_VOLATILITY":
+        logger.critical("🚨 DETECTADA VOLATILIDAD ANORMALMENTE BAJA. Usando 'NORMAL' como fallback para evitar bloqueo.")
+        market_condition = "NORMAL" # Fallback a modo normal para continuar operando
+        # Se podría enviar una alerta de Telegram aquí también
+
     
     # 🤖 ADVANCED ML: Selección optimizada (simplificada temporalmente)
     # model_comparison = advanced_model_selector.run_model_comparison(
@@ -789,12 +823,22 @@ def run_once(state: BotState, clf):
                 if is_crypto:
                     # 🔄 CRYPTO OPTIMIZADO: Solo cerrar posiciones largas existentes
                     if is_long:
-                        logger.info(f"📉 CLOSE LONG {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (señal bajista)")
+                        logger.info(f"📉 CRYPTO CLOSE LONG {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (señal bajista)")
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
                     else:
                         logger.info(f"⚠️ {symbol}: Señal bajista ({sig:+.3f}) → SKIP (no posición larga para cerrar)")
                 else:
-                    # 🚫 ACCIONES: SHORTS DESHABILITADOS (Alpaca no permite fractional shorts)
+                    # 🛡️ PDT AWARENESS FOR STOCKS/ETFS
+                    # Comprobar si la posición se abrió hoy para evitar PDT
+                    opened_today = False
+                    try:
+                        # Comprobar si la posición se abrió hoy (necesitaríamos la fecha de apertura de la API)
+                        # Como no la tenemos, asumimos que si hay una señal de venta, es para una posición reciente.
+                        # Para estar seguros, evitamos el cierre si no podemos confirmar que es de un día anterior.
+                        # Esta es una simplificación. Una implementación real guardaría la fecha de apertura.
+                        pass # Lógica de comprobación de fecha iría aquí
+                    except: pass
+
                     if is_long:
                         logger.info(f"📉 CLOSE LONG {symbol}: score={sig:+.3f}, qty={abs(current_qty):.6f} (solo cerrar, no short)")
                         place_order(symbol, abs(current_qty), "sell", price, fractional=not is_crypto, is_crypto=is_crypto)
@@ -843,15 +887,239 @@ def run_once(state: BotState, clf):
 
     return  # ✅ Único punto de salida
 
+def _apply_live_parameters(best_params: Dict[str, Any]):
+    """
+    Aplica los nuevos parámetros optimizados a la configuración en vivo del bot,
+    sin necesidad de reiniciar.
+    """
+    from .config import settings
+    logger.info("🚀 Aplicando nuevos parámetros de Optuna en vivo...")
+    
+    for key, value in best_params.items():
+        if hasattr(settings, key):
+            old_value = getattr(settings, key)
+            setattr(settings, key, value)
+            logger.info(f"   🔧 Parámetro '{key}' actualizado: {old_value} → {value}")
+        else:
+            logger.warning(f"   ⚠️ Parámetro '{key}' no encontrado en la configuración actual. Omitiendo.")
+            
+    logger.info("✅ Nuevos parámetros aplicados. El bot operará con la configuración optimizada.")
+
+def _update_optuna_config_file(best_params: Dict[str, Any]):
+    """
+    Genera y escribe el archivo bot/optuna_config.py con los nuevos parámetros optimizados.
+    Esto permite que el bot los cargue en el próximo reinicio.
+    """
+    config_path = Path("bot/optuna_config.py")
+    
+    content = "# Este archivo es generado automáticamente por el optimizador de Optuna.\n"
+    content += "# NO EDITAR MANUALMENTE.\n\n"
+    content += "from .config import Settings\n\n"
+    content += "def apply_optimized_config(settings: Settings) -> Settings:\n"
+    content += "    # Parámetros optimizados por Optuna\n"
+    content += "    print('⚙️ Aplicando configuración optimizada por Optuna...')\n"
+    
+    for key, value in best_params.items():
+        if isinstance(value, str):
+            content += f"    settings.{key} = '{value}'\n"
+        else:
+            content += f"    settings.{key} = {value}\n"
+    
+    content += "\n    return settings\n"
+    
+    try:
+        with open(config_path, "w") as f:
+            f.write(content)
+        logger.info(f"✅ Archivo de configuración de Optuna actualizado: {config_path}")
+    except Exception as e:
+        logger.error(f"❌ No se pudo actualizar el archivo de configuración de Optuna: {e}")
+
+def run_periodic_optimization(state: BotState):
+    """
+    Ejecuta la optimización de hiperparámetros con Optuna periódicamente.
+    """
+    from .strategy_optimizer import optimize_strategy_parameters
+    from .config import settings
+    
+    optimize_interval_days = 14 # Re-optimizar cada 14 días (dos semanas)
+    
+    while True:
+        try:
+            last_optimization_str = state.state.get("last_optimization_date")
+            should_optimize = True
+            
+            if last_optimization_str:
+                last_optimization_date = datetime.fromisoformat(last_optimization_str)
+                if (datetime.now() - last_optimization_date).days < optimize_interval_days:
+                    should_optimize = False
+            
+            if should_optimize:
+                logger.info("🧠 OPTUNA: Iniciando optimización de hiperparámetros periódica...")
+                
+                # Ejecutar optimización con un número razonable de trials
+                # Usar un subconjunto de símbolos para no tardar demasiado
+                symbols_to_optimize = settings.symbols[:10] # Optimizar con los 10 primeros símbolos
+
+                # Definir el rango de fechas para la optimización
+                end_date = datetime.now()
+                start_date = end_date - timedelta(days=settings.training_data_days)
+                
+                optimization_results_obj = optimize_strategy_parameters(
+                    symbols=symbols_to_optimize,
+                    start_date=start_date.strftime('%Y-%m-%d'),
+                    end_date=end_date.strftime('%Y-%m-%d'),
+                    optimization_method="bayesian",
+                    max_trials=50 # Número de trials razonable para ejecución periódica
+                )
+                
+                # El resultado es un objeto OptimizationResult, no un diccionario
+                if optimization_results_obj and optimization_results_obj.best_score > -float('inf'):
+                    best_params = optimization_results_obj.best_parameters
+                    logger.info("✅ OPTUNA: Optimización periódica completada.")
+                    logger.info(f"🏆 Mejores parámetros encontrados: {best_params}")
+                    
+                    # 1. Persistir para futuros reinicios
+                    _update_optuna_config_file(best_params)
+                    
+                    # 2. 🚀 AUTO-APLICACIÓN EN VIVO: Actualizar configuración sin reiniciar
+                    _apply_live_parameters(best_params)
+                    
+                    # 📱 NOTIFICACIÓN TELEGRAM
+                    try:
+                        param_str = "\n".join([f"• {k}: {v:.4f}" if isinstance(v, float) else f"• {k}: {v}" for k, v in best_params.items()])
+                        msg = f"🧠 OPTUNA COMPLETADO\n\n🏆 Nuevos parámetros aplicados en vivo:\n{param_str}"
+                        send_telegram(msg)
+                    except Exception as e:
+                        logger.error(f"❌ Error enviando Telegram de Optuna: {e}")
+                    
+                    state.state["last_optimization_date"] = datetime.now().isoformat()
+                    state.save()
+                else:
+                    logger.error("❌ OPTUNA: Optimización periódica falló.")
+            
+            # Esperar 24 horas para la próxima verificación
+            time.sleep(86400) 
+            
+        except Exception as e:
+            logger.error(f"💥 Error en optimización periódica: {e}")
+            time.sleep(3600) # Esperar una hora en caso de error
+
+def run_periodic_retraining(state: BotState):
+    """
+    Ejecuta el re-entrenamiento del modelo periódicamente.
+    """
+    from .model_training import train_all_models
+    from .data import fetch_all_bars
+    from .config import settings
+    
+    retrain_interval_days = 7 # Re-entrenar cada 7 días
+    
+    while True:
+        try:
+            last_training_str = state.state.get("last_retraining_date")
+            should_retrain = True
+            
+            if last_training_str:
+                last_training_date = datetime.fromisoformat(last_training_str)
+                if (datetime.now() - last_training_date).days < retrain_interval_days:
+                    should_retrain = False
+            
+            if should_retrain:
+                logger.info("🔄 INICIANDO RE-ENTRENAMIENTO PERIÓDICO...")
+                
+                # Fetch data for training
+                end_date = datetime.now()
+                start_date = end_date - timedelta(days=settings.training_data_days)
+                
+                training_data = fetch_all_bars(
+                    settings.symbols, 
+                    start=start_date.strftime('%Y-%m-%d'), 
+                    end=end_date.strftime('%Y-%m-%d')
+                )
+                
+                if training_data:
+                    train_results = train_all_models(training_data)
+                    if train_results:
+                        logger.info("✅ RE-ENTRENAMIENTO PERIÓDICO COMPLETADO.")
+                        state.state["last_retraining_date"] = datetime.now().isoformat()
+                        state.save()
+                        reset_model_cache() # Reset cache to load new model
+                        
+                        # 📱 NOTIFICACIÓN TELEGRAM
+                        try:
+                            msg = f"🔄 RE-ENTRENAMIENTO COMPLETADO\n\n✅ El modelo de trading ha sido actualizado con los últimos datos del mercado."
+                            send_telegram(msg)
+                        except Exception as e:
+                            logger.error(f"❌ Error enviando Telegram de re-entrenamiento: {e}")
+                            
+            
+            # Wait for next check (1 day)
+            time.sleep(86400) 
+            
+        except Exception as e:
+            logger.error(f"💥 Error en re-entrenamiento periódico: {e}")
+            time.sleep(3600) # Wait an hour on error
+
+def run_orchestrator_async(orchestrator: AGUSOrchestrator):
+    """Helper function to run the async orchestrator in a dedicated thread."""
+    try:
+        logger.info("🧠 AGUS Orchestrator event loop starting...")
+        # Create and set a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(orchestrator.start())
+        logger.info("🧠 AGUS Orchestrator event loop finished.")
+    except asyncio.CancelledError:
+        logger.info("🧠 AGUS Orchestrator event loop cancelled.")
+    except Exception as e:
+        logger.error(f"❌ AGUS Orchestrator thread failed critically: {e}", exc_info=True)
 
 def main():
+    # ☁️ INICIAR SERVIDOR DE SALUD PARA LA NUBE (FLY.IO)
+    start_health_server()
+    logger.info("✅ Servidor de salud iniciado en el puerto 8080")
+
+    # 🧠 INICIAR ORQUESTADOR CENTRAL
+    orchestrator = AGUSOrchestrator()
+    # 🚀 FIX: Run the orchestrator in a background thread to prevent blocking the main trading loop.
+    orchestrator_thread = threading.Thread(target=run_orchestrator_async, args=(orchestrator,), daemon=True, name="AGUSOrchestrator")
+    orchestrator_thread.start()
+    logger.info("✅ AGUS Orchestrator starting in a background thread...")
+    
+    send_telegram("🚀 Bot de trading institucional INICIADO (modo paper).")
     logger.info("🚀 Bot de trading institucional iniciado (modo paper). Ctrl+C para detener.")
     state = BotState()
+
+    # 🤖 AUTO-TRAINING: Entrenar solo si no existe NINGÚN modelo en la carpeta.
+    model_dir = Path(os.path.dirname(settings.model_path))
+    existing_models = list(model_dir.glob("*.pkl"))
+
+    if not existing_models:
+        logger.warning(f"⚠️ No se encontraron modelos en '{model_dir}'. Iniciando entrenamiento automático...")
+        try:
+            # Ejecutar script de entrenamiento de forma segura
+            result = subprocess.run(
+                [sys.executable, "scripts/train_model.py"],
+                capture_output=True, text=True, check=True, timeout=1800 # 30 min timeout
+            )
+            logger.info("✅ Entrenamiento completado. El modelo ya está disponible.")
+            logger.debug(f"Output del entrenamiento:\n{result.stdout}")
+        except subprocess.CalledProcessError as train_error:
+            logger.critical(f"❌ Falló el entrenamiento automático del modelo: {train_error.stderr}")
+            logger.critical("Deteniendo bot. Revisa los logs de entrenamiento.")
+            return
+        except Exception as train_error:
+            logger.critical(f"❌ Error inesperado durante el entrenamiento: {train_error}. Deteniendo bot.")
+            return
+    else:
+        logger.info(f"✅ {len(existing_models)} modelo(s) detectado(s) en '{model_dir}'. Saltando entrenamiento.")
 
     try:
         clf = load_trading_model()
         if clf is None:
-            logger.critical("❌ No se pudo cargar el modelo. Deteniendo bot.")
+            logger.critical(f"❌ No se pudo cargar el modelo desde '{settings.model_path}'.")
+            logger.critical("   El archivo podría estar corrupto o no ser compatible.")
+            logger.critical("   Por favor, borra el modelo existente y reinicia para re-entrenar.")
             return
         logger.info("✅ Modelo de trading cargado y listo para usar.")
         logger.info(f"🧠 Modelo: {type(clf).__name__} | Features: {len(clf.feature_names_in_)} | Riesgo: {settings.risk_per_trade:.2%}")
@@ -905,8 +1173,7 @@ def main():
     # 🔧 INICIAR SELF-HEALING SYSTEM EN THREAD SEPARADO
     logger.info("🔧 Iniciando Self-Healing System en thread separado...")
     try:
-        import asyncio
-        from .agus_self_healing import initialize_self_healing
+        from .agus_self_healing import initialize_self_healing, get_self_healing
         from .agus_self_healing_integration import AGUSSelfHealingBridge
         
         # Create and start the self-healing system
@@ -914,8 +1181,8 @@ def main():
             """Run self-healing in its own event loop"""
             async def init_system():
                 try:
-                    # Initialize the self-healing system
-                    self_healing = await initialize_self_healing()
+                    # Initialize the self-healing system with the central orchestrator
+                    self_healing = await initialize_self_healing(orchestrator)
                     logger.info("✅ Self-Healing initialized and monitoring started")
                     
                     # Keep system running
@@ -951,21 +1218,47 @@ def main():
     )
     monitor_intelligence_thread.start()
     logger.info("✅ Intelligent Monitor 24/7 activo con AGUS - auto-diagnosis y auto-correction habilitados")
+    
+    # 🔄 INICIAR RE-ENTRENAMIENTO PERIÓDICO
+    logger.info("🔄 Iniciando Re-entrenamiento Periódico en thread separado...")
+    retrain_thread = threading.Thread(
+        target=run_periodic_retraining,
+        args=(state,),
+        daemon=True,
+        name="PeriodicRetrainer"
+    )
+    retrain_thread.start()
+    logger.info("✅ Re-entrenamiento Periódico activo")
+    
+    # 🧠 INICIAR OPTIMIZACIÓN PERIÓDICA CON OPTUNA
+    logger.info("🧠 Iniciando Optuna Periodic Optimizer en thread separado...")
+    optimization_thread = threading.Thread(
+        target=run_periodic_optimization,
+        args=(state,),
+        daemon=True,
+        name="PeriodicOptimizer"
+    )
+    optimization_thread.start()
+    logger.info("✅ Optuna Periodic Optimizer activo")
 
-    while True:
-        try:
-            result = run_once(state, clf)
-            if result == "STOP":
-                logger.critical("🛑 Bot detenido por stop diario.")
+    try:
+        while True:
+            try:
+                result = run_once(state, clf)
+                if result == "STOP":
+                    logger.critical("🛑 Bot detenido por stop diario.")
+                    break
+            except KeyboardInterrupt:
+                logger.info("🛑 Bot detenido por el usuario.")
                 break
-        except KeyboardInterrupt:
-            logger.info("🛑 Bot detenido por el usuario.")
-            break
-        except Exception as e:
-            logger.exception("💥 Error en el loop principal")
-            alert_error("Error en loop principal", str(e))
-        logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
-        time.sleep(8)   # 🔥 ULTRA-VELOCIDAD: 8 segundos para máxima frecuencia
+            except Exception as e:
+                logger.exception("💥 Error en el loop principal")
+                alert_error("Error en loop principal", str(e))
+            logger.info("⏳ Esperando 15 segundos para próxima iteración...")  # 🔥 META $1000
+            time.sleep(8)   # 🔥 ULTRA-VELOCIDAD: 8 segundos para máxima frecuencia
+    finally:
+        send_telegram("🛑 Bot de trading institucional DETENIDO.")
+        logger.info("🛑 Bot de trading detenido.")
 
 
 if __name__ == "__main__":

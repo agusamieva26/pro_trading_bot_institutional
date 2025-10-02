@@ -17,6 +17,12 @@ except ImportError:
     logger.warning("⚠️ joblib not available - model persistence disabled")
 _trading_model_instance = None
 
+def reset_model_cache():
+    """Resetea el modelo en caché para forzar la recarga."""
+    global _trading_model_instance
+    _trading_model_instance = None
+    logger.info("🔄 Cache del modelo de trading reseteado.")
+
 # =========================
 # 📊 Análisis de Fibonacci
 # =========================

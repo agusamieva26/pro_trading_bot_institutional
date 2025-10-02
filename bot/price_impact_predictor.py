@@ -163,38 +163,38 @@ class NewsDataCollector:
             logger.error(f"❌ Error registrando evento: {e}")
             return False
     
+    async def _update_price_after_delay(self, record_id: int, symbol: str, delay_seconds: int, column_name: str):
+        """Espera un delay y actualiza un campo de precio en la BD."""
+        try:
+            await asyncio.sleep(delay_seconds)
+            
+            # Obtener precio actualizado
+            updated_price = await self._get_current_price(symbol)
+            if updated_price:
+                # Actualizar base de datos
+                with sqlite3.connect(self.db_path) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute(f"""
+                        UPDATE price_movements 
+                        SET {column_name} = ? 
+                        WHERE id = ?
+                    """, (updated_price, record_id))
+                    conn.commit()
+                
+                logger.debug(f"🔄 {symbol} {column_name}: ${updated_price:.4f} (record: {record_id})")
+        except Exception as e:
+            logger.debug(f"Error actualizando precio {column_name} para record {record_id}: {e}")
+
     async def _schedule_price_updates(self, record_id: int, symbol: str):
-        """Programa actualizaciones de precio en intervalos específicos"""
-        
+        """Programa actualizaciones de precio en intervalos específicos de forma concurrente."""
         update_intervals = [
             (900, "price_after_15m"),   # 15 minutos
             (3600, "price_after_1h"),   # 1 hora
             (14400, "price_after_4h"),  # 4 horas
             (86400, "price_after_24h")  # 24 horas
         ]
-        
         for delay_seconds, column_name in update_intervals:
-            try:
-                await asyncio.sleep(delay_seconds)
-                
-                # Obtener precio actualizado
-                updated_price = await self._get_current_price(symbol)
-                if updated_price:
-                    # Actualizar base de datos
-                    with sqlite3.connect(self.db_path) as conn:
-                        cursor = conn.cursor()
-                        cursor.execute(f"""
-                            UPDATE price_movements 
-                            SET {column_name} = ? 
-                            WHERE id = ?
-                        """, (updated_price, record_id))
-                        conn.commit()
-                    
-                    logger.debug(f"🔄 {symbol} {column_name}: ${updated_price:.4f}")
-                
-            except Exception as e:
-                logger.debug(f"Error actualizando precio {column_name}: {e}")
-                break
+            asyncio.create_task(self._update_price_after_delay(record_id, symbol, delay_seconds, column_name))
     
     async def _get_current_price(self, symbol: str) -> Optional[float]:
         """Obtiene precio actual del símbolo"""
@@ -810,10 +810,25 @@ if __name__ == "__main__":
     async def test_price_predictor():
         logger.info("🧪 Testing Price Impact Predictor...")
         
-        # Crear sentiment de prueba
-        from .ai_sentiment_analyzer import SentimentResult
+        # Definir una clase de prueba localmente para que el script sea ejecutable
+        @dataclass
+        class MockSentimentResult:
+            article_id: str
+            symbol: str
+            sentiment_score: float
+            confidence: float
+            sentiment_label: str
+            critical_keywords: List[str]
+            price_impact_prediction: Dict
+            reasoning: str
+            timestamp: datetime
+            emotional_intensity: float
+            market_relevance: float
+            urgency_level: int
+            event_type: str
         
-        test_sentiment = SentimentResult(
+        # Crear sentiment de prueba
+        test_sentiment = MockSentimentResult(
             article_id="test_123",
             symbol="BTC/USD",
             sentiment_score=0.7,
