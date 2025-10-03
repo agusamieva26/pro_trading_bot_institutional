@@ -2,6 +2,8 @@
 import os
 # 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in environments without GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# 🤫 Suppress TensorFlow oneDNN INFO messages
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import threading
 import time
