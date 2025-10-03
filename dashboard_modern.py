@@ -1719,7 +1719,7 @@ with tab2:
                 df_display['market_value'] = df_display['market_value'].apply(lambda x: f"${x:,.2f}")
                 df_display['qty'] = df_display['qty'].apply(lambda x: f"{x:.6f}")
                 
-                st.dataframe(df_display, use_container_width=True)
+                st.dataframe(df_display, width='stretch')
         
         # Portfolio composition chart
         st.markdown("### 🥧 Portfolio Composition")
@@ -1761,7 +1761,7 @@ with tab2:
             margin=dict(l=60, r=60, t=80, b=60)
         )
         
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
         
     else:
         st.info("💼 No open positions currently. Ready to deploy capital.")
@@ -1780,7 +1780,7 @@ with tab2:
                 ]
             }
             df_account = pd.DataFrame(account_data)
-            st.dataframe(df_account, use_container_width=True, hide_index=True)
+            st.dataframe(df_account, width='stretch', hide_index=True)
 
 # ===============================
 # TAB 3: PERFORMANCE ANALYTICS
@@ -1795,7 +1795,7 @@ with tab3:
         # Main performance chart
         perf_chart = create_performance_chart(df_trades)
         if perf_chart:
-            st.plotly_chart(perf_chart, width="stretch")
+            st.plotly_chart(perf_chart, width='stretch')
         
         # Calculate performance metrics
         df_closed = df_trades[df_trades["status"] == "closed"].copy()
@@ -1925,8 +1925,8 @@ with tab4:
     orders = get_open_orders()
     
     if orders:
-        df_orders = pd.DataFrame(orders)
-        st.dataframe(df_orders, use_container_width=True)
+        df_orders = pd.DataFrame(orders, columns=["symbol", "side", "qty", "type", "filled", "status"])
+        st.dataframe(df_orders, width='stretch')
     else:
         st.success("✅ No pending orders. All executions complete.")
     
@@ -1990,7 +1990,7 @@ with tab4:
         # Display filtered results
         if len(filtered_df) > 0:
             display_df = filtered_df.head(max_rows) if len(filtered_df) > max_rows else filtered_df
-            st.dataframe(display_df, use_container_width=True)
+            st.dataframe(display_df, width='stretch')
             st.caption(f"📊 Showing {len(display_df)} of {len(filtered_df)} total trades")
         else:
             st.info("🔍 No trades match the selected filters.")
@@ -2063,11 +2063,11 @@ with tab5:
                     
                     with col1:
                         st.markdown("##### 📋 Executive Summary")
-                        st.dataframe(df_summary, use_container_width=True)
+                        st.dataframe(df_summary, width='stretch')
                     
                     with col2:
                         st.markdown("##### ⚡ Recent Trades")
-                        st.dataframe(df_trades_report.head(10), use_container_width=True)
+                        st.dataframe(df_trades_report.head(10), width='stretch')
                         if len(df_trades_report) > 10:
                             st.caption(f"📊 Showing 10 of {len(df_trades_report)} trades")
                     
@@ -2212,7 +2212,7 @@ with tab7:
         st.markdown("#### 🏆 Model Rankings (by recent performance)")
         if rankings:
             df_rankings = pd.DataFrame(list(rankings.items()), columns=['Model', 'Performance Score'])
-            st.dataframe(df_rankings, use_container_width=True)
+            st.dataframe(df_rankings, width='stretch')
         else:
             st.info("No performance data available yet.")
 
@@ -3013,7 +3013,7 @@ with tab13:
                 
                 df_evolution = pd.DataFrame(evolution_data)
                 
-                fig_evolution = go.Figure()
+                fig_evolution = go.Figure() # type: ignore
                 
                 fig_evolution.add_trace(go.Scatter(
                     x=df_evolution["Generation"],
@@ -3059,7 +3059,7 @@ with tab13:
                     margin=dict(l=60, r=60, t=80, b=60)
                 )
                 
-                st.plotly_chart(fig_evolution, use_container_width=True)
+                st.plotly_chart(fig_evolution, width='stretch')
         
         # Strategy library
         st.markdown("---")
@@ -3078,7 +3078,7 @@ with tab13:
                 })
             
             df_strategies = pd.DataFrame(strategies_data)
-            st.dataframe(df_strategies, use_container_width=True)
+            st.dataframe(df_strategies, width='stretch')
 
 # ===============================
 # PROFESSIONAL SIDEBAR

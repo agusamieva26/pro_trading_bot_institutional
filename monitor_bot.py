@@ -10,6 +10,7 @@ import time
 import subprocess
 from datetime import datetime
 import json
+import psutil
 from pathlib import Path
 
 class BotMonitor:
@@ -44,10 +45,17 @@ class BotMonitor:
     def get_system_info(self):
         """Obtener información del sistema"""
         try:
-            # Verificar procesos del bot
-            result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
-            streamlit_running = "streamlit" in result.stdout
-            
+            # Verificar procesos del bot de forma multi-plataforma con psutil
+            streamlit_running = False
+            for proc in psutil.process_iter(['name', 'cmdline']):
+                try:
+                    cmdline = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else ''
+                    if 'streamlit' in cmdline and 'run' in cmdline:
+                        streamlit_running = True
+                        break
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+
             # Verificar archivos importantes
             files_status = {
                 'trades_log.csv': os.path.exists('trades_log.csv'),

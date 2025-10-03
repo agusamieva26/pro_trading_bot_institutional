@@ -20142,5 +20142,19 @@
       "BTC/USD"
     ],
     "failed_symbols": []
+  },
+  {
+    "timestamp": 1759467097.386532,
+    "datetime": "2025-10-03T06:51:37.386532",
+    "trigger_cash": 0,
+    "target_amount": 4361.4285,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 28363.026397999998,
+    "closed_symbols": [
+      "BTC/USD",
+      "PEPE/USD"
+    ],
+    "failed_symbols": []
   }
 ]

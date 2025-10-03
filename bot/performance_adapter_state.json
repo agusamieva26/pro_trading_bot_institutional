@@ -1,7 +1,11 @@
 {
   "performance_declining": true,
   "intervention_mode": true,
-  "last_update": "2025-09-15T05:17:11.854200",
+  "degradation_reasons": [
+    "Negative Sharpe ratio: -4.85",
+    "Low profit factor: 0.00"
+  ],
+  "last_update": "2025-10-03T07:05:35.040147",
   "current_regime": "average",
   "current_multiplier": 1.0
 }

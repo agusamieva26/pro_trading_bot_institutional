@@ -1,30 +1,16 @@
 {
-  "UNI/USD": {
-    "trailing_activated": true,
-    "max_price_reached": 10.18,
-    "partial_profit_taken": true,
-    "original_quantity": 16.96995638,
-    "entry_price": 9.748411584
-  },
-  "XRP/USD": {
-    "trailing_activated": true,
-    "max_price_reached": 3.1072,
-    "partial_profit_taken": true,
-    "original_quantity": 343.311292126,
-    "entry_price": 3.01169
-  },
   "BTC/USD": {
     "trailing_activated": false,
-    "max_price_reached": 116136.3985,
+    "max_price_reached": 120484.98,
     "partial_profit_taken": false,
-    "original_quantity": 0.002930304,
-    "entry_price": 114301.25
+    "original_quantity": 0.021669755,
+    "entry_price": 120243.224
   },
-  "LINK/USD": {
+  "PEPE/USD": {
     "trailing_activated": false,
-    "max_price_reached": 25.1337,
+    "max_price_reached": 1.021e-05,
     "partial_profit_taken": false,
-    "original_quantity": 11.557574109,
-    "entry_price": 25.1337
+    "original_quantity": 14877313.656951398,
+    "entry_price": 1.004e-05
   }
 }

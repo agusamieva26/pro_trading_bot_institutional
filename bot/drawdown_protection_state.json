@@ -1,9 +1,9 @@
 {
-  "peak_equity": 18562.26,
+  "peak_equity": 29143.12,
   "emergency_triggered": false,
   "recovery_mode": false,
-  "peak_timestamp": "2025-09-13T13:48:04.079413",
-  "last_update": "2025-09-15T05:18:10.502705",
-  "current_drawdown": 0.10069463524376876,
-  "protection_level": "defensive"
+  "peak_timestamp": "2025-10-03T06:35:34.350838",
+  "last_update": "2025-10-03T07:05:28.689948",
+  "current_drawdown": 0.005131228228137456,
+  "protection_level": "normal"
 }

@@ -8,6 +8,8 @@ sys.stdout.flush() # Ensure the message is displayed immediately
 
 # 🧠 Force TensorFlow to use CPU only to avoid CUDA errors in all environments
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# 🤫 Suppress TensorFlow oneDNN INFO messages
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import logging
 import time
