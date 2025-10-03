@@ -12,6 +12,7 @@ Es la forma recomendada y segura de mantener el sistema limpio.
 import os
 import glob
 import shutil
+import json
 from pathlib import Path
 
 # Navegar a la raíz del proyecto para asegurar que las rutas relativas funcionen
@@ -19,35 +20,44 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 os.chdir(PROJECT_ROOT)
 
 def get_active_model() -> str | None:
-    """
-    Detecta el nombre del archivo del modelo de ML activo.
-    Por ahora, asumimos que es el más reciente. En un futuro, podría leer un archivo de estado.
-    """
-    models_path = PROJECT_ROOT / "models" / "trained_models"
-    if not models_path.exists():
-        return None
-
-    # Encuentra todos los modelos y los ordena por fecha de modificación (el más nuevo primero)
-    models = sorted(models_path.glob('*.pkl'), key=os.path.getmtime, reverse=True)
-    
-    if models:
-        print(f"🔍 Modelo activo detectado (el más reciente): {models[0].name}")
-        return models[0].name
+    """DEPRECATED: La nueva lógica usa get_best_models_from_summary."""
     return None
+
+def get_best_models_from_summary() -> set:
+    """Lee el summary y retorna un set con los nombres base de los mejores modelos."""
+    models_path = PROJECT_ROOT / "models" / "trained_models"
+    summary_file = models_path / "best_models_summary.json"
+    best_model_files = set()
+
+    if summary_file.exists():
+        try:
+            with open(summary_file, 'r') as f:
+                summary = json.load(f)
+            for model_info in summary.values():
+                model_path = model_info.get('model_path')
+                if model_path:
+                    # Extraer el nombre base del archivo (sin extensión)
+                    base_name = Path(model_path).stem
+                    best_model_files.add(base_name)
+            print(f"🔍 Modelos a conservar detectados: {len(best_model_files)}")
+        except Exception as e:
+            print(f"⚠️ Error leyendo best_models_summary.json: {e}")
+    return best_model_files
 
 def cleanup_old_models():
     """Elimina todos los modelos excepto el que está activo."""
     print("\n--- Limpiando modelos antiguos ---")
-    active_model = get_active_model()
-    if not active_model:
-        print("🟡 No se encontraron modelos para limpiar.")
+    models_to_keep = get_best_models_from_summary()
+    models_dir = PROJECT_ROOT / "models" / "trained_models"
+
+    if not models_dir.exists():
+        print("🟡 Directorio de modelos no encontrado.")
         return
 
-    models_dir = PROJECT_ROOT / "models" / "trained_models"
-    for model_file in models_dir.glob('*.pkl'):
-        if model_file.name != active_model:
-            print(f"🗑️  Eliminando modelo antiguo: {model_file.name}")
-            os.remove(model_file)
+    for file_path in models_dir.iterdir():
+        if file_path.is_file() and file_path.stem not in models_to_keep and file_path.name != "best_models_summary.json":
+            print(f"🗑️  Eliminando archivo de modelo obsoleto: {file_path.name}")
+            os.remove(file_path)
 
 def cleanup_folders():
     """Elimina el contenido de carpetas temporales."""
