@@ -1,6 +1,8 @@
 # bot/google_drive_uploader.py
 import os
 from google.auth.transport.requests import Request
+import base64
+import json
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -16,6 +18,30 @@ TOKEN_FILE = os.path.join(PROJECT_ROOT, 'token.json')
 
 def get_drive_service():
     """Crea y retorna un servicio de Google Drive autenticado."""
+    # 🚀 NUEVO: Lógica para leer credenciales desde secrets de Fly.io
+    gcreds_b64 = os.environ.get('GCREDS_JSON_B64')
+    gtoken_b64 = os.environ.get('GTOKEN_JSON_B64')
+
+    if gcreds_b64 and gtoken_b64:
+        logger.info("🔑 Usando credenciales de Google Drive desde secrets de entorno.")
+        try:
+            # Decodificar y cargar las credenciales desde las variables de entorno
+            creds_json = json.loads(base64.b64decode(gcreds_b64).decode('utf-8'))
+            token_json = json.loads(base64.b64decode(gtoken_b64).decode('utf-8'))
+            
+            # Crear objeto de credenciales desde la información del token
+            creds = Credentials.from_authorized_user_info(token_json, SCOPES)
+
+            if not creds.valid and creds.refresh_token:
+                logger.info("Refrescando token de acceso de Google Drive...")
+                creds.refresh(Request())
+            
+            return build('drive', 'v3', credentials=creds)
+        except Exception as e:
+            logger.error(f"❌ Error cargando credenciales desde secrets: {e}. Intentando método de archivo local.")
+
+    # --- Lógica anterior (fallback para entorno local) ---
+    logger.info("🔑 Usando archivos locales (credentials.json/token.json) para Google Drive.")
     creds = None
     if os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)

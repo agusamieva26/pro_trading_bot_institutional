@@ -696,14 +696,26 @@ class ModelTrainer:
         """Prepare features and target arrays."""
         try:
             # Select feature columns
-            feature_cols = [col for col in data.columns 
-                           if not col.startswith('future_') and 
-                              col not in ['timestamp', 'symbol', self.config.target_column]]
+            feature_cols = [col for col in data.columns
+                           if not col.startswith('future_') and
+                              col not in ['timestamp', 'symbol', self.config.target_column, 'target_class']]
             
-            # Limit features to avoid overfitting
+            # 🎯 ADVANCED FEATURE SELECTION: Use feature importance to select the best features
             if len(feature_cols) > self.config.max_features_per_model:
-                # Select most important features (placeholder - would use feature importance)
-                feature_cols = feature_cols[:self.config.max_features_per_model]
+                logger.info(f"🔬 Performing feature selection: {len(feature_cols)} -> {self.config.max_features_per_model}")
+                
+                # Use a temporary, fast model to get feature importances
+                temp_model = RandomForestClassifier(n_estimators=50, random_state=self.config.random_state, n_jobs=-1)
+                temp_X = data[feature_cols].fillna(0)
+                temp_y = self.validator._prepare_target(data[self.config.target_column])
+                
+                temp_model.fit(temp_X, temp_y)
+                
+                # Create a series of feature importances and select the top N
+                importances = pd.Series(temp_model.feature_importances_, index=feature_cols)
+                top_features = importances.nlargest(self.config.max_features_per_model).index.tolist()
+                feature_cols = top_features
+                logger.info(f"✅ Top features selected: {feature_cols[:5]}...")
             
             X = data[feature_cols].fillna(0).values
             y = self.validator._prepare_target(data[self.config.target_column])

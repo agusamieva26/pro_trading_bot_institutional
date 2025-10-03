@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 # Construir rutas absolutas a la raíz del proyecto para los archivos de credenciales
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CREDENTIALS_FILE = os.path.join(PROJECT_ROOT, 'credentials.json')
 TOKEN_FILE = os.path.join(PROJECT_ROOT, 'token.json')
 
@@ -42,15 +42,15 @@ def authorize_gdrive():
         logger.info(f"Se encontró un '{TOKEN_FILE}' existente. Eliminándolo para forzar una nueva autorización.")
         os.remove(TOKEN_FILE)
 
-    if not os.path.exists(CREDENTIALS_FILE):
+    if not Path(CREDENTIALS_FILE).exists():
         logger.error(f"❌ {CREDENTIALS_FILE} no encontrado. Por favor, sigue las instrucciones para crearlo.")
         return
     
     logger.info("🔑 Iniciando flujo de autorización para Google Drive.")
     try:
         flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-        # run_console() muestra una URL para copiar y pegar manualmente en el navegador.
-        creds = flow.run_console()
+        # run_local_server() abre el navegador y gestiona la autenticación automáticamente.
+        creds = flow.run_local_server(port=0)
     except Exception as e:
         logger.error(f"❌ Error durante el flujo de autorización: {e}")
         logger.error("   Asegúrate de que 'credentials.json' es para una 'Aplicación de escritorio'.")

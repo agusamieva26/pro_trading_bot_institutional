@@ -30,17 +30,9 @@ def run_automation():
 def run_dashboard():
     """Ejecuta el dashboard de Streamlit y abre automáticamente el navegador."""
     try:
-        logger.info("🚀 Iniciando dashboard de Streamlit...")
-        
-        # Esperar un poco para que el servidor inicie
-        def open_browser():
-            time.sleep(3)  # Esperar 3 segundos para que Streamlit inicie
-            webbrowser.open('http://localhost:5000')
-            logger.info("🌐 Navegador abierto automáticamente en http://localhost:5000")
-        
-        # Abrir navegador en un thread separado
-        browser_thread = threading.Thread(target=open_browser, daemon=True)
-        browser_thread.start()
+        # En un entorno de servidor como Fly.io, no se debe intentar abrir un navegador.
+        # El dashboard será accesible a través de la URL pública de Fly.
+        logger.info("🚀 Iniciando dashboard de Streamlit en el puerto 5000...")
         
         # Iniciar Streamlit
         subprocess.run([
