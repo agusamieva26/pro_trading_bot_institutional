@@ -40,8 +40,16 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import xgboost as xgb
-import lightgbm as lgb
 
+# 🚀 FIX: Hacer que LightGBM sea opcional para evitar ModuleNotFoundError
+try:
+    import lightgbm as lgb
+    LIGHTGBM_AVAILABLE = True
+except ImportError:
+    LIGHTGBM_AVAILABLE = False
+    lgb = None
+    logger.warning("⚠️ LightGBM not available - el modelo LightGBM será deshabilitado.")
+    
 # Deep Learning (conditional)
 try:
     import tensorflow as tf
@@ -244,6 +252,10 @@ class HyperparameterOptimizer:
                          X_val: np.ndarray, y_val: np.ndarray,
                          n_trials: int = 50) -> Dict[str, Any]:
         """Optimize LightGBM hyperparameters."""
+        # 🚀 FIX: No intentar optimizar si LightGBM no está disponible
+        if not LIGHTGBM_AVAILABLE:
+            logger.warning("Skipping LightGBM optimization: library not found.")
+            return {}
         
         def objective(trial):
             params = {
@@ -818,6 +830,10 @@ class ModelTrainer:
                        X_val: np.ndarray, y_val: np.ndarray,
                        X_test: np.ndarray, y_test: np.ndarray) -> Optional[TrainingResult]:
         """Train LightGBM with optimization."""
+        # 🚀 FIX: No intentar entrenar si LightGBM no está disponible
+        if not LIGHTGBM_AVAILABLE:
+            return None
+            
         try:
             logger.info("💡 Training LightGBM...")
             
@@ -1004,39 +1020,48 @@ class ModelTrainer:
     def _save_training_results(self, results: Dict[str, TrainingResult]):
         """Save training results and models."""
         try:
-            # Create models directory
             models_dir = Path("models/trained_models")
             models_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Save each model and its results
+
             for model_name, result in results.items():
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                
-                # Save result metadata
-                result_file = models_dir / f"{model_name}_{timestamp}_result.json"
+                base_filename = f"{model_name}_{timestamp}"
+
+                # 🚀 FIX: Actualizar la ruta del modelo en el resultado para que coincida con el nuevo nombre
+                model_extension = ".h5" if model_name == "lstm" else ".joblib"
+                model_path = models_dir / f"{base_filename}{model_extension}"
+                result.model_path = str(model_path)
+
+                # Guardar metadatos del resultado
+                result_file = models_dir / f"{base_filename}_result.json"
                 with open(result_file, 'w') as f:
-                    json.dump(result.to_dict(), f, indent=2)
-                
-                # Update best models
-                if (model_name not in self.best_models or 
-                    result.performance.accuracy > self.best_models[model_name].performance.accuracy):
+                    json.dump(result.to_dict(), f, indent=2, default=str)
+
+                # Actualizar el mejor modelo si este es superior
+                if (model_name not in self.best_models or
+                        result.performance.accuracy > self.best_models[model_name].performance.accuracy):
                     self.best_models[model_name] = result
-            
-            # Save best models summary
+
+            # 🚀 FIX: Guardar un resumen de los mejores modelos para la limpieza inteligente
             best_models_file = models_dir / "best_models_summary.json"
-            best_summary = {
-                name: result.to_dict() 
-                for name, result in self.best_models.items()
-            }
-            
+            best_summary = {}
+            if self.best_models:
+                best_summary = {
+                    name: res.to_dict()
+                    for name, res in self.best_models.items()
+                }
+
             with open(best_models_file, 'w') as f:
-                json.dump(best_summary, f, indent=2)
-            
+                json.dump(best_summary, f, indent=2, default=str)
+
             # Add to training history
             self.training_history.append({
                 'timestamp': datetime.now().isoformat(),
                 'models_trained': list(results.keys()),
-                'best_accuracy': max(r.performance.accuracy for r in results.values()),
+                'best_accuracy': max(
+                    (r.performance.accuracy for r in results.values() if r and r.performance), 
+                    default=0.0
+                ),
                 'training_summary': {name: {
                     'accuracy': result.performance.accuracy,
                     'f1_score': result.performance.f1_score
@@ -1044,7 +1069,7 @@ class ModelTrainer:
             })
             
             logger.info(f"✅ Training results saved to {models_dir}")
-            
+
         except Exception as e:
             logger.error(f"❌ Error saving training results: {e}")
     
