@@ -1,7 +1,0 @@
-{
-  "n_splits": 5,
-  "embargo_period": 30,
-  "purge_period": 60,
-  "min_accuracy": 0.7,
-  "max_accuracy": 0.8
-}

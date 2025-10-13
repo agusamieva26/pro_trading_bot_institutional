@@ -23,6 +23,27 @@
  
  # Qwen/LocalAI (based on imports)
  requests
+ 
+ # Entornos virtuales
+venv/
+.env
+
+# Compilados de Python
+__pycache__/
+*.pyc
+
+# Datos temporales y logs
+*.log
+*.csv
+*.xlsx
+*.json
+*.db
+*.sqlite3
+
+# Archivos de cache o temporales
+data_cache/
+bot/__pycache__/
+
 
 # Nota: Si usas librerías adicionales, añádelas aquí.
 # Por ejemplo, si 'bot.qwen_lightweight' usa una librería específica, debe ser incluida.
