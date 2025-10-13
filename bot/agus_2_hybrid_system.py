@@ -1365,8 +1365,10 @@ class AGUS2HybridSystem:
     Orchestrates all components for institutional-grade AI capabilities
     """
     
-    def __init__(self):
+    def __init__(self, bot_instance: Optional[Any] = None):
         # Core AGUS components
+        self.bot_instance = bot_instance
+
         self.memory_manager = ContextualMemoryManager()
         self.routing_engine = IntelligentRoutingEngine()
         self.reasoning_engine = AdvancedReasoningEngine()

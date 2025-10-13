@@ -767,8 +767,10 @@ class EnsemblePredictor:
                 
                 if lstm_model_file.exists() and lstm_scaler_file.exists():
                     try:
+                        # 🧠 FIX: Add compile=False to suppress the benign warning about metrics.
+                        # This is the recommended approach when loading a model for inference only.
                         lstm_predictor = LSTMPredictor()
-                        lstm_predictor.model = tf.keras.models.load_model(lstm_model_file)
+                        lstm_predictor.model = tf.keras.models.load_model(lstm_model_file, compile=False)
                         lstm_predictor.scaler = joblib.load(lstm_scaler_file)
                         lstm_predictor.is_trained = True
                         

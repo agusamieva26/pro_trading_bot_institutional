@@ -18,15 +18,15 @@ import asyncio
 import time
 from datetime import datetime, timedelta
 import json
+from streamlit_autorefresh import st_autorefresh
 
-# Imports del sistema AI
-from bot.ai_trading_integration import (
-    ai_trading_integrator, get_ai_market_overview, 
-    get_ai_symbol_status, check_emergency_stops
+# 🚀 FIX: Corregir importación para usar el nuevo `orchestrator_integration`
+# El módulo `multi_model_orchestrator` fue refactorizado.
+from bot.orchestrator_integration import (
+    get_integration_manager,
+    get_trading_prediction,
+    initialize_complete_system
 )
-from bot.advanced_news_engine import news_engine
-from bot.ai_sentiment_analyzer import ai_sentiment_analyzer, get_sentiment_stats
-from bot.price_impact_predictor import get_price_predictor_status
 from bot.util import logger
 
 # Configuración de página
@@ -518,13 +518,12 @@ class AIHybridDashboard:
                         st.error(f"Error: {e}")
             
             # Configuración de refresh
-            auto_refresh = st.checkbox("🔄 Auto-refresh", value=True)
-            if auto_refresh:
-                refresh_rate = st.selectbox("Intervalo", [15, 30, 60, 120], index=1)
-                st.write(f"Refrescando cada {refresh_rate} segundos")
-                time.sleep(refresh_rate)
-                st.rerun()
-        
+            st.session_state.auto_refresh = st.checkbox("🔄 Auto-refresh", value=True)
+            refresh_rate = st.selectbox("Intervalo (segundos)", [15, 30, 60, 120], index=1)
+            
+            if st.session_state.auto_refresh:
+                st_autorefresh(interval=refresh_rate * 1000, key="dashboard_refresher")
+
         # Obtener datos
         with st.spinner("Cargando datos del sistema AI..."):
             try:

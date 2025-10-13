@@ -20156,5 +20156,103 @@
       "PEPE/USD"
     ],
     "failed_symbols": []
+  },
+  {
+    "timestamp": 1759725451.9926496,
+    "datetime": "2025-10-06T06:37:31.992649",
+    "trigger_cash": 0,
+    "target_amount": 4327.8615,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 26714.700011,
+    "closed_symbols": [
+      "BTC/USD",
+      "SHIB/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759729848.1564577,
+    "datetime": "2025-10-06T07:50:48.156457",
+    "trigger_cash": 0,
+    "target_amount": 4302.864,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 26456.771125,
+    "closed_symbols": [
+      "BTC/USD",
+      "LINK/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759732843.6736197,
+    "datetime": "2025-10-06T08:40:43.673619",
+    "trigger_cash": 0,
+    "target_amount": 4260.6195,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 25697.030915,
+    "closed_symbols": [
+      "BTC/USD",
+      "GRT/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759768989.3574708,
+    "datetime": "2025-10-06T18:43:09.357470",
+    "trigger_cash": 0,
+    "target_amount": 4250.169,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 26426.586919,
+    "closed_symbols": [
+      "BTC/USD",
+      "CRV/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759769348.2657151,
+    "datetime": "2025-10-06T18:49:08.265715",
+    "trigger_cash": 0,
+    "target_amount": 4252.236,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 1548.0471499999999,
+    "closed_symbols": [
+      "CRV/USD",
+      "SOL/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759789033.8345847,
+    "datetime": "2025-10-07T00:17:13.834584",
+    "trigger_cash": 0,
+    "target_amount": 4232.0715,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 26364.187868,
+    "closed_symbols": [
+      "BTC/USD",
+      "CRV/USD"
+    ],
+    "failed_symbols": []
+  },
+  {
+    "timestamp": 1759789463.1799226,
+    "datetime": "2025-10-07T00:24:23.179922",
+    "trigger_cash": 0,
+    "target_amount": 4223.6715,
+    "positions_closed": 2,
+    "positions_failed": 0,
+    "capital_freed": 1533.674006,
+    "closed_symbols": [
+      "CRV/USD",
+      "VTI"
+    ],
+    "failed_symbols": []
   }
 ]

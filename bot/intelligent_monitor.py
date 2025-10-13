@@ -76,13 +76,16 @@ class IntelligentMonitor:
         self.last_equity = 0.0
         self.max_acceptable_loss = -1000.0  # $1000 max loss crítica
         self.critical_error_count = 0
+        self.bot_pid = None
         self.system_health = SystemHealth.HEALTHY
         
         # AGUS Integration
         self.agus = None
         if AGUS_AVAILABLE and AGUS2HybridSystem is not None:
             try:
-                self.agus = AGUS2HybridSystem()
+                # 🚀 FIX: Pasar la instancia del bot a AGUS para que tenga contexto
+                # Esto es crucial para que el chat de AGUS pueda responder sobre el estado del bot.
+                self.agus = AGUS2HybridSystem(bot_instance=self.bot)
                 logger.info("🧠 AGUS Intelligence integrated into monitoring system")
             except Exception as e:
                 logger.error(f"🚨 Failed to initialize AGUS: {e}")
@@ -120,6 +123,11 @@ class IntelligentMonitor:
             return
         
         self.is_running = True
+        # Store the bot's PID if it's available
+        try:
+            self.bot_pid = os.getpid()
+        except Exception:
+            pass # os.getpid() might not be available in all contexts
         self.monitor_thread = threading.Thread(target=self._monitoring_loop, daemon=True)
         self.monitor_thread.start()
         
@@ -486,29 +494,13 @@ class IntelligentMonitor:
     def _check_bot_process(self) -> bool:
         """Verifica si el proceso del bot está corriendo"""
         try:
-            # Check for Python processes related to the bot
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-                try:
-                    cmdline = ' '.join(proc.info['cmdline'] or [])
-                    # Mejorado para detectar el workflow actual del bot
-                    if any(pattern in cmdline for pattern in [
-                        'bot.main',           # python -u -m bot.main
-                        'main.py',            # python main.py
-                        'trading_bot',        # trading_bot process
-                        'bot/main.py',        # python bot/main.py
-                        'run.py'              # python run.py
-                    ]):
-                        # Verificar que es un proceso Python activo
-                        if proc.info['name'] in ['python', 'python3', 'python3.11'] and proc.is_running():
-                            logger.debug(f"🤖 Bot process detected: PID={proc.pid}, CMD={cmdline}")
-                            return True
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    continue
-            
-            # Fallback: si el intelligent_monitor está corriendo, probablemente el bot también
-            # porque están en el mismo proceso/hilo
-            if hasattr(self, 'bot') and self.bot is not None:
-                logger.debug("🤖 Bot process detected via bot instance")
+            # Use PID if available for a more reliable check
+            if self.bot_pid and psutil.pid_exists(self.bot_pid):
+                proc = psutil.Process(self.bot_pid)
+                if proc.is_running() and 'python' in proc.name().lower():
+                    logger.debug(f"🤖 Bot process detected via PID: {self.bot_pid}")
+                    return True
+            elif hasattr(self, 'bot') and self.bot is not None:
                 return True
                 
             logger.debug("❌ Bot process not detected in running processes")
@@ -528,12 +520,24 @@ class IntelligentMonitor:
             return False
     
     def _check_api_connection(self) -> bool:
-        """Verifica conectividad API"""
+        """
+        Verifica la conectividad con la API de Alpaca.
+        Esto es más robusto que un chequeo de internet genérico.
+        """
         try:
-            import requests
-            response = requests.get('https://httpbin.org/status/200', timeout=10)
-            return response.status_code == 200
-        except:
+            from .config import settings
+            from alpaca.trading.client import TradingClient
+
+            client = TradingClient(
+                api_key=settings.alpaca_api_key,
+                secret_key=settings.alpaca_secret_key,
+                paper=(settings.mode == "paper")
+            )
+            # get_account() es una llamada ligera que confirma la autenticación y conectividad.
+            account = client.get_account()
+            return account.status == 'ACTIVE'
+        except Exception as e:
+            logger.warning(f"⚠️ Fallo en el chequeo de conectividad API de Alpaca: {e}")
             return False
     
     def _check_memory_usage(self) -> float:

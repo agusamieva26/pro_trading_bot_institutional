@@ -134,6 +134,42 @@ def add_fibonacci_features(df):
     
     return df
 
+def scalping_signal(row: pd.Series) -> float:
+    """
+    ⚡ Señal de alta frecuencia optimizada para scalping.
+    Combina cruce de EMAs rápidas, Estocástico y Bandas de Bollinger.
+    """
+    required_features = ["ema_5", "ema_10", "stoch_k", "stoch_d", "bb_width"]
+    if not all(feat in row and pd.notna(row[feat]) for feat in required_features):
+        logger.warning(f"⚠️ [scalping_signal] Features faltantes para scalping. Retornando señal neutral.")
+        return 0.0
+
+    # 1. Tendencia ultra-corta (Cruce de EMAs 5/10)
+    ema_trend = 1.0 if row["ema_5"] > row["ema_10"] else -1.0
+
+    # 2. Momentum y sobrecompra/sobreventa (Estocástico)
+    stoch_k, stoch_d = row["stoch_k"], row["stoch_d"]
+    stoch_momentum = 1.0 if stoch_k > stoch_d else -1.0
+    
+    if stoch_k > 80:
+        stoch_signal = -1.0  # Sobrecompra -> Venta
+    elif stoch_k < 20:
+        stoch_signal = 1.0   # Sobreventa -> Compra
+    else:
+        stoch_signal = 0.0
+
+    # 3. Volatilidad (Ancho de Bandas de Bollinger)
+    # Aumentar señal si hay volatilidad (bandas anchas), reducir si no la hay.
+    volatility_factor = 1.0
+    if row["bb_width"] > 0.05: # >5% de ancho
+        volatility_factor = 1.2 # Aumentar señal
+    elif row["bb_width"] < 0.02: # <2% de ancho
+        volatility_factor = 0.7 # Reducir señal
+
+    # Combinar señales con pesos para scalping
+    signal = (0.4 * ema_trend + 0.4 * stoch_signal + 0.2 * stoch_momentum) * volatility_factor
+    return np.clip(signal, -1.0, 1.0)
+
 # Lista de features que el modelo espera (deben coincidir con make_features)
 FEATURES = [
     "ret_1", "ema_12", "ema_26", "rsi_14",
@@ -147,13 +183,21 @@ def rule_signal(row):
     Señal basada en cruce de EMA + RSI + volatilidad + Fibonacci.
     Devuelve una señal entre -1.0 y +1.0 (no binaria).
     """
+    # 🛡️ DEFENSA: Validar que las features esenciales existen antes de usarlas.
+    required_features = ["ema_12", "ema_26", "rsi_14", "close", "atr_14"]
+    for feature in required_features:
+        if feature not in row:
+            logger.warning(f"⚠️ [rule_signal] Feature faltante: '{feature}'. Retornando señal neutral.")
+            return 0.0
+
     # Tendencia
     ema_trend = 1.0 if row["ema_12"] > row["ema_26"] else -1.0
     
     # Momento
-    if row["rsi_14"] > 70:
+    rsi_val = row["rsi_14"]
+    if rsi_val > 70:
         rsi_signal = -1.0
-    elif row["rsi_14"] < 30:
+    elif rsi_val < 30:
         rsi_signal = +1.0
     else:
         rsi_signal = 0.0
@@ -281,19 +325,34 @@ def reset_signal_memory():
     _last_signals.clear()
     logger.info("🔄 Memoria de señales reseteada - permitiendo recálculo limpio")
 
-def hybrid_signal(features, model=None, timeframe=None, symbol=None):
+def hybrid_signal(features, model=None, timeframe=None, symbol=None, use_scalping: bool = False):
     """
     Genera señal híbrida:
     - Si el modelo está disponible: combina predicción + reglas
     - Si no: usa solo reglas
+    - Si `use_scalping` es True, utiliza la lógica de scalping.
     Retorna: float entre -1.0 (fuerte venta) y +1.0 (fuerte compra)
     """
+    # ⚡ Lógica de Scalping
+    if use_scalping:
+        logger.debug(f"⚡ Usando señal de SCALPING para {symbol}")
+        return scalping_signal(features)
+
+    # 🛡️ DEFENSA: Validar que las features existen antes de cualquier cálculo.
+    # Esto previene KeyErrors en `rule_signal` y en la lógica de predicción.
+    if not all(feat in features for feat in FEATURES):
+        missing_feats = [feat for feat in FEATURES if feat not in features]
+        logger.error(f"❌ [hybrid_signal] Features faltantes: {missing_feats}. Usando solo reglas como fallback.")
+        # Aún así, rule_signal tiene su propia validación interna por si acaso.
+        return rule_signal(features)
+
     model = model or _trading_model_instance
     if model is None:
         logger.warning("⚠️ No hay modelo cargado. Usando solo reglas.")
         return rule_signal(features)
 
     try:
+        # A este punto, ya sabemos que todas las features en FEATURES existen.
         # Preparar input
         try:
             if isinstance(features, pd.Series):

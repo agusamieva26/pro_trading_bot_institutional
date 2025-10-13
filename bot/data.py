@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from alpaca.data.historical import StockHistoricalDataClient, CryptoHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest, CryptoBarsRequest
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
+from requests.exceptions import ConnectionError
 from alpaca.common.exceptions import APIError
 from .config import settings
 from .util import logger
@@ -60,41 +61,48 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
         start_dt = pd.Timestamp(start, tz="UTC") if start else (pd.Timestamp.utcnow() - pd.Timedelta(days=lookback_days))
         end_dt   = pd.Timestamp(end, tz="UTC") if end else (pd.Timestamp.utcnow() - pd.Timedelta(minutes=16))
 
-        try:
-            if "/" in symbol:  # cripto
-                req = CryptoBarsRequest(
-                    symbol_or_symbols=symbol,
-                    start=start_dt,
-                    end=end_dt,
-                    timeframe=_tf()
-                )
-                df = crypto_client.get_crypto_bars(req).df
-            else:  # acción
-                req = StockBarsRequest(
-                    symbol_or_symbols=symbol,
-                    start=start_dt,
-                    end=end_dt,
-                    timeframe=_tf(),
-                    adjustment="raw",
-                    feed="iex"
-                )
-                df = stock_client.get_stock_bars(req).df
+        for retry in range(3): # 🧠 FIX: Add retry loop for network errors
+            try:
+                if "/" in symbol:  # cripto
+                    req = CryptoBarsRequest(
+                        symbol_or_symbols=symbol,
+                        start=start_dt,
+                        end=end_dt,
+                        timeframe=_tf()
+                    )
+                    df = crypto_client.get_crypto_bars(req).df
+                else:  # acción
+                    req = StockBarsRequest(
+                        symbol_or_symbols=symbol,
+                        start=start_dt,
+                        end=end_dt,
+                        timeframe=_tf(),
+                        adjustment="raw",
+                        feed="iex"
+                    )
+                    df = stock_client.get_stock_bars(req).df
+                
+                # If successful, break the retry loop
+                break
+            except (ConnectionError, APIError) as e:
+                if "too many requests" in str(e).lower() or isinstance(e, ConnectionError):
+                    wait_time = (retry + 1) * 2 # Exponential backoff (2, 4, 6 seconds)
+                    logger.warning(f"⏳ Connection error for {symbol} ({e}). Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                    df = pd.DataFrame() # Ensure df is empty for the next loop
+                else:
+                    raise e # Re-raise other API errors
+        else: # If all retries fail
+            logger.error(f"❌ Failed to fetch data for {symbol} after multiple retries.")
+            return pd.DataFrame()
 
-            if df.empty:
-                logger.warning(f"⚠️ No hay datos para {symbol}")
-                return df
-
+        if df.empty:
+            logger.warning(f"⚠️ No hay datos para {symbol} en el período solicitado.")
+            # Allow the outer loop to expand the date range
+        else:
             if isinstance(df.index, pd.MultiIndex):
                 df = df.xs(symbol, level=0)
-
             bars = df.sort_index().rename(columns=str.lower)
-
-        except APIError as e:
-            logger.error(f"❌ Alpaca API error: {e}")
-            return pd.DataFrame()
-        except Exception as e:
-            logger.exception(f"💥 Error construyendo petición de datos ({symbol}): {e}")
-            return pd.DataFrame()
 
         if len(bars) >= min_bars or lookback_days > 3650 or attempt >= max_attempts:
             if len(bars) < min_bars:

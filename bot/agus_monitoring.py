@@ -22,7 +22,7 @@ from pathlib import Path
 from collections import defaultdict, deque
 
 # Import orchestrator components with relative imports
-from .agus_core import AGUSOrchestrator, EventType, AlertSeverity, Event, Alert, EventBus, StateStore
+from .agus_core import AGUSOrchestrator, EventType, AlertSeverity, Event, Alert, EventBus, StateStore, get_orchestrator
 
 # Import bot modules with relative imports
 try:
@@ -63,9 +63,9 @@ class PerformanceMetrics:
 
 
 class BaseMonitoringAgent:
-    def __init__(self, name: str, orchestrator: AGUSOrchestrator):
+    def __init__(self, name: str, orchestrator: Optional[AGUSOrchestrator]):
         self.name = name
-        self.orchestrator = orchestrator
+        self.orchestrator = orchestrator or get_orchestrator()
         self.is_running = False
         self.last_check = None
         self.check_interval = 30
@@ -554,9 +554,9 @@ class RiskDrawdownMonitorAgent(BaseMonitoringAgent):
 class AGUSMonitoringSystem:
     """Main AGUS 24/7 monitoring system orchestrator"""
     
-    def __init__(self, dry_run: bool = False):
+    def __init__(self, orchestrator: Optional[AGUSOrchestrator] = None, dry_run: bool = False):
         self.dry_run = dry_run
-        self.orchestrator = AGUSOrchestrator(dry_run=dry_run)
+        self.orchestrator = orchestrator or get_orchestrator(dry_run=dry_run)
         
         # Initialize monitoring agents
         self.agents = {

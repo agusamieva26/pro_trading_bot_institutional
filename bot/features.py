@@ -21,6 +21,13 @@ def atr(df: pd.DataFrame, period:int=14):
     tr = pd.concat([(h-l),(h-c.shift()).abs(),(l-c.shift()).abs()], axis=1).max(axis=1)
     return tr.rolling(period).mean()
 
+def bollinger_bands(close: pd.Series, period:int=20, std_dev:int=2):
+    sma = close.rolling(window=period).mean()
+    std = close.rolling(window=period).std()
+    upper = sma + (std * std_dev)
+    lower = sma - (std * std_dev)
+    return upper, lower, (upper - lower) / sma
+
 def make_features(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFrame:
     out = df.copy()
     out["ret_1"] = out["close"].pct_change()
@@ -52,6 +59,8 @@ def make_features(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFram
     
     out["ema_12"] = ema(close_series, fast)
     out["ema_26"] = ema(close_series, slow)
+    out["ema_5"] = ema(close_series, 5)   # ⚡ EMA rápida para scalping
+    out["ema_10"] = ema(close_series, 10) # ⚡ EMA media para scalping
     
     # RSI con períodos diversificados
     rsi_periods = {'BTC': 14, 'ETH': 13, 'SOL': 15, 'AVAX': 14, 'LINK': 13, 
@@ -64,6 +73,16 @@ def make_features(df: pd.DataFrame, symbol: Optional[str] = None) -> pd.DataFram
     out["macd"], out["macd_sig"], out["macd_hist"] = m, s, h
     out["atr_14"] = atr(out, 14)
     out["vol_roll"] = out["ret_1"].rolling(24).std() * (24**0.5)
+
+    # ⚡ NUEVO: Indicadores para Scalping
+    # Oscilador Estocástico
+    low_14, high_14 = out['low'].rolling(14).min(), out['high'].rolling(14).max()
+    out['stoch_k'] = 100 * ((out['close'] - low_14) / (high_14 - low_14 + 1e-9))
+    out['stoch_d'] = out['stoch_k'].rolling(3).mean()
+
+    # Bandas de Bollinger
+    bb_upper, bb_lower, bb_width = bollinger_bands(close_series)
+    out["bb_upper"], out["bb_lower"], out["bb_width"] = bb_upper, bb_lower, bb_width
     
     # Añadir features de Fibonacci
     from .strategy import add_fibonacci_features
