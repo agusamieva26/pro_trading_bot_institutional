@@ -13,6 +13,7 @@ import webbrowser
 from bot.main import main
 from health_server import start_health_server
 from bot.automated_trainer import run_automated_trainer
+from bot.smart_cleanup import main as smart_cleanup_main
 from bot.util import logger
 
 def run_main():
@@ -55,6 +56,17 @@ def run_debug_monitor():
     except Exception as e:
         logger.error(f"❌ Error en debug monitor: {e}")
 
+def run_periodic_cleanup():
+    """Ejecuta la limpieza inteligente periódicamente cada 24 horas."""
+    while True:
+        try:
+            logger.info("🧹 Ejecutando limpieza inteligente periódica...")
+            smart_cleanup_main()
+            logger.info("✅ Limpieza completada. Próxima ejecución en 24 horas.")
+        except Exception as e:
+            logger.error(f"❌ Error en la limpieza periódica: {e}")
+        time.sleep(86400) # 24 horas
+
 if __name__ == "__main__":
     logger.info("🚀 Iniciando sistema evolutivo completo con Dashboard y Debug Monitor...")
     
@@ -73,6 +85,9 @@ if __name__ == "__main__":
     # Thread 5: Servidor de Health Check para monitoreo externo (Fly.io)
     t5 = threading.Thread(target=start_health_server, daemon=True, name="HealthServer")
 
+    # Thread 6: Limpieza Inteligente Periódica
+    t6 = threading.Thread(target=run_periodic_cleanup, daemon=True, name="SmartCleanup")
+
     logger.info("🤖 Iniciando threads del sistema...")
     t1.start()
     logger.info("✅ Thread 1: Trading Bot iniciado")
@@ -88,9 +103,12 @@ if __name__ == "__main__":
     
     t5.start()
     logger.info("✅ Thread 5: Health Check Server iniciado en puerto 8080")
+
+    t6.start()
+    logger.info("✅ Thread 6: Limpieza Inteligente Periódica iniciada (cada 24h)")
     
     logger.info("🚀 SISTEMA EVOLUTIVO COMPLETO ACTIVO")
-    logger.info("📊 Trading Bot + Dashboard + Reportes + Training + Optuna + Debug + Health")
+    logger.info("📊 Trading Bot + Dashboard + Reportes + Training + Optuna + Debug + Health + Limpieza")
     logger.info("🌐 Dashboard: http://0.0.0.0:5000 (se abrirá automáticamente)")
     logger.info("🔧 Debug Monitor: Monitoreo 24/7 con reparación automática de errores")
 

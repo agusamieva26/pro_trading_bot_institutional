@@ -19,10 +19,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 os.chdir(PROJECT_ROOT)
 
-def get_active_model() -> str | None:
-    """DEPRECATED: La nueva lógica usa get_best_models_from_summary."""
-    return None
-
 def get_best_models_from_summary() -> set:
     """Lee el summary y retorna un set con los nombres base de los mejores modelos."""
     models_path = PROJECT_ROOT / "models" / "trained_models"
@@ -46,15 +42,15 @@ def get_best_models_from_summary() -> set:
 
 def cleanup_old_models():
     """Elimina todos los modelos excepto el que está activo."""
-    print("\n--- Limpiando modelos antiguos ---")
+    print("\n--- 2. Limpiando modelos de ML antiguos ---")
     models_to_keep = get_best_models_from_summary()
     models_dir = PROJECT_ROOT / "models" / "trained_models"
 
     if not models_dir.exists():
         print("🟡 Directorio de modelos no encontrado.")
         return
-
-    for file_path in models_dir.iterdir():
+    
+    for file_path in list(models_dir.iterdir()): # Usar list() para evitar problemas al eliminar
         if file_path.is_file() and file_path.stem not in models_to_keep and file_path.name != "best_models_summary.json":
             print(f"🗑️  Eliminando archivo de modelo obsoleto: {file_path.name}")
             os.remove(file_path)
@@ -62,7 +58,7 @@ def cleanup_old_models():
 def cleanup_folders():
     """Elimina el contenido de carpetas temporales."""
     print("\n--- Limpiando cachés, logs y reportes ---")
-    folders_to_clean = [
+    folders_to_clean = [ # Rutas relativas a la raíz del proyecto
         "data_cache",
         "backtest_cache",
         "logs",
@@ -74,17 +70,28 @@ def cleanup_folders():
         if path.exists():
             print(f"🗑️  Vaciando carpeta: {folder}")
             shutil.rmtree(path)
-            os.makedirs(path, exist_ok=True) # Volver a crear la carpeta vacía
+            os.makedirs(path, exist_ok=True) # Re-crear la carpeta vacía
+
+def cleanup_pycache():
+    """Elimina todos los directorios __pycache__ del proyecto."""
+    print("\n--- 3. Limpiando caché de Python (__pycache__) ---")
+    for path in PROJECT_ROOT.rglob('__pycache__'):
+        if path.is_dir():
+            print(f"🗑️  Eliminando {path}")
+            shutil.rmtree(path)
 
 def main():
     """Ejecuta el proceso de limpieza completo."""
     print("🧹 Iniciando limpieza inteligente del espacio de trabajo...")
     
     # 1. Limpieza de carpetas temporales
-    cleanup_folders()
+    cleanup_folders() # Esta función fue renombrada en el remoto, pero la lógica es la misma.
     
     # 2. Limpieza inteligente de modelos antiguos
     cleanup_old_models()
+
+    # 3. Limpieza de __pycache__
+    cleanup_pycache()
     
     print("\n✅ ¡Limpieza inteligente completada!")
 

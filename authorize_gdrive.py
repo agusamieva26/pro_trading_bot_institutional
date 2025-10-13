@@ -1,24 +1,25 @@
-<<<<<<< HEAD
 #!/usr/bin/env python
 """
-ðŸ”‘ SCRIPT DE AUTORIZACIÃ“N PARA GOOGLE DRIVE
+?? SCRIPT DE AUTORIZACI¨®N PARA GOOGLE DRIVE
 
 Ejecuta este script UNA SOLA VEZ de forma interactiva para generar el archivo `token.json`.
 Este archivo es necesario para que el bot pueda subir reportes a tu Google Drive.
 
 Pasos:
-1. AsegÃºrate de tener tu archivo `credentials.json` en la misma carpeta.
+1. Aseg¨²rate de tener tu archivo `credentials.json` en la misma carpeta.
 2. Ejecuta este script: `python authorize_gdrive.py`
-3. Se abrirÃ¡ una ventana en tu navegador. Inicia sesiÃ³n con tu cuenta de Google y concede los permisos.
-4. Una vez autorizado, se crearÃ¡ un archivo `token.json` en esta carpeta.
+3. Se abrir¨¢ una ventana en tu navegador. Inicia sesi¨®n con tu cuenta de Google y concede los permisos.
+4. Una vez autorizado, se crear¨¢ un archivo `token.json` en esta carpeta.
 
-Â¡Listo! Ahora el bot podrÃ¡ usar este token para subir archivos sin necesidad de volver a autorizar.
+?Listo! Ahora el bot podr¨¢ usar este token para subir archivos sin necesidad de volver a autorizar.
 """
 import os
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+import base64
 from google_auth_oauthlib.flow import InstalledAppFlow
 import logging
+from pathlib import Path
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,106 +28,62 @@ logger = logging.getLogger(__name__)
 # Si modificas estos SCOPES, borra el archivo token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-# Construir rutas absolutas a la raÃ­z del proyecto para los archivos de credenciales
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CREDENTIALS_FILE = os.path.join(PROJECT_ROOT, 'credentials.json')
-TOKEN_FILE = os.path.join(PROJECT_ROOT, 'token.json')
+# Construir rutas absolutas a la ra¨ªz del proyecto para los archivos de credenciales
+PROJECT_ROOT = Path(__file__).resolve().parent.parent # Navega dos niveles arriba desde el script actual
+CREDENTIALS_FILE = PROJECT_ROOT / 'credentials.json'
+TOKEN_FILE = PROJECT_ROOT / 'token.json'
 
 def authorize_gdrive():
     """
-    Realiza el flujo de autorizaciÃ³n de OAuth2 para Google Drive.
+    Realiza el flujo de autorizaci¨®n de OAuth2 para Google Drive.
     """
+    # ?? NUEVO: L¨®gica para leer credenciales desde secrets de Fly.io
+    gcreds_b64 = os.environ.get('GCREDS_JSON_B64')
+    gtoken_b64 = os.environ.get('GTOKEN_JSON_B64')
+
+    if gcreds_b64 and gtoken_b64:
+        logger.info("?? Usando credenciales de Google Drive desde secrets de entorno.")
+        try:
+            # Decodificar y cargar las credenciales desde las variables de entorno
+            creds_json_str = base64.b64decode(gcreds_b64).decode('utf-8')
+            token_json_str = base64.b64decode(gtoken_b64).decode('utf-8')
+            
+            # Guardar en archivos temporales para que el flujo de Google los pueda usar
+            with open(CREDENTIALS_FILE, 'w') as f:
+                f.write(creds_json_str)
+            with open(TOKEN_FILE, 'w') as f:
+                f.write(token_json_str)
+            
+            logger.info(f"? Credenciales y token guardados temporalmente para autorizaci¨®n.")
+            # El flujo continuar¨¢ usando los archivos creados.
+        except Exception as e:
+            logger.error(f"? Error cargando credenciales desde secrets: {e}. Se intentar¨¢ el flujo interactivo.")
+
     creds = None
     
-    # Forzar re-autorizaciÃ³n eliminando el token existente si lo hay.
+    # Forzar re-autorizaci¨®n eliminando el token existente si lo hay.
     if os.path.exists(TOKEN_FILE):
-        logger.info(f"Se encontrÃ³ un '{TOKEN_FILE}' existente. EliminÃ¡ndolo para forzar una nueva autorizaciÃ³n.")
+        logger.info(f"Se encontr¨® un '{TOKEN_FILE}' existente. Elimin¨¢ndolo para forzar una nueva autorizaci¨®n.")
         os.remove(TOKEN_FILE)
-
-    if not os.path.exists(CREDENTIALS_FILE):
-        logger.error(f"âŒ {CREDENTIALS_FILE} no encontrado. Por favor, sigue las instrucciones para crearlo.")
-        return
     
-    logger.info("ðŸ”‘ Iniciando flujo de autorizaciÃ³n para Google Drive.")
+    if not Path(CREDENTIALS_FILE).exists():
+        logger.error(f"? {CREDENTIALS_FILE} no encontrado. Por favor, sigue las instrucciones para crearlo.")
+        return
+
+    logger.info("?? Iniciando flujo de autorizaci¨®n para Google Drive.")
     try:
         flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-        # run_local_server() abre el navegador y gestiona la autenticaciÃ³n automÃ¡ticamente.
+        # run_local_server() abre el navegador y gestiona la autenticaci¨®n autom¨¢ticamente.
         creds = flow.run_local_server(port=0)
     except Exception as e:
-        logger.error(f"âŒ Error durante el flujo de autorizaciÃ³n: {e}")
-        logger.error("   AsegÃºrate de que 'credentials.json' es para una 'AplicaciÃ³n de escritorio'.")
+        logger.error(f"? Error durante el flujo de autorizaci¨®n interactivo: {e}")
+        logger.error("   Aseg¨²rate de que 'credentials.json' es para una 'Aplicaci¨®n de escritorio' y que puedes abrir un navegador.")
         return
-    
-    # Guardar las credenciales para el prÃ³ximo uso
+
+    # Guardar las credenciales para el pr¨®ximo uso
     with open(TOKEN_FILE, 'w') as token:
         token.write(creds.to_json())
-    logger.info(f"âœ… Â¡AutorizaciÃ³n completada! Se ha guardado el token en '{TOKEN_FILE}'.")
+    logger.info(f"? ?Autorizaci¨®n completada! Se ha guardado el token en '{TOKEN_FILE}'.")
 
 if __name__ == '__main__':
-=======
-#!/usr/bin/env python3
-"""
-ðŸ”‘ SCRIPT DE AUTORIZACIÃ“N PARA GOOGLE DRIVE
-
-Ejecuta este script UNA SOLA VEZ de forma interactiva para generar el archivo `token.json`.
-Este archivo es necesario para que el bot pueda subir reportes a tu Google Drive.
-
-Pasos:
-1. AsegÃºrate de tener tu archivo `credentials.json` en la misma carpeta.
-2. Ejecuta este script: `python authorize_gdrive.py`
-3. Se abrirÃ¡ una ventana en tu navegador. Inicia sesiÃ³n con tu cuenta de Google y concede los permisos.
-4. Una vez autorizado, se crearÃ¡ un archivo `token.json` en esta carpeta.
-
-Â¡Listo! Ahora el bot podrÃ¡ usar este token para subir archivos sin necesidad de volver a autorizar.
-"""
-import os
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-import logging
-
-# Configurar logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-# Si modificas estos SCOPES, borra el archivo token.json.
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-CREDENTIALS_FILE = 'credentials.json'
-TOKEN_FILE = 'token.json'
-
-def authorize_gdrive():
-    """
-    Realiza el flujo de autorizaciÃ³n de OAuth2 para Google Drive.
-    """
-    creds = None
-    
-    if os.path.exists(TOKEN_FILE):
-        logger.info(f"âœ… El archivo '{TOKEN_FILE}' ya existe. La autorizaciÃ³n parece estar completa.")
-        try:
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-            if creds and creds.valid:
-                 logger.info("Las credenciales son vÃ¡lidas. No se necesita re-autorizaciÃ³n.")
-                 return
-            if creds and creds.expired and creds.refresh_token:
-                logger.info("Refrescando token de acceso...")
-                creds.refresh(Request())
-                logger.info("Token refrescado exitosamente.")
-        except Exception as e:
-            logger.warning(f"âš ï¸ No se pudo cargar '{TOKEN_FILE}'. Se procederÃ¡ a re-autorizar. Error: {e}")
-
-    if not creds or not creds.valid:
-        if not os.path.exists(CREDENTIALS_FILE):
-            logger.error(f"âŒ {CREDENTIALS_FILE} no encontrado. Por favor, sigue las instrucciones para crearlo.")
-            return
-        
-        logger.info("ðŸ”‘ Iniciando flujo de autorizaciÃ³n. Se abrirÃ¡ una ventana en tu navegador.")
-        flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-        creds = flow.run_local_server(port=0)
-        
-        with open(TOKEN_FILE, 'w') as token:
-            token.write(creds.to_json())
-        logger.info(f"âœ… Â¡AutorizaciÃ³n completada! Se ha guardado el token en '{TOKEN_FILE}'.")
-
-if __name__ == '__main__':
->>>>>>> 5467461205daa4de03832788163f55c1d92bf1e5
     authorize_gdrive()

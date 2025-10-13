@@ -556,7 +556,9 @@ def monitor_closed_positions(clf):
                     time.sleep(10)  # Esperar 10 segundos antes de la próxima verificación
                     continue
                 else:
-                    logger.info(f"👁️ Monitoreando {len(positions)} posiciones abiertas...")
+                    # 🚀 FIX: Mostrar los símbolos de las posiciones que se están monitoreando.
+                    position_symbols = [normalize_symbol(getattr(p, 'symbol', '')) for p in positions]
+                    logger.info(f"👁️ Monitoreando {len(positions)} posiciones abiertas: {', '.join(position_symbols)}")
             except Exception as e:
                 logger.error(f"❌ No se pudieron obtener posiciones: {e}")
                 time.sleep(10)
