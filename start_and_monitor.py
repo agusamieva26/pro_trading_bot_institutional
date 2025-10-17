@@ -62,7 +62,7 @@ def main():
                     )
                     logger.info(f"✅ Process '{name}' started with PID: {procs[name].pid}")
 
-            time.sleep(15)
+            time.sleep(5) # Check process status more frequently
     except KeyboardInterrupt:
         logger.info("🛑 User interrupt detected. Shutting down all processes gracefully...")
     finally:
