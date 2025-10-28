@@ -169,7 +169,7 @@ class PortfolioAnalyzer:
             positions = alpaca_data.get('positions', [])
             
             # Calcular métricas
-            initial_equity = settings.initial_equity if settings else 30000.0
+            initial_equity = float(settings.initial_equity) if settings and hasattr(settings, 'initial_equity') else 30000.0
             total_pnl = equity - initial_equity
             total_pnl_pct = (total_pnl / initial_equity) * 100
             daily_pnl_pct = (daily_pnl / equity) * 100 if equity > 0 else 0
@@ -272,7 +272,7 @@ class PortfolioAnalyzer:
             trades_history = await self._load_trades_history()
             
             # Métricas básicas
-            initial_equity = 30000.0
+            initial_equity = float(settings.initial_equity) if settings and hasattr(settings, 'initial_equity') else 30000.0
             total_return_pct = ((snapshot.total_equity / initial_equity) - 1) * 100
             daily_return_pct = snapshot.daily_pnl_pct
             
@@ -852,7 +852,7 @@ CONTEXTO DEL BOT DEL USUARIO:
             if question_type == "portfolio_status":
                 return await self._answer_portfolio_question(question, snapshot, metrics)
             elif question_type == "performance":
-                return await self._answer_performance_question(question, metrics)
+                return await self._answer_performance_question(question, metrics, snapshot)
             elif question_type == "risk":
                 return await self._answer_risk_question(question, snapshot, metrics)
             elif question_type == "recommendations":
@@ -911,7 +911,7 @@ INSTRUCCIONES:
 """
         return await self._generate_qwen_response(prompt, question)
     
-    async def _answer_performance_question(self, question: str, metrics: PerformanceMetrics) -> str:
+    async def _answer_performance_question(self, question: str, metrics: PerformanceMetrics, snapshot: PortfolioSnapshot) -> str:
         """📈 Responde preguntas sobre rendimiento usando Qwen."""
         performance_grade = "A" if metrics.win_rate > 60 and metrics.profit_factor > 1.2 else \
                            "B" if metrics.win_rate > 50 and metrics.profit_factor > 1 else \
@@ -925,6 +925,7 @@ Usa las siguientes métricas de rendimiento para dar un análisis conversacional
 
 MÉTRICAS DE RENDIMIENTO:
 - Calificación General: {performance_grade}
+- Retorno Total: {metrics.total_return_pct:+.1f}% (desde ${float(settings.initial_equity) if settings and hasattr(settings, 'initial_equity') else 30000.0:,.0f})
 - Win Rate: {metrics.win_rate:.1f}%
 - Profit Factor: {metrics.profit_factor:.2f}
 - Sharpe Ratio: {metrics.sharpe_ratio:.2f}
@@ -937,7 +938,7 @@ MÉTRICAS DE RENDIMIENTO:
 INSTRUCCIONES:
 1. Comienza abordando la pregunta del usuario sobre el rendimiento.
 2. Otorga la calificación general ({performance_grade}) y explica brevemente por qué.
-3. Analiza el Win Rate y el Profit Factor juntos. Si el profit factor es < 1, explica que las pérdidas superan a las ganancias en magnitud.
+3. Analiza el Win Rate y el Profit Factor juntos. Si el profit factor es < 1, explica que, aunque se ganen operaciones, las pérdidas son de mayor magnitud.
 4. Comenta sobre las rachas. Si la racha perdedora es alta, normaliza la situación ("es normal tener malas rachas...").
 5. Ofrece una conclusión sobre qué área necesita más atención (ej. "El win rate es decente, pero necesitamos mejorar el tamaño de las ganancias respecto a las pérdidas.").
 6. Termina de forma proactiva.
