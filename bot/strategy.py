@@ -325,6 +325,28 @@ def reset_signal_memory():
     _last_signals.clear()
     logger.info("🔄 Memoria de señales reseteada - permitiendo recálculo limpio")
 
+def get_market_regime(features: pd.Series) -> str:
+    """
+    Determina el régimen de mercado actual (volátil, tendencial, tranquilo).
+    Usa el ATR normalizado como proxy de la volatilidad.
+    """
+    if "atr_14" not in features or "close" not in features or features["close"] == 0:
+        return "normal"
+
+    atr_ratio = features["atr_14"] / features["close"]
+
+    # Umbrales para clasificar el régimen (ajustar según el activo)
+    if atr_ratio > 0.05:  # >5% de volatilidad diaria
+        return "volatil"
+    elif atr_ratio < 0.015: # <1.5% de volatilidad diaria
+        return "tranquilo"
+    
+    # Considerar tendencia
+    if abs(features.get("fib_trend", 0)) > 0.5:
+        return "tendencial"
+
+    return "normal"
+
 def hybrid_signal(features, model=None, timeframe=None, symbol=None, use_scalping: bool = False):
     """
     Genera señal híbrida:
@@ -387,11 +409,24 @@ def hybrid_signal(features, model=None, timeframe=None, symbol=None, use_scalpin
         # Señal de reglas
         rule_sig = rule_signal(features)
 
+        # 🏛️ ANÁLISIS DE RÉGIMEN DE MERCADO
+        market_regime = get_market_regime(features)
+
         # 🔎 DEBUG: ver valores sin redondeo
-        logger.debug(f"🔧 [hybrid_signal] proba={proba.tolist()} | model_signal={model_signal:.6f} | rule_signal={rule_sig:.6f}")
+        logger.debug(f"🔧 [{symbol}] proba={proba.tolist()} | model_sig={model_signal:.4f} | rule_sig={rule_sig:.4f} | regime={market_regime}")
 
         # Combinar con pesos (modelo 70%, reglas 30%)
         combined_signal = 0.7 * model_signal + 0.3 * rule_sig
+
+        # ✅ AJUSTE DINÁMICO POR RÉGIMEN DE MERCADO
+        if market_regime == "volatil":
+            # En mercados volátiles, ser más cauteloso. Reducir la señal.
+            combined_signal *= 0.8
+            logger.debug(f"📉 [{symbol}] Régimen volátil detectado. Reduciendo señal a {combined_signal:.4f}")
+        elif market_regime == "tendencial":
+            # En mercados con tendencia, confiar más en la señal.
+            combined_signal *= 1.15
+            logger.debug(f"📈 [{symbol}] Régimen tendencial detectado. Aumentando señal a {combined_signal:.4f}")
 
         # Ajustar por volatilidad
         if "atr_14" in features and "close" in features:
@@ -500,15 +535,33 @@ def allocate_positions(signals, equity, max_exposure=0.3, max_allocation_per_ass
     total_score = sum(s["score"] for s in ranked) or 1.0
     total_capital = equity * max_exposure
 
+    # 🛡️ NUEVO: Normalizar por volatilidad (ATR) para ajustar riesgo
+    # Extraer ATR de las features si está disponible
+    for s in ranked:
+        if s.get("features") is not None and "atr_14" in s["features"]:
+            s["atr"] = s["features"]["atr_14"]
+            s["price"] = s["features"]["close"]
+        else:
+            s["atr"] = 0.01 # Fallback a 1% de volatilidad
+            s["price"] = 1.0
+
+    # Calcular pesos ajustados por volatilidad inversa
+    # Menos volatilidad = más peso
+    total_risk_adjusted_score = 0
+    for s in ranked:
+        volatility_factor = 1 / (s["atr"] / s["price"] + 0.005) if s["price"] > 0 else 1
+        s["risk_adjusted_score"] = s["score"] * volatility_factor
+        total_risk_adjusted_score += s["risk_adjusted_score"]
+
     allocations = []
     for s in ranked:
-        weight = s["score"] / total_score
+        weight = s["risk_adjusted_score"] / total_risk_adjusted_score if total_risk_adjusted_score > 0 else 0
         alloc = min(weight * total_capital, equity * max_allocation_per_asset)
         allocations.append({
             "symbol": s["symbol"],
             "allocation": alloc,
             "signal": s["signal"],
-            "score": s["score"],  # 👈 ***ESTO ES LO QUE TE FALTABA***
+            "score": s["score"],
         })
 
     return allocations
