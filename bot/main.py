@@ -187,16 +187,33 @@ def run_once(state: BotState, clf):
     # ✅ P&L diario usando valores reales de Alpaca
     logger.info(f"📈 P&L diario Alpaca: {daily_change_pct:+.2f}% (${daily_change:+,.2f}) | Ayer: ${last_equity:,.2f}")
     
-    # 🚨 KILL SWITCH DIARIO: Parar si pérdidas > $3000 o > 15%  
-    daily_loss_limit = -3000  # $3000 pérdida máxima (expandido para recuperación épica)
-    daily_loss_pct_limit = -15.0  # 15% pérdida máxima
+    # 🚨 KILL SWITCH DIARIO (MÁS ESTRICTO): Parar si pérdidas > $350 o > 2.5%
+    daily_loss_limit = -350.0  # Límite de pérdida en USD (más seguro)
+    daily_loss_pct_limit = -2.5 / 100.0 # Límite de pérdida en % (2.5%)
+
+    # 🟡 SOFT STOP: No abrir nuevas posiciones si pérdidas > $200 o > 1.5%
+    soft_stop_loss_limit = -200.0
+    soft_stop_loss_pct_limit = -1.5 / 100.0
+
+    # Comprobar si se activa el SOFT STOP
+    soft_stop_active = daily_change <= soft_stop_loss_limit or daily_change_pct <= soft_stop_loss_pct_limit
+    if soft_stop_active and not state.state.get("soft_stop_notified", False):
+        logger.warning(f"🟡 SOFT STOP ACTIVADO: Pérdida diaria ${daily_change:+,.2f} ({daily_change_pct:+.2f}%). No se abrirán nuevas posiciones.")
+        try:
+            from bot.telegram import send_telegram
+            telegram_msg = f"🟡 SOFT STOP ACTIVADO 🟡\n\nPérdida diaria: ${daily_change:+,.2f} ({daily_change_pct:+.2f}%)\n\nNo se abrirán nuevas posiciones, solo se gestionarán las existentes."
+            send_telegram(telegram_msg)
+            state.state["soft_stop_notified"] = True
+            state.save()
+        except Exception as e:
+            logger.error(f"❌ Error enviando Telegram de Soft Stop: {e}")
     
     # 🧪 RISK MANAGEMENT TEST MODE BYPASS
     kill_switch_active = daily_change <= daily_loss_limit or daily_change_pct <= daily_loss_pct_limit
     bypass_kill_switch = settings.risk_management_test_mode or settings.disable_kill_switch
     
     if kill_switch_active and bypass_kill_switch:
-        logger.warning(f"🧪 KILL SWITCH BYPASSED FOR TESTING: Loss ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) - Continuing for risk management validation")
+        logger.warning(f"🧪 KILL SWITCH BYPASSED: Loss ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) - Continuing for testing")
         logger.info(f"🧪 Test Mode: risk_management_test_mode={settings.risk_management_test_mode}, disable_kill_switch={settings.disable_kill_switch}")
     elif kill_switch_active:
         logger.critical(f"🚨🛑 KILL SWITCH ACTIVADO: Pérdida diaria ${daily_change:+,.2f} ({daily_change_pct:+.2f}%) excede límites!")
@@ -210,7 +227,7 @@ def run_once(state: BotState, clf):
             telegram_msg = f"""🚨 KILL SWITCH ACTIVADO 🚨
 
 💀 Pérdida diaria: ${daily_change:+,.2f} ({daily_change_pct:+.2f}%)
-🛑 Límite: -$3000 o -15%
+🛑 Límite: ${daily_loss_limit:,.0f} o {daily_loss_pct_limit:.1%}
 
 🚨 CERRANDO TODAS LAS POSICIONES
 ⏸️ TRADING PAUSADO hasta reset diario"""
@@ -223,13 +240,24 @@ def run_once(state: BotState, clf):
         
         logger.critical(f"🚨 TRADING PAUSADO hasta próximo reset diario")
         return "KILL_SWITCH_ACTIVATED"
+
+    # Si el soft stop está activo, no continuar con la lógica de abrir posiciones
+    if soft_stop_active:
+        logger.info("🟡 Soft Stop activo, saltando análisis de nuevas señales.")
+        # Aquí podrías añadir lógica para solo gestionar/cerrar posiciones existentes si es necesario
     
-    # 🎯 TAKE PROFIT DIARIO: $1000 - Cerrar todas las posiciones
-    if daily_change >= 1000:
+    # 🎯 TAKE PROFIT DIARIO DINÁMICO: % del capital en lugar de un valor fijo
+    daily_profit_target_pct = 3.0 / 100.0  # Objetivo del 3.0% del capital diario
+    min_daily_target_usd = 150.0  # Un mínimo de $150 para que valga la pena
+
+    # Calcular el objetivo en USD basado en el capital del día anterior
+    daily_profit_target_usd = max(last_equity * daily_profit_target_pct, min_daily_target_usd)
+
+    if daily_change >= daily_profit_target_usd:
         from bot.execution import close_all
         from bot.telegram import send_telegram
         
-        msg = f"🎯 META ALCANZADA: ${daily_change:+,.2f} beneficio diario ≥ $1,000"
+        msg = f"🎯 META DIARIA ALCANZADA: ${daily_change:+,.2f} beneficio ≥ ${daily_profit_target_usd:,.2f}"
         logger.critical(f"💰 {msg}")
         logger.critical("🚨 CERRANDO TODAS LAS POSICIONES - OBJETIVO DIARIO CUMPLIDO")
         
@@ -237,9 +265,8 @@ def run_once(state: BotState, clf):
         try:
             telegram_msg = f"""🎯 ¡OBJETIVO DIARIO CUMPLIDO! 🎯
 
-💰 Beneficio alcanzado: ${daily_change:+,.2f}
-🎯 Objetivo: $1,000.00
-📊 Porcentaje: {(daily_change/1000)*100:.1f}%
+💰 Beneficio: ${daily_change:+,.2f}
+🎯 Objetivo dinámico: ${daily_profit_target_usd:,.2f} ({daily_profit_target_pct:.1%})
 
 🚨 CERRANDO TODAS LAS POSICIONES AUTOMÁTICAMENTE
 
@@ -582,6 +609,7 @@ def run_once(state: BotState, clf):
     signals = portfolio_rebalancer.apply_rebalancing_to_signals(sentiment_enhanced_signals, portfolio_analysis)
     
     # 🛡️ CONFIGURACIÓN DINÁMICA: Adaptar a condiciones de mercado
+    from .dynamic_config import dynamic_config_manager
     sentiment_level = sentiment_enhanced_signals[0].get('sentiment_level', 'neutral') if sentiment_enhanced_signals else 'neutral'
     dynamic_config_manager.adapt_to_market_conditions(market_condition, sentiment_level)
 
@@ -699,6 +727,11 @@ def run_once(state: BotState, clf):
 
     logger.info(f"💰 Procesando {len(signals)} señales detectadas...")
     
+    # Si el soft stop está activo, no procesar señales para abrir nuevas posiciones
+    if soft_stop_active:
+        logger.info("🟡 Soft Stop activo: No se procesarán señales para abrir nuevas posiciones.")
+        signals = [] # Vaciar la lista de señales para no abrir nada nuevo
+
     for i, item in enumerate(signals, 1):
         symbol = item["symbol"]
         sig = item["signal"]
@@ -794,6 +827,7 @@ def run_once(state: BotState, clf):
         leverage = max(min(abs(sig) * 0.8 + risk_multiplier * 0.2, 2.0), 0.05)  # Enhanced leverage calculation
         qty = min(shares * leverage, max_position_usd / price) if price > 0 else 0
         
+        # Aplicar stops dinámicos del sistema integrado
         # Apply dynamic stops from integrated system
         settings.stop_loss_pct = dynamic_stop_loss_pct
         settings.take_profit_pct = dynamic_take_profit_pct
