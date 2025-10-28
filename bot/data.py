@@ -56,11 +56,13 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
     max_attempts = 3  # Limite de intentos para evitar loop infinito
     attempt = 0
     
-    while attempt < max_attempts:
+    # Bucle para expandir el rango de fechas si no se encuentran suficientes barras
+    while len(bars) < min_bars and attempt < max_attempts:
         attempt += 1
         start_dt = pd.Timestamp(start, tz="UTC") if start else (pd.Timestamp.utcnow() - pd.Timedelta(days=lookback_days))
         end_dt   = pd.Timestamp(end, tz="UTC") if end else (pd.Timestamp.utcnow() - pd.Timedelta(minutes=16))
-
+        
+        df = pd.DataFrame() # Asegurarse que df esté vacío
         for retry in range(3): # 🧠 FIX: Add retry loop for network errors
             try:
                 if "/" in symbol:  # cripto
@@ -89,9 +91,9 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
                     wait_time = (retry + 1) * 2 # Exponential backoff (2, 4, 6 seconds)
                     logger.warning(f"⏳ Connection error for {symbol} ({e}). Retrying in {wait_time}s...")
                     time.sleep(wait_time)
-                    df = pd.DataFrame() # Ensure df is empty for the next loop
                 else:
                     raise e # Re-raise other API errors
+            
         else: # If all retries fail
             logger.error(f"❌ Failed to fetch data for {symbol} after multiple retries.")
             return pd.DataFrame()
@@ -104,16 +106,13 @@ def fetch_bars(symbol: str, start: str | None = None, end: str | None = None, mi
                 df = df.xs(symbol, level=0)
             bars = df.sort_index().rename(columns=str.lower)
 
-        if len(bars) >= min_bars or lookback_days > 3650 or attempt >= max_attempts:
-            if len(bars) < min_bars:
-                logger.warning(f"⚠️ Solo {len(bars)} velas para {symbol}, por debajo del mínimo {min_bars}.")
-            return bars
-        else:
+        # Si después de la descarga aún no tenemos suficientes barras, expandimos la ventana de búsqueda
+        if len(bars) < min_bars and attempt < max_attempts:
             logger.info(f"🔍 Solo {len(bars)} velas para {symbol}, retrocediendo más... (intento {attempt}/{max_attempts})")
             lookback_days *= 2
-    
-    # Si llegamos aquí, se agotaron los intentos
-    logger.warning(f"⚠️ Máximo de intentos alcanzado para {symbol}, devolviendo datos disponibles")
+
+    if len(bars) < min_bars:
+        logger.warning(f"⚠️ Solo {len(bars)} velas para {symbol}, por debajo del mínimo {min_bars}.")
     return bars
 
 # ------------------------------------------------------------------
@@ -127,56 +126,38 @@ def fetch_all_bars(symbols: list[str], start: str = None, end: str = None, min_b
     results = {}
     max_workers = min(4, len(symbols))
     logger.info(f"📡 Descargando datos de {len(symbols)} símbolos en paralelo ({max_workers} hilos)...")
-
-    def fetch_with_retry(sym, retries=3, delay=1.0):
+    
+    def fetch_and_cache(sym):
+        """Función wrapper para descargar, manejar caché y errores."""
         cache_file = os.path.join(CACHE_DIR, f"{sym.replace('/', '_')}.parquet")
-        cached_df = pd.DataFrame()
-
-        # 1️⃣ Cargar caché si existe
+        
+        # 1. Cargar caché si existe y tiene suficientes datos
         if os.path.exists(cache_file):
             try:
-                cached_df = pd.read_parquet(cache_file).sort_index()
-                # Si tengo suficientes datos en cache, usar esos
+                cached_df = pd.read_parquet(cache_file)
                 if len(cached_df) >= min_bars:
                     logger.debug(f"✅ {sym}: {len(cached_df)} velas en caché")
                     return cached_df
             except Exception as e:
                 logger.warning(f"⚠️ Error leyendo caché de {sym}: {e}")
-                cached_df = pd.DataFrame()
-
-        # 2️⃣ Descarga incremental con reintentos
-        for attempt in range(retries):
-            try:
-                df = fetch_bars(sym, start, end, min_bars)
-                
-                # Guardar en caché si descarga exitosa
-                if not df.empty:
-                    try:
-                        df.to_parquet(cache_file)
-                        logger.debug(f"💾 {sym}: datos guardados en caché")
-                    except Exception as e:
-                        logger.warning(f"⚠️ No se pudo guardar caché de {sym}: {e}")
-                
-                return df
-            except APIError as e:
-                if "too many requests" in str(e).lower() or "rate limit" in str(e).lower():
-                    wait_time = delay * (2 ** attempt)
-                    logger.warning(f"⏳ Rate limit para {sym}, reintentando en {wait_time:.1f}s...")
-                    time.sleep(wait_time)
-                else:
-                    logger.error(f"💥 Error API {sym}: {e}")
-                    break
-            except Exception as e:
-                logger.error(f"💥 Error inesperado con {sym}: {e}")
-                break
         
-        # Si falla todo, devolver caché (aunque esté vacío)
-        return cached_df
+        # 2. Si no hay caché o es insuficiente, descargar datos
+        # La lógica de reintentos ya está dentro de fetch_bars
+        df = fetch_bars(sym, start, end, min_bars)
+        
+        # 3. Guardar en caché si la descarga fue exitosa
+        if not df.empty:
+            try:
+                df.to_parquet(cache_file)
+                logger.debug(f"💾 {sym}: datos guardados en caché")
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo guardar caché de {sym}: {e}")
+        
+        return df
 
-    # 3️⃣ Ejecutar en paralelo
+    # Ejecutar en paralelo
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(fetch_with_retry, sym): sym for sym in symbols}
-
+        futures = {executor.submit(fetch_and_cache, sym): sym for sym in symbols}
         for future in as_completed(futures):
             sym = futures[future]
             try:
@@ -189,9 +170,6 @@ def fetch_all_bars(symbols: list[str], start: str = None, end: str = None, min_b
             except Exception as e:
                 logger.error(f"💥 Error descargando {sym}: {e}")
                 results[sym] = pd.DataFrame()
-
-            # Pausa mayor para evitar rate limiting de Alpaca
-            time.sleep(0.5)
 
     successful = len([v for v in results.values() if not v.empty])
     logger.info(f"✅ Descarga completada: {successful}/{len(symbols)} símbolos con datos.")
